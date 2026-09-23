@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { ArrowUp } from "lucide-react";
+import { ArrowUp, Code2, ArrowUpRight, Heart, Sparkles, Send } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getSocialLinksFromDb } from "@/lib/supabase-db";
 import { SocialLinkItem } from "@/lib/data";
@@ -11,6 +11,16 @@ import { DynamicIcon } from "@/components/ui/dynamic-icon";
 export interface FooterProps {
   initialSocialLinks?: SocialLinkItem[];
 }
+
+const QUICK_LINKS = [
+  { label: "Home", href: "#home" },
+  { label: "About", href: "#about" },
+  { label: "Skills", href: "#skills" },
+  { label: "Projects", href: "#projects" },
+  { label: "Experience", href: "#experience" },
+  { label: "Education", href: "#education" },
+  { label: "Contact", href: "#contact" },
+];
 
 export function Footer({ initialSocialLinks = [] }: FooterProps = {}) {
   const pathname = usePathname();
@@ -36,11 +46,22 @@ export function Footer({ initialSocialLinks = [] }: FooterProps = {}) {
 
   useEffect(() => {
     const handleScroll = () => {
-      setShowBackToTop(window.scrollY > 300);
+      setShowBackToTop(window.scrollY > 400);
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    const targetId = href.replace("#", "");
+    const targetElement = document.getElementById(targetId);
+    if (targetElement) {
+      targetElement.scrollIntoView({ behavior: "smooth" });
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
 
   const scrollToTop = () => {
     window.scrollTo({
@@ -54,58 +75,141 @@ export function Footer({ initialSocialLinks = [] }: FooterProps = {}) {
     return null;
   }
 
+  const currentYear = new Date().getFullYear();
+
   return (
-    <footer className="relative bg-card border-t border-border mt-20 transition-colors duration-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col items-center justify-between gap-8 md:flex-row">
-        {/* Left Side: Brand & Credit */}
-        <div className="flex flex-col items-center md:items-start gap-2 text-center md:text-left">
-          <span className="font-heading font-bold text-xl tracking-tight text-foreground">
-            Portfolio<span className="text-primary">.</span>
-          </span>
-          <p className="text-sm text-muted-foreground">
-            Built with{" "}
+    <footer className="relative bg-card/60 backdrop-blur-xl border-t border-border/70 mt-28 overflow-hidden transition-colors duration-300">
+      {/* Top Ambient Glow / Accent Gradient Line */}
+      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+      <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-24 bg-primary/10 blur-3xl pointer-events-none rounded-full" />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-8 pb-12 border-b border-border/60">
+          {/* Column 1: Brand & Bio & Live Status (5 cols) */}
+          <div className="lg:col-span-5 space-y-4">
             <a
-              href="https://nextjs.org"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-medium text-foreground hover:text-primary transition-colors underline underline-offset-4"
+              href="#home"
+              onClick={(e) => scrollToSection(e, "#home")}
+              className="inline-flex items-center gap-2.5 group focus:outline-none focus:ring-2 focus:ring-primary rounded-xl p-1 -ml-1"
+              aria-label="Home page"
             >
-              Next.js
-            </a>{" "}
-            &amp;{" "}
-            <a
-              href="https://tailwindcss.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-medium text-foreground hover:text-primary transition-colors underline underline-offset-4"
-            >
-              Tailwind CSS
+              <div className="p-2.5 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground group-hover:shadow-md group-hover:shadow-primary/20 transition-all duration-300">
+                <Code2 className="w-5 h-5" />
+              </div>
+              <span className="font-heading font-bold text-xl tracking-tight text-foreground">
+                Prasid Gautam<span className="text-primary">.</span>
+              </span>
             </a>
-            .
-          </p>
+
+            <p className="text-sm text-muted-foreground leading-relaxed max-w-sm">
+              Full-Stack Web Developer &amp; BCA Student specializing in building modern, high-performance web applications with clean architecture and delightful user experiences.
+            </p>
+
+            {/* Availability Status Badge */}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              </span>
+              Available for freelance &amp; full-time opportunities
+            </div>
+          </div>
+
+          {/* Column 2: Quick Links (3 cols) */}
+          <div className="lg:col-span-3 space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-wider text-foreground">
+              Navigation
+            </p>
+            <ul className="grid grid-cols-2 gap-2 text-sm">
+              {QUICK_LINKS.map((link) => (
+                <li key={link.href}>
+                  <a
+                    href={link.href}
+                    onClick={(e) => scrollToSection(e, link.href)}
+                    className="group inline-flex items-center text-muted-foreground hover:text-primary transition-colors py-1 focus:outline-none focus:ring-2 focus:ring-primary rounded-md"
+                  >
+                    <span className="group-hover:translate-x-1 transition-transform duration-200">
+                      {link.label}
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Column 3: Connect & CTA Card (4 cols) */}
+          <div className="lg:col-span-4 space-y-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-foreground">
+              Let&apos;s Connect
+            </p>
+
+            {/* Dynamic Social Links */}
+            {socialLinks.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {socialLinks.map((social) => (
+                  <a
+                    key={social.id}
+                    href={social.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`Visit ${social.platform}`}
+                    className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/60 hover:bg-primary hover:text-primary-foreground border border-border/60 hover:border-primary text-muted-foreground transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <DynamicIcon name={social.iconName} className="w-4 h-4" />
+                    <span>{social.platform}</span>
+                    <ArrowUpRight className="w-3 h-3 opacity-60" />
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Follow and connect on social platforms.
+              </p>
+            )}
+
+            {/* Quick Contact CTA Card */}
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/5 via-card to-primary/10 border border-primary/20 flex items-center justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-primary" />
+                  Have a project in mind?
+                </p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  Let&apos;s discuss how I can help.
+                </p>
+              </div>
+              <a
+                href="#contact"
+                onClick={(e) => scrollToSection(e, "#contact")}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 hover:shadow-md hover:shadow-primary/20 transition-all duration-200 shrink-0"
+              >
+                <span>Chat</span>
+                <Send className="w-3 h-3" />
+              </a>
+            </div>
+          </div>
         </div>
 
-        {/* Center: Dynamic Social Media Links (Omitted if empty) */}
-        {socialLinks.length > 0 && (
-          <div className="flex items-center gap-3">
-            {socialLinks.map((social) => (
-              <a
-                key={social.id}
-                href={social.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`Visit ${social.platform}`}
-                className="p-2.5 rounded-xl bg-muted/60 hover:bg-primary hover:text-primary-foreground text-muted-foreground transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary shadow-sm"
-              >
-                <DynamicIcon name={social.iconName} className="w-5 h-5" />
-              </a>
-            ))}
-          </div>
-        )}
+        {/* Bottom Sub-Footer Bar */}
+        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
+          <p className="flex items-center gap-1 text-center sm:text-left">
+            &copy; {currentYear} Prasid Gautam. Made with{" "}
+            <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500 inline mx-0.5" /> in Nepal.
+          </p>
 
-        {/* Right Side: Copyright */}
-        <div className="text-sm text-muted-foreground text-center md:text-right">
-          &copy; {new Date().getFullYear()} All rights reserved.
+          <div className="flex items-center gap-4">
+            <span>
+              Built with Next.js &amp; Tailwind CSS
+            </span>
+            <button
+              onClick={scrollToTop}
+              className="inline-flex items-center gap-1 text-xs font-medium text-foreground hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded-md px-1 py-0.5"
+              aria-label="Scroll back to top"
+            >
+              <span>Back to Top</span>
+              <ArrowUp className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -119,7 +223,7 @@ export function Footer({ initialSocialLinks = [] }: FooterProps = {}) {
             onClick={scrollToTop}
             aria-label="Back to top"
             suppressHydrationWarning
-            className="fixed bottom-6 right-6 p-3 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring z-40 transition-all duration-200"
+            className="fixed bottom-6 right-6 p-3 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring z-40 transition-all duration-200 hover:-translate-y-1 hover:shadow-primary/25"
           >
             <ArrowUp className="w-5 h-5" />
           </motion.button>
