@@ -1,15 +1,35 @@
 "use client";
 
-import { useState } from "react";
-import { CERTIFICATIONS_DATA, CertificationItem } from "@/lib/data";
+import { useState, useEffect } from "react";
+import { CertificationItem } from "@/lib/data";
+import { getCertificationsFromDb } from "@/lib/supabase-db";
+import {
+  saveCertificationAction,
+  deleteCertificationAction,
+  reorderCertificationsAction,
+} from "@/app/admin/actions";
 import { Plus, Edit2, Trash2, ArrowUp, ArrowDown, Award, CheckCircle2, ExternalLink, X } from "lucide-react";
 
 export default function CertificationsManagerPage() {
-  const [items, setItems] = useState<CertificationItem[]>(CERTIFICATIONS_DATA);
+  const [items, setItems] = useState<CertificationItem[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<CertificationItem | null>(null);
   const [deletingItem, setDeletingItem] = useState<CertificationItem | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    async function load() {
+      const data = await getCertificationsFromDb();
+      if (active) {
+        setItems(data ?? []);
+      }
+    }
+    load();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Form State
   const [title, setTitle] = useState("");
@@ -46,7 +66,7 @@ export default function CertificationsManagerPage() {
     setIsModalOpen(true);
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !issuer.trim()) return;
 
@@ -55,40 +75,72 @@ export default function CertificationsManagerPage() {
       .map((s) => s.trim())
       .filter((s) => s.length > 0);
 
-    if (editingItem) {
-      setItems(
-        items.map((it) =>
-          it.id === editingItem.id
-            ? { ...it, title, issuer, date, credentialUrl, skills: skillsArray, issuerColor }
-            : it
-        )
-      );
-      showToast(`Updated "${title}".`);
-    } else {
-      const newItem: CertificationItem = {
-        id: `cert-${Date.now()}`,
-        title,
-        issuer,
-        date,
-        credentialUrl,
-        skills: skillsArray,
-        issuerColor,
-      };
-      setItems([...items, newItem]);
-      showToast(`Added "${title}".`);
+    try {
+      if (editingItem) {
+        await saveCertificationAction({
+          id: editingItem.id,
+          title,
+          issuer,
+          date,
+          credential_url: credentialUrl,
+          skills: skillsArray,
+          issuer_color: issuerColor,
+        });
+        setItems(
+          items.map((it) =>
+            it.id === editingItem.id
+              ? { ...it, title, issuer, date, credentialUrl, skills: skillsArray, issuerColor }
+              : it
+          )
+        );
+        showToast(`Updated "${title}".`);
+      } else {
+        const res = await saveCertificationAction({
+          title,
+          issuer,
+          date,
+          credential_url: credentialUrl,
+          skills: skillsArray,
+          issuer_color: issuerColor,
+          order_index: items.length + 1,
+        });
+
+        const newItem: CertificationItem = {
+          id: res.data?.id || `cert-${Date.now()}`,
+          title,
+          issuer,
+          date,
+          credentialUrl,
+          skills: skillsArray,
+          issuerColor,
+        };
+        setItems([...items, newItem]);
+        showToast(`Added "${title}".`);
+      }
+    } catch (err) {
+      console.error("Save certification failed:", err);
+      const msg = err instanceof Error ? err.message : "Unexpected error.";
+      showToast(`Failed to save certification: ${msg}`);
     }
 
     setIsModalOpen(false);
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (!deletingItem) return;
-    setItems(items.filter((it) => it.id !== deletingItem.id));
-    showToast("Deleted certification.");
+    try {
+      await deleteCertificationAction(deletingItem.id);
+      setItems(items.filter((it) => it.id !== deletingItem.id));
+      showToast("Deleted certification.");
+    } catch (err) {
+      console.error("Delete certification failed:", err);
+      const msg = err instanceof Error ? err.message : "Unexpected error.";
+      showToast(`Failed to delete certification: ${msg}`);
+    }
     setDeletingItem(null);
   };
 
-  const handleMove = (index: number, direction: "up" | "down") => {
+  const handleMove = async (index: number, direction: "up" | "down") => {
     const targetIndex = direction === "up" ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= items.length) return;
 
@@ -97,8 +149,20 @@ export default function CertificationsManagerPage() {
     updated[index] = updated[targetIndex];
     updated[targetIndex] = temp;
     setItems(updated);
-    showToast("Reordered certifications.");
+
+    try {
+      await reorderCertificationsAction([
+        { id: updated[targetIndex].id, order_index: targetIndex + 1 },
+        { id: updated[index].id, order_index: index + 1 },
+      ]);
+      showToast("Reordered certifications.");
+    } catch (err) {
+      console.error("Reorder certifications failed:", err);
+      const msg = err instanceof Error ? err.message : "Unexpected error.";
+      showToast(`Failed to reorder certifications: ${msg}`);
+    }
   };
+
 
   return (
     <div className="space-y-6">

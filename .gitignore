@@ -1,36 +1,91 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# ===================================================
+# Git Ignore Configuration
+# Stack: Next.js 14, TypeScript, Supabase, Tailwind CSS
+# OS Support: Windows, macOS, Linux
+# ===================================================
 
-# dependencies
-/node_modules
-/.pnp
+# ── Dependencies ─────────────────────────────────
+node_modules/
+.pnp
 .pnp.js
 .yarn/install-state.gz
 
-# testing
-/coverage
+# ── Next.js & Build Artifacts ────────────────────
+.next/
+out/
+build/
+.turbo/
+.vercel/
 
-# next.js
-/.next/
-/out/
+# ── TypeScript Build Cache ────────────────────────
+*.tsbuildinfo
+next-env.d.ts
 
-# production
-/build
+# ── Testing & Coverage ───────────────────────────
+coverage/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
 
-# misc
-.DS_Store
-*.pem
+# ── Environment & Secrets ─────────────────────────
+# Never commit credentials or local overrides.
+# Keep .env.example committed — it documents required vars without values.
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# debug
+# ── Logs & Temporary Files ────────────────────────
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.tmp
+*.bak
+*.swp
 
-# local env files
-.env*.local
+# ── Supabase CLI ──────────────────────────────────
+supabase/.branches/
+supabase/.temp/
+supabase/functions/.eszip
 
-# vercel
-.vercel
+# ── OS & System Metadata ─────────────────────────
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+# Certificates (never commit private keys)
+*.pem
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# ── Editor & IDE Settings ────────────────────────
+# VS Code — allow shared workspace settings, block personal/generated files
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+# JetBrains IDEs
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ── AI Agent Files ───────────────────────────────
+# Agent skill bundles and lock files — project-specific config,
+# not part of the deployable application.
+.agents/
+skills-lock.json

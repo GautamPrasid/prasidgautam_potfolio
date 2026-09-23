@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Mail,
+  Phone,
   Send,
   Loader2,
   CheckCircle2,
@@ -11,6 +12,7 @@ import {
   MapPin,
   Clock,
 } from "lucide-react";
+import { getHeroAboutFromDb, HeroAboutData } from "@/lib/supabase-db";
 
 interface FormState {
   name: string;
@@ -26,13 +28,35 @@ interface FormErrors {
   message?: string;
 }
 
-export function ContactSection() {
+export interface ContactSectionProps {
+  initialHeroData?: HeroAboutData | null;
+}
+
+export function ContactSection({ initialHeroData = null }: ContactSectionProps = {}) {
+  const [heroData, setHeroData] = useState<HeroAboutData | null>(initialHeroData);
   const [formData, setFormData] = useState<FormState>({
     name: "",
     email: "",
     subject: "",
     message: "",
   });
+
+  useEffect(() => {
+    if (initialHeroData) {
+      setHeroData(initialHeroData);
+    }
+  }, [initialHeroData]);
+
+  useEffect(() => {
+    if (initialHeroData) return;
+    let active = true;
+    getHeroAboutFromDb().then((data) => {
+      if (active) setHeroData(data);
+    });
+    return () => {
+      active = false;
+    };
+  }, [initialHeroData]);
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -130,6 +154,7 @@ export function ContactSection() {
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
         className="space-y-16"
+        suppressHydrationWarning
       >
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
@@ -160,68 +185,72 @@ export function ContactSection() {
 
               <div className="space-y-6">
                 {/* Email Card */}
-                <a
-                  href="mailto:prasid.gautam@example.com"
-                  className="flex items-center gap-4 p-4 rounded-2xl bg-muted/50 hover:bg-primary/10 border border-border/80 hover:border-primary/40 transition-all duration-200 group"
-                >
-                  <div className="p-3 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                    <Mail className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Email Address
-                    </p>
-                    <p className="text-sm sm:text-base font-semibold text-foreground group-hover:text-primary transition-colors">
-                      prasid.gautam@example.com
-                    </p>
-                  </div>
-                </a>
+                {heroData?.contactEmail && (
+                  <a
+                    href={`mailto:${heroData.contactEmail}`}
+                    className="flex items-center gap-4 p-4 rounded-2xl bg-muted/50 hover:bg-primary/10 border border-border/80 hover:border-primary/40 transition-all duration-200 group"
+                  >
+                    <div className="p-3 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                      <Mail className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        Email Address
+                      </p>
+                      <p className="text-sm sm:text-base font-semibold text-foreground group-hover:text-primary transition-colors">
+                        {heroData.contactEmail}
+                      </p>
+                    </div>
+                  </a>
+                )}
 
-                {/* LinkedIn Card */}
-                <a
-                  href="https://linkedin.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-4 p-4 rounded-2xl bg-muted/50 hover:bg-primary/10 border border-border/80 hover:border-primary/40 transition-all duration-200 group"
-                >
-                  <div className="p-3 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                    <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-                      <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.25V10.9H6.46M7.86 6.64a1.62 1.62 0 1 0 0 3.24 1.62 1.62 0 0 0 0-3.24z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      LinkedIn
-                    </p>
-                    <p className="text-sm sm:text-base font-semibold text-foreground group-hover:text-primary transition-colors">
-                      linkedin.com/in/prasidgautam
-                    </p>
-                  </div>
-                </a>
+                {/* Phone Card */}
+                {heroData?.contactPhone && (
+                  <a
+                    href={`tel:${heroData.contactPhone.replace(/\s+/g, "")}`}
+                    className="flex items-center gap-4 p-4 rounded-2xl bg-muted/50 hover:bg-primary/10 border border-border/80 hover:border-primary/40 transition-all duration-200 group"
+                  >
+                    <div className="p-3 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                      <Phone className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        Phone Number
+                      </p>
+                      <p className="text-sm sm:text-base font-semibold text-foreground group-hover:text-primary transition-colors">
+                        {heroData.contactPhone}
+                      </p>
+                    </div>
+                  </a>
+                )}
 
                 {/* Location Card */}
-                <div className="flex items-center gap-4 p-4 rounded-2xl bg-muted/50 border border-border/80">
-                  <div className="p-3 rounded-xl bg-accent/10 text-accent">
-                    <MapPin className="w-5 h-5" />
+                {heroData?.location && (
+                  <div className="flex items-center gap-4 p-4 rounded-2xl bg-muted/50 border border-border/80">
+                    <div className="p-3 rounded-xl bg-accent/10 text-accent">
+                      <MapPin className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        Location
+                      </p>
+                      <p className="text-sm sm:text-base font-semibold text-foreground">
+                        {heroData.location}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Location
-                    </p>
-                    <p className="text-sm sm:text-base font-semibold text-foreground">
-                      Pokhara, Nepal
-                    </p>
-                  </div>
-                </div>
+                )}
               </div>
 
               {/* Response Time Pill */}
-              <div className="p-4 rounded-2xl bg-primary/10 border border-primary/20 flex items-center gap-3">
-                <Clock className="w-5 h-5 text-primary shrink-0" />
-                <p className="text-xs text-primary font-medium">
-                  Average response time: Within 24 hours.
-                </p>
-              </div>
+              {heroData?.responseTimeText && (
+                <div className="p-4 rounded-2xl bg-primary/10 border border-primary/20 flex items-center gap-3">
+                  <Clock className="w-5 h-5 text-primary shrink-0" />
+                  <p className="text-xs text-primary font-medium">
+                    {heroData.responseTimeText}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -244,6 +273,7 @@ export function ContactSection() {
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
+                    suppressHydrationWarning
                     className={`p-4 rounded-2xl flex items-start gap-3 border ${
                       statusMessage.type === "success"
                         ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
@@ -277,7 +307,6 @@ export function ContactSection() {
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
-                      placeholder="Alex Sharma"
                       disabled={isSubmitting}
                       className={`w-full px-4 py-3 rounded-xl bg-background border text-sm text-foreground focus:outline-none focus:ring-2 transition-all ${
                         errors.name
@@ -304,7 +333,6 @@ export function ContactSection() {
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
-                      placeholder="alex@example.com"
                       disabled={isSubmitting}
                       className={`w-full px-4 py-3 rounded-xl bg-background border text-sm text-foreground focus:outline-none focus:ring-2 transition-all ${
                         errors.email
@@ -332,7 +360,6 @@ export function ContactSection() {
                     name="subject"
                     value={formData.subject}
                     onChange={handleChange}
-                    placeholder="Project Inquiry / Collaboration"
                     disabled={isSubmitting}
                     className={`w-full px-4 py-3 rounded-xl bg-background border text-sm text-foreground focus:outline-none focus:ring-2 transition-all ${
                       errors.subject
@@ -359,7 +386,6 @@ export function ContactSection() {
                     rows={5}
                     value={formData.message}
                     onChange={handleChange}
-                    placeholder="Tell me about your project or idea..."
                     disabled={isSubmitting}
                     className={`w-full px-4 py-3 rounded-xl bg-background border text-sm text-foreground focus:outline-none focus:ring-2 transition-all resize-none ${
                       errors.message

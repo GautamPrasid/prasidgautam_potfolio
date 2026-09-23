@@ -1,10 +1,41 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { EDUCATION_DATA, EducationItem } from "@/lib/data";
+import { EducationItem } from "@/lib/data";
+import { getEducationFromDb } from "@/lib/supabase-db";
 import { GraduationCap, Calendar, MapPin, BookOpen } from "lucide-react";
 
-export function EducationSection() {
+export interface EducationSectionProps {
+  initialEducation?: EducationItem[];
+}
+
+export function EducationSection({ initialEducation = [] }: EducationSectionProps = {}) {
+  const [education, setEducation] = useState<EducationItem[]>(initialEducation);
+
+  useEffect(() => {
+    if (initialEducation && initialEducation.length > 0) {
+      setEducation(initialEducation);
+    }
+  }, [initialEducation]);
+
+  useEffect(() => {
+    if (initialEducation && initialEducation.length > 0) return;
+    let active = true;
+    async function fetchEducation() {
+      const data = await getEducationFromDb();
+      if (active) {
+        setEducation(data ?? []);
+      }
+    }
+    fetchEducation();
+    return () => {
+      active = false;
+    };
+  }, [initialEducation]);
+
+  const safeEducation = education ?? [];
+
   return (
     <section
       id="education"
@@ -17,6 +48,7 @@ export function EducationSection() {
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
         className="space-y-16"
+        suppressHydrationWarning
       >
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
@@ -32,17 +64,27 @@ export function EducationSection() {
         </div>
 
         {/* Timeline Container */}
-        <div className="relative pl-6 sm:pl-8 md:pl-10 space-y-12">
-          {/* Animated Connecting Vertical Line */}
-          <motion.div
-            initial={{ scaleY: 0 }}
-            whileInView={{ scaleY: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1.2, ease: "easeInOut" }}
-            className="absolute left-3 sm:left-4 top-4 bottom-4 w-0.5 bg-gradient-to-b from-primary via-accent to-primary/30 origin-top"
-          />
+        {safeEducation.length === 0 ? (
+          <div className="py-12 text-center rounded-2xl bg-card border border-dashed border-border p-8 max-w-md mx-auto">
+            <GraduationCap className="w-8 h-8 text-muted-foreground/50 mx-auto mb-3" />
+            <p className="text-sm font-medium text-muted-foreground">
+              No education history added yet.
+            </p>
+          </div>
+        ) : (
+          <div className="relative pl-6 sm:pl-8 md:pl-10 space-y-12">
+            {/* Animated Connecting Vertical Line */}
+            <motion.div
+              initial={{ scaleY: 0 }}
+              whileInView={{ scaleY: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1.2, ease: "easeInOut" }}
+              className="absolute left-3 sm:left-4 top-4 bottom-4 w-0.5 bg-gradient-to-b from-primary via-accent to-primary/30 origin-top"
+            />
 
-          {EDUCATION_DATA.map((item: EducationItem, idx: number) => {
+            {safeEducation.map((item: EducationItem, idx: number) => {
+
+
             const isEnrolled = item.status === "Enrolled";
             return (
               <motion.div
@@ -51,6 +93,7 @@ export function EducationSection() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ duration: 0.5, delay: idx * 0.15 }}
+                suppressHydrationWarning
                 className="relative group"
               >
                 {/* Timeline Pulsing Node Circle */}
@@ -134,11 +177,13 @@ export function EducationSection() {
               </motion.div>
             );
           })}
-        </div>
+          </div>
+        )}
       </motion.div>
     </section>
   );
 }
+
 
 // Export alias for Education
 export { EducationSection as Education };

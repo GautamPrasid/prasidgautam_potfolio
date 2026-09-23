@@ -1,10 +1,41 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { EXPERIENCE_DATA, ExperienceItem } from "@/lib/data";
+import { ExperienceItem } from "@/lib/data";
+import { getExperienceFromDb } from "@/lib/supabase-db";
 import { Briefcase, Calendar, MapPin, CheckCircle2, Code2 } from "lucide-react";
 
-export function ExperienceSection() {
+export interface ExperienceSectionProps {
+  initialExperience?: ExperienceItem[];
+}
+
+export function ExperienceSection({ initialExperience = [] }: ExperienceSectionProps = {}) {
+  const [experience, setExperience] = useState<ExperienceItem[]>(initialExperience);
+
+  useEffect(() => {
+    if (initialExperience && initialExperience.length > 0) {
+      setExperience(initialExperience);
+    }
+  }, [initialExperience]);
+
+  useEffect(() => {
+    if (initialExperience && initialExperience.length > 0) return;
+    let active = true;
+    async function fetchExperience() {
+      const data = await getExperienceFromDb();
+      if (active) {
+        setExperience(data ?? []);
+      }
+    }
+    fetchExperience();
+    return () => {
+      active = false;
+    };
+  }, [initialExperience]);
+
+  const safeExperience = experience ?? [];
+
   return (
     <section
       id="experience"
@@ -17,6 +48,7 @@ export function ExperienceSection() {
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
         className="space-y-16"
+        suppressHydrationWarning
       >
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
@@ -32,17 +64,27 @@ export function ExperienceSection() {
         </div>
 
         {/* Experience Timeline Grid */}
-        <div className="relative pl-6 sm:pl-8 md:pl-10 space-y-12">
-          {/* Connecting Vertical Line */}
-          <motion.div
-            initial={{ scaleY: 0 }}
-            whileInView={{ scaleY: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1.2, ease: "easeInOut" }}
-            className="absolute left-3 sm:left-4 top-4 bottom-4 w-0.5 bg-gradient-to-b from-primary via-accent to-primary/30 origin-top"
-          />
+        {safeExperience.length === 0 ? (
+          <div className="py-12 text-center rounded-2xl bg-card border border-dashed border-border p-8 max-w-md mx-auto">
+            <Briefcase className="w-8 h-8 text-muted-foreground/50 mx-auto mb-3" />
+            <p className="text-sm font-medium text-muted-foreground">
+              No experience records added yet.
+            </p>
+          </div>
+        ) : (
+          <div className="relative pl-6 sm:pl-8 md:pl-10 space-y-12">
+            {/* Connecting Vertical Line */}
+            <motion.div
+              initial={{ scaleY: 0 }}
+              whileInView={{ scaleY: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1.2, ease: "easeInOut" }}
+              className="absolute left-3 sm:left-4 top-4 bottom-4 w-0.5 bg-gradient-to-b from-primary via-accent to-primary/30 origin-top"
+            />
 
-          {EXPERIENCE_DATA.map((item: ExperienceItem, idx: number) => {
+            {safeExperience.map((item: ExperienceItem, idx: number) => {
+
+
             return (
               <motion.div
                 key={item.id}
@@ -50,6 +92,7 @@ export function ExperienceSection() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ duration: 0.5, delay: idx * 0.15 }}
+                suppressHydrationWarning
                 className="relative group"
               >
                 {/* Node Indicator Dot */}
@@ -122,11 +165,13 @@ export function ExperienceSection() {
               </motion.div>
             );
           })}
-        </div>
+          </div>
+        )}
       </motion.div>
     </section>
   );
 }
+
 
 // Export alias for Experience
 export { ExperienceSection as Experience };

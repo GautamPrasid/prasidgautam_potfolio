@@ -1,14 +1,24 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { motion, useScroll, useSpring } from "framer-motion";
 
 export function ScrollProgress() {
+  const [mounted, setMounted] = useState(false);
+  const pathname = usePathname();
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 100,
     damping: 30,
     restDelta: 0.001,
   });
+
+  useEffect(() => setMounted(true), []);
+
+  if (!mounted || pathname?.startsWith("/admin")) {
+    return null;
+  }
 
   return (
     <motion.div

@@ -1,22 +1,44 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
-import { PROJECTS_DATA, Project } from "@/lib/data";
-import { Plus, Edit2, Trash2, ArrowUp, ArrowDown, CheckCircle2, X } from "lucide-react";
+import { Project } from "@/lib/data";
+import { getProjectsFromDb, getSupabaseClient } from "@/lib/supabase-db";
+import {
+  saveProjectAction,
+  deleteProjectAction,
+  reorderProjectsAction,
+} from "@/app/admin/actions";
+import { Plus, Edit2, Trash2, ArrowUp, ArrowDown, CheckCircle2, X, Upload, FolderGit2 } from "lucide-react";
 
 export default function ProjectsManagerPage() {
-  const [items, setItems] = useState<Project[]>(PROJECTS_DATA);
+  const [items, setItems] = useState<Project[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Project | null>(null);
   const [deletingItem, setDeletingItem] = useState<Project | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    async function load() {
+      const data = await getProjectsFromDb();
+      if (active) {
+        setItems(data ?? []);
+      }
+    }
+    load();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Form State
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [tagsText, setTagsText] = useState("");
-  const [image, setImage] = useState("/images/projects/saas-dashboard.jpg");
+  const [image, setImage] = useState("");
   const [github, setGithub] = useState("");
   const [demo, setDemo] = useState("");
   const [category, setCategory] = useState<Project["category"]>("Full-Stack");
@@ -27,16 +49,64 @@ export default function ProjectsManagerPage() {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setUploadError("Please select a valid image file.");
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadError(null);
+
+    try {
+      const client = getSupabaseClient();
+      if (!client) {
+        throw new Error("Supabase client not initialized.");
+      }
+
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+      const filePath = `projects/${fileName}`;
+
+      const { error: uploadErr } = await client.storage
+        .from("portfolio-assets")
+        .upload(filePath, file, {
+          cacheControl: "3600",
+          upsert: true,
+        });
+
+      if (uploadErr) {
+        throw uploadErr;
+      }
+
+      const { data: { publicUrl } } = client.storage
+        .from("portfolio-assets")
+        .getPublicUrl(filePath);
+
+      setImage(publicUrl);
+    } catch (err: unknown) {
+      console.error("Storage upload failed:", err);
+      const message = err instanceof Error ? err.message : "Upload failed. Check portfolio-assets bucket.";
+      setUploadError(message);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleOpenAdd = () => {
     setEditingItem(null);
     setTitle("");
     setDescription("");
     setTagsText("Next.js 14, TypeScript, Tailwind CSS");
-    setImage("/images/projects/saas-dashboard.jpg");
-    setGithub("https://github.com");
-    setDemo("https://vercel.app");
+    setImage("");
+    setGithub("");
+    setDemo("");
     setCategory("Full-Stack");
     setFeatured(true);
+    setUploadError(null);
     setIsModalOpen(true);
   };
 
@@ -45,15 +115,16 @@ export default function ProjectsManagerPage() {
     setTitle(item.title);
     setDescription(item.description);
     setTagsText(item.tags.join(", "));
-    setImage(item.image);
-    setGithub(item.github);
+    setImage(item.image || "");
+    setGithub(item.github || "");
     setDemo(item.demo || "");
     setCategory(item.category);
     setFeatured(item.featured || false);
+    setUploadError(null);
     setIsModalOpen(true);
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !description.trim()) return;
 
@@ -62,42 +133,78 @@ export default function ProjectsManagerPage() {
       .map((t) => t.trim())
       .filter((t) => t.length > 0);
 
-    if (editingItem) {
-      setItems(
-        items.map((it) =>
-          it.id === editingItem.id
-            ? { ...it, title, description, tags: tagsArray, image, github, demo: demo.trim() || undefined, category, featured }
-            : it
-        )
-      );
-      showToast(`Updated "${title}".`);
-    } else {
-      const newItem: Project = {
-        id: `proj-${Date.now()}`,
-        title,
-        description,
-        tags: tagsArray,
-        image,
-        github,
-        demo: demo.trim() || undefined,
-        category,
-        featured,
-      };
-      setItems([...items, newItem]);
-      showToast(`Added "${title}".`);
+    try {
+      if (editingItem) {
+        await saveProjectAction({
+          id: editingItem.id,
+          title,
+          description,
+          tags: tagsArray,
+          image: image.trim() || null,
+          github: github.trim() || null,
+          demo: demo.trim() || null,
+          category,
+          featured,
+        });
+        setItems(
+          items.map((it) =>
+            it.id === editingItem.id
+              ? { ...it, title, description, tags: tagsArray, image: image.trim() || undefined, github: github.trim() || undefined, demo: demo.trim() || undefined, category, featured }
+              : it
+          )
+        );
+        showToast(`Updated "${title}".`);
+      } else {
+        const res = await saveProjectAction({
+          title,
+          description,
+          tags: tagsArray,
+          image: image.trim() || null,
+          github: github.trim() || null,
+          demo: demo.trim() || null,
+          category,
+          featured,
+          order_index: items.length + 1,
+        });
+
+        const newItem: Project = {
+          id: res.data?.id || `proj-${Date.now()}`,
+          title,
+          description,
+          tags: tagsArray,
+          image: image.trim() || undefined,
+          github: github.trim() || undefined,
+          demo: demo.trim() || undefined,
+          category,
+          featured,
+        };
+        setItems([...items, newItem]);
+        showToast(`Added "${title}".`);
+      }
+    } catch (err) {
+      console.error("Save project failed:", err);
+      const msg = err instanceof Error ? err.message : "Unexpected error.";
+      showToast(`Failed to save project: ${msg}`);
     }
 
     setIsModalOpen(false);
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (!deletingItem) return;
-    setItems(items.filter((it) => it.id !== deletingItem.id));
-    showToast("Deleted project.");
+    try {
+      await deleteProjectAction(deletingItem.id);
+      setItems(items.filter((it) => it.id !== deletingItem.id));
+      showToast("Deleted project.");
+    } catch (err) {
+      console.error("Delete project failed:", err);
+      const msg = err instanceof Error ? err.message : "Unexpected error.";
+      showToast(`Failed to delete project: ${msg}`);
+    }
     setDeletingItem(null);
   };
 
-  const handleMove = (index: number, direction: "up" | "down") => {
+  const handleMove = async (index: number, direction: "up" | "down") => {
     const targetIndex = direction === "up" ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= items.length) return;
 
@@ -106,8 +213,20 @@ export default function ProjectsManagerPage() {
     updated[index] = updated[targetIndex];
     updated[targetIndex] = temp;
     setItems(updated);
-    showToast("Reordered projects.");
+
+    try {
+      await reorderProjectsAction([
+        { id: updated[targetIndex].id, order_index: targetIndex + 1 },
+        { id: updated[index].id, order_index: index + 1 },
+      ]);
+      showToast("Reordered projects.");
+    } catch (err) {
+      console.error("Reorder projects failed:", err);
+      const msg = err instanceof Error ? err.message : "Unexpected error.";
+      showToast(`Failed to reorder projects: ${msg}`);
+    }
   };
+
 
   return (
     <div className="space-y-6">
@@ -164,13 +283,17 @@ export default function ProjectsManagerPage() {
               </div>
 
               {/* Thumbnail Preview */}
-              <div className="relative w-24 h-16 rounded-xl overflow-hidden bg-muted shrink-0 border border-border">
-                <Image
-                  src={item.image}
-                  alt={item.title}
-                  fill
-                  className="object-cover"
-                />
+              <div className="relative w-24 h-16 rounded-xl overflow-hidden bg-muted shrink-0 border border-border flex items-center justify-center">
+                {item.image ? (
+                  <Image
+                    src={item.image}
+                    alt={item.title}
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <FolderGit2 className="w-6 h-6 text-muted-foreground/40" />
+                )}
               </div>
 
               <div className="space-y-1 min-w-0">
@@ -272,15 +395,49 @@ export default function ProjectsManagerPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-xs font-semibold uppercase text-muted-foreground">Image URL</label>
-                  <input
-                    type="text"
-                    required
-                    value={image}
-                    onChange={(e) => setImage(e.target.value)}
-                    placeholder="/images/projects/saas-dashboard.jpg"
-                    className="w-full px-3.5 py-2 rounded-xl bg-background border border-border text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-semibold uppercase text-muted-foreground">Project Image</label>
+                    {isUploading && (
+                      <span className="text-[10px] text-primary flex items-center gap-1 font-medium">
+                        <Upload className="w-3 h-3 animate-pulse" /> Uploading to Supabase...
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={image}
+                      onChange={(e) => setImage(e.target.value)}
+                      placeholder="Paste URL or upload image..."
+                      className="flex-1 px-3.5 py-2 rounded-xl bg-background border border-border text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                    <label className="px-3 py-2 rounded-xl bg-muted hover:bg-muted/80 text-foreground border border-border text-xs font-semibold cursor-pointer shrink-0 flex items-center gap-1.5 transition-colors">
+                      <Upload className="w-3.5 h-3.5 text-primary" />
+                      <span>{isUploading ? "Uploading..." : "Upload"}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        disabled={isUploading}
+                        onChange={handleFileUpload}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                  {uploadError && (
+                    <p className="text-[10px] text-rose-500 font-medium">{uploadError}</p>
+                  )}
+                  {image && (
+                    <div className="flex items-center gap-2 pt-1 text-[11px] text-muted-foreground">
+                      <span className="truncate max-w-[200px]">URL: {image}</span>
+                      <button
+                        type="button"
+                        onClick={() => setImage("")}
+                        className="text-rose-500 hover:underline text-[10px]"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 

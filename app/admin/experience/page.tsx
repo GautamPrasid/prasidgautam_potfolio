@@ -1,15 +1,35 @@
 "use client";
 
-import { useState } from "react";
-import { EXPERIENCE_DATA, ExperienceItem } from "@/lib/data";
+import { useState, useEffect } from "react";
+import { ExperienceItem } from "@/lib/data";
+import { getExperienceFromDb } from "@/lib/supabase-db";
+import {
+  saveExperienceAction,
+  deleteExperienceAction,
+  reorderExperienceAction,
+} from "@/app/admin/actions";
 import { Plus, Edit2, Trash2, ArrowUp, ArrowDown, Briefcase, CheckCircle2, X } from "lucide-react";
 
 export default function ExperienceManagerPage() {
-  const [items, setItems] = useState<ExperienceItem[]>(EXPERIENCE_DATA);
+  const [items, setItems] = useState<ExperienceItem[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ExperienceItem | null>(null);
   const [deletingItem, setDeletingItem] = useState<ExperienceItem | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    async function load() {
+      const data = await getExperienceFromDb();
+      if (active) {
+        setItems(data ?? []);
+      }
+    }
+    load();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Form State
   const [role, setRole] = useState("");
@@ -49,7 +69,7 @@ export default function ExperienceManagerPage() {
     setIsModalOpen(true);
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!role.trim() || !company.trim()) return;
 
@@ -63,41 +83,75 @@ export default function ExperienceManagerPage() {
       .map((t) => t.trim())
       .filter((t) => t.length > 0);
 
-    if (editingItem) {
-      setItems(
-        items.map((it) =>
-          it.id === editingItem.id
-            ? { ...it, role, company, location, duration, type, bullets: bulletsArray, technologies: techArray }
-            : it
-        )
-      );
-      showToast(`Updated "${role}".`);
-    } else {
-      const newItem: ExperienceItem = {
-        id: `exp-${Date.now()}`,
-        role,
-        company,
-        location,
-        duration,
-        type,
-        bullets: bulletsArray,
-        technologies: techArray,
-      };
-      setItems([...items, newItem]);
-      showToast(`Added "${role}".`);
+    try {
+      if (editingItem) {
+        await saveExperienceAction({
+          id: editingItem.id,
+          role,
+          company,
+          location,
+          duration,
+          type,
+          bullets: bulletsArray,
+          technologies: techArray,
+        });
+        setItems(
+          items.map((it) =>
+            it.id === editingItem.id
+              ? { ...it, role, company, location, duration, type, bullets: bulletsArray, technologies: techArray }
+              : it
+          )
+        );
+        showToast(`Updated "${role}".`);
+      } else {
+        const res = await saveExperienceAction({
+          role,
+          company,
+          location,
+          duration,
+          type,
+          bullets: bulletsArray,
+          technologies: techArray,
+          order_index: items.length + 1,
+        });
+
+        const newItem: ExperienceItem = {
+          id: res.data?.id || `exp-${Date.now()}`,
+          role,
+          company,
+          location,
+          duration,
+          type,
+          bullets: bulletsArray,
+          technologies: techArray,
+        };
+        setItems([...items, newItem]);
+        showToast(`Added "${role}".`);
+      }
+    } catch (err) {
+      console.error("Save experience failed:", err);
+      const msg = err instanceof Error ? err.message : "Unexpected error.";
+      showToast(`Failed to save experience: ${msg}`);
     }
 
     setIsModalOpen(false);
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (!deletingItem) return;
-    setItems(items.filter((it) => it.id !== deletingItem.id));
-    showToast("Deleted experience record.");
+    try {
+      await deleteExperienceAction(deletingItem.id);
+      setItems(items.filter((it) => it.id !== deletingItem.id));
+      showToast("Deleted experience record.");
+    } catch (err) {
+      console.error("Delete experience failed:", err);
+      const msg = err instanceof Error ? err.message : "Unexpected error.";
+      showToast(`Failed to delete experience: ${msg}`);
+    }
     setDeletingItem(null);
   };
 
-  const handleMove = (index: number, direction: "up" | "down") => {
+  const handleMove = async (index: number, direction: "up" | "down") => {
     const targetIndex = direction === "up" ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= items.length) return;
 
@@ -106,8 +160,20 @@ export default function ExperienceManagerPage() {
     updated[index] = updated[targetIndex];
     updated[targetIndex] = temp;
     setItems(updated);
-    showToast("Reordered experience records.");
+
+    try {
+      await reorderExperienceAction([
+        { id: updated[targetIndex].id, order_index: targetIndex + 1 },
+        { id: updated[index].id, order_index: index + 1 },
+      ]);
+      showToast("Reordered experience records.");
+    } catch (err) {
+      console.error("Reorder experience failed:", err);
+      const msg = err instanceof Error ? err.message : "Unexpected error.";
+      showToast(`Failed to reorder experience: ${msg}`);
+    }
   };
+
 
   return (
     <div className="space-y-6">

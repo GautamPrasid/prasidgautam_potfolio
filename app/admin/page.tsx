@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   FolderGit2,
@@ -10,14 +11,54 @@ import {
   User,
   GraduationCap,
   Briefcase,
+  Share2,
 } from "lucide-react";
-import { SKILLS_DATA, CERTIFICATIONS_DATA, PROJECTS_DATA } from "@/lib/data";
+import { getSupabaseClient } from "@/lib/supabase-db";
 
 export default function AdminOverviewPage() {
+  const [counts, setCounts] = useState({
+    projects: 0,
+    skills: 0,
+    certifications: 0,
+    messages: 0,
+  });
+
+  useEffect(() => {
+    let active = true;
+    async function loadCounts() {
+      const client = getSupabaseClient();
+      if (!client) return;
+
+      try {
+        const [proj, skl, cert, msg] = await Promise.all([
+          client.from("projects").select("*", { count: "exact", head: true }),
+          client.from("skills").select("*", { count: "exact", head: true }),
+          client.from("certifications").select("*", { count: "exact", head: true }),
+          client.from("messages").select("*", { count: "exact", head: true }),
+        ]);
+
+        if (active) {
+          setCounts({
+            projects: proj.count ?? 0,
+            skills: skl.count ?? 0,
+            certifications: cert.count ?? 0,
+            messages: msg.count ?? 0,
+          });
+        }
+      } catch {
+        // default 0
+      }
+    }
+    loadCounts();
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const metrics = [
     {
       title: "Projects",
-      count: PROJECTS_DATA.length,
+      count: counts.projects,
       label: "Featured Work",
       href: "/admin/projects",
       icon: FolderGit2,
@@ -25,7 +66,7 @@ export default function AdminOverviewPage() {
     },
     {
       title: "Skills",
-      count: SKILLS_DATA.length,
+      count: counts.skills,
       label: "Technologies & Soft Skills",
       href: "/admin/skills",
       icon: Wrench,
@@ -33,7 +74,7 @@ export default function AdminOverviewPage() {
     },
     {
       title: "Certifications",
-      count: CERTIFICATIONS_DATA.length,
+      count: counts.certifications,
       label: "Verified Credentials",
       href: "/admin/certifications",
       icon: Award,
@@ -41,7 +82,7 @@ export default function AdminOverviewPage() {
     },
     {
       title: "Messages",
-      count: 0,
+      count: counts.messages,
       label: "Contact Submissions",
       href: "/admin/messages",
       icon: Mail,
@@ -49,8 +90,10 @@ export default function AdminOverviewPage() {
     },
   ];
 
+
   const quickLinks = [
     { title: "Hero & About", desc: "Edit name, roles, bio & stats", href: "/admin/hero", icon: User },
+    { title: "Social Links", desc: "Manage header/footer profiles", href: "/admin/social-links", icon: Share2 },
     { title: "Skills Manager", desc: "Add, edit or reorder skills", href: "/admin/skills", icon: Wrench },
     { title: "Education History", desc: "Update degrees & coursework", href: "/admin/education", icon: GraduationCap },
     { title: "Experience & Roles", desc: "Manage career & hackathons", href: "/admin/experience", icon: Briefcase },

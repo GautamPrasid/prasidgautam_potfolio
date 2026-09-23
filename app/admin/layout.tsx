@@ -18,11 +18,13 @@ import {
   Menu,
   X,
   ShieldAlert,
+  Share2,
 } from "lucide-react";
 
 const ADMIN_NAV = [
   { label: "Overview", href: "/admin", icon: LayoutDashboard },
   { label: "Hero & About", href: "/admin/hero", icon: User },
+  { label: "Social Links", href: "/admin/social-links", icon: Share2 },
   { label: "Skills", href: "/admin/skills", icon: Wrench },
   { label: "Education", href: "/admin/education", icon: GraduationCap },
   { label: "Experience", href: "/admin/experience", icon: Briefcase },

@@ -39,41 +39,37 @@ export async function POST(request: Request) {
     const supabaseKey =
       process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    // If Supabase is configured with real URL and Key, insert record
     if (
-      supabaseUrl &&
-      supabaseKey &&
-      !supabaseUrl.includes("your-project-ref") &&
-      !supabaseKey.includes("your-anon-key")
+      !supabaseUrl ||
+      !supabaseKey ||
+      supabaseUrl.includes("your-project-ref") ||
+      supabaseKey.includes("your-anon-key")
     ) {
-      const supabase = createClient(supabaseUrl, supabaseKey);
-      const { error } = await supabase.from("messages").insert([
-        {
-          name: name.trim(),
-          email: email.trim().toLowerCase(),
-          subject: subject.trim(),
-          message: message.trim(),
-          created_at: new Date().toISOString(),
-        },
-      ]);
-
-      if (error) {
-        console.error("Supabase insert error:", error);
-        return NextResponse.json(
-          { error: "Failed to store message in database." },
-          { status: 500 }
-        );
-      }
-    } else {
-      // Demo fallback when Supabase keys are placeholders
-      console.log("Contact form submission (Demo Mode):", {
-        name,
-        email,
-        subject,
-        message,
-        timestamp: new Date().toISOString(),
-      });
+      return NextResponse.json(
+        { error: "Contact service is not configured. Please try again later." },
+        { status: 503 }
+      );
     }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { error } = await supabase.from("messages").insert([
+      {
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        subject: subject.trim(),
+        message: message.trim(),
+        created_at: new Date().toISOString(),
+      },
+    ]);
+
+    if (error) {
+      console.error("Supabase insert error:", error);
+      return NextResponse.json(
+        { error: "Failed to store message in database." },
+        { status: 500 }
+      );
+    }
+
 
     return NextResponse.json(
       { success: true, message: "Thank you! Your message has been sent successfully." },

@@ -1,23 +1,66 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  PROJECTS_DATA,
   PROJECT_CATEGORIES,
   ProjectCategory,
   Project,
 } from "@/lib/data";
+import { getProjectsFromDb, getHeroAboutFromDb } from "@/lib/supabase-db";
 import { ExternalLink, ArrowUpRight, Sparkles, FolderGit2 } from "lucide-react";
 
-export function ProjectsSection() {
-  const [selectedCategory, setSelectedCategory] = useState<ProjectCategory>("All");
+export interface ProjectsSectionProps {
+  initialProjects?: Project[];
+  initialGithubUrl?: string | null;
+}
 
+export function ProjectsSection({
+  initialProjects = [],
+  initialGithubUrl = null,
+}: ProjectsSectionProps = {}) {
+  const [projects, setProjects] = useState<Project[]>(initialProjects);
+  const [selectedCategory, setSelectedCategory] = useState<ProjectCategory>("All");
+  const [githubUrl, setGithubUrl] = useState<string | null>(initialGithubUrl);
+
+  useEffect(() => {
+    if (initialProjects && initialProjects.length > 0) {
+      setProjects(initialProjects);
+    }
+  }, [initialProjects]);
+
+  useEffect(() => {
+    if (initialGithubUrl !== undefined) {
+      setGithubUrl(initialGithubUrl);
+    }
+  }, [initialGithubUrl]);
+
+  useEffect(() => {
+    if (initialProjects && initialProjects.length > 0) return;
+    let active = true;
+    async function fetchProjects() {
+      const [projectData, heroData] = await Promise.all([
+        getProjectsFromDb(),
+        getHeroAboutFromDb(),
+      ]);
+      if (active) {
+        setProjects(projectData ?? []);
+        setGithubUrl(heroData?.githubUrl ?? null);
+      }
+    }
+    fetchProjects();
+    return () => {
+      active = false;
+    };
+  }, [initialProjects]);
+
+  const safeProjects = projects ?? [];
   const filteredProjects =
     selectedCategory === "All"
-      ? PROJECTS_DATA
-      : PROJECTS_DATA.filter((project) => project.category === selectedCategory);
+      ? safeProjects
+      : safeProjects.filter((project) => project.category === selectedCategory);
+
 
   return (
     <section
@@ -31,6 +74,7 @@ export function ProjectsSection() {
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
         className="space-y-12"
+        suppressHydrationWarning
       >
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
@@ -66,12 +110,32 @@ export function ProjectsSection() {
         </div>
 
         {/* Projects Grid */}
-        <motion.div
-          layout
-          className="grid grid-cols-1 md:grid-cols-2 gap-8"
-        >
-          <AnimatePresence mode="popLayout">
-            {filteredProjects.map((project: Project) => {
+        {filteredProjects.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            suppressHydrationWarning
+            className="py-16 px-8 text-center rounded-3xl bg-card/60 border border-dashed border-border/80 max-w-lg mx-auto backdrop-blur-sm space-y-3"
+          >
+            <div className="p-3.5 rounded-2xl bg-primary/10 text-primary border border-primary/20 w-fit mx-auto">
+              <FolderGit2 className="w-8 h-8" />
+            </div>
+            <h3 className="font-heading font-semibold text-base sm:text-lg text-foreground">
+              {safeProjects.length === 0 ? "No Projects Added Yet" : "No Projects in This Category"}
+            </h3>
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-sm mx-auto">
+              {safeProjects.length === 0
+                ? "Portfolio project showcases and repositories will appear here once published."
+                : `No projects currently found under "${selectedCategory}". Try selecting another category.`}
+            </p>
+          </motion.div>
+        ) : (
+          <motion.div
+            layout
+            className="grid grid-cols-1 md:grid-cols-2 gap-8"
+          >
+            <AnimatePresence mode="popLayout">
+              {filteredProjects.map((project: Project) => {
               return (
                 <motion.div
                   key={project.id}
@@ -81,20 +145,31 @@ export function ProjectsSection() {
                   exit={{ opacity: 0, scale: 0.95 }}
                   whileHover={{ y: -8 }}
                   transition={{ duration: 0.3 }}
+                  suppressHydrationWarning
                   className="rounded-3xl bg-card border border-border/80 hover:border-primary/50 shadow-md hover:shadow-2xl transition-all duration-300 flex flex-col justify-between overflow-hidden group"
                 >
-                  {/* Image Container with Zoom & Overlay */}
-                  <div className="relative w-full aspect-[16/9] overflow-hidden bg-muted">
-                    <Image
-                      src={project.image}
-                      alt={project.title}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 50vw"
-                      className="object-cover object-top group-hover:scale-105 transition-transform duration-700 ease-out"
-                    />
+                  {/* Image Container with Zoom & Overlay or Placeholder */}
+                  <div className="relative w-full aspect-[16/9] overflow-hidden bg-muted flex items-center justify-center">
+                    {project.image ? (
+                      <>
+                        <Image
+                          src={project.image}
+                          alt={project.title}
+                          fill
+                          unoptimized
+                          sizes="(max-width: 768px) 100vw, 50vw"
+                          className="object-cover object-top group-hover:scale-105 transition-transform duration-700 ease-out"
+                        />
 
-                    {/* Gradient Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-card via-card/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
+                        {/* Gradient Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-card via-card/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
+                      </>
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center bg-muted/50 text-muted-foreground/60 select-none">
+                        <FolderGit2 className="w-10 h-10 mb-2 opacity-40 stroke-[1.5]" />
+                        <span className="text-xs font-medium uppercase tracking-wider">No image preview</span>
+                      </div>
+                    )}
 
                     {/* Category Badge Pill */}
                     <div className="absolute top-4 left-4 z-10">
@@ -166,20 +241,23 @@ export function ProjectsSection() {
             })}
           </AnimatePresence>
         </motion.div>
+        )}
 
-        {/* View All on GitHub Button */}
-        <div className="pt-8 flex justify-center">
-          <a
-            href="https://github.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-8 py-4 rounded-2xl bg-card border border-border hover:border-primary/50 text-foreground font-semibold shadow-md hover:shadow-xl transition-all duration-200 flex items-center gap-3 group"
-          >
-            <FolderGit2 className="w-5 h-5 text-primary group-hover:rotate-12 transition-transform" />
-            <span>View All Repositories on GitHub</span>
-            <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
-          </a>
-        </div>
+        {/* View All on GitHub Button — only shown when a real GitHub URL is configured */}
+        {githubUrl && (
+          <div className="pt-8 flex justify-center">
+            <a
+              href={githubUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-8 py-4 rounded-2xl bg-card border border-border hover:border-primary/50 text-foreground font-semibold shadow-md hover:shadow-xl transition-all duration-200 flex items-center gap-3 group"
+            >
+              <FolderGit2 className="w-5 h-5 text-primary group-hover:rotate-12 transition-transform" />
+              <span>View All Repositories on GitHub</span>
+              <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+            </a>
+          </div>
+        )}
       </motion.div>
     </section>
   );

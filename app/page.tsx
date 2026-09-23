@@ -7,18 +7,57 @@ import { ExperienceSection } from "@/components/sections/experience-section";
 import { ProjectsSection } from "@/components/sections/projects-section";
 import { CertificationsSection } from "@/components/sections/certifications-section";
 import { ContactSection } from "@/components/sections/contact-section";
+import {
+  getHeroAboutFromDb,
+  getSocialLinksFromDb,
+  getSkillsFromDb,
+  getEducationFromDb,
+  getExperienceFromDb,
+  getProjectsFromDb,
+  getCertificationsFromDb,
+} from "@/lib/supabase-db";
 
-export default function Home() {
+export const revalidate = 0;
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  const [
+    heroAbout,
+    socialLinks,
+    skills,
+    education,
+    experience,
+    projects,
+    certifications,
+  ] = await Promise.all([
+    getHeroAboutFromDb(),
+    getSocialLinksFromDb(),
+    getSkillsFromDb(),
+    getEducationFromDb(),
+    getExperienceFromDb(),
+    getProjectsFromDb(),
+    getCertificationsFromDb(),
+  ]);
+
   return (
     <PageWrapper>
-      <HeroSection />
-      <AboutSection />
-      <SkillsSection />
-      <EducationSection />
-      <ExperienceSection />
-      <ProjectsSection />
-      <CertificationsSection />
-      <ContactSection />
+      <HeroSection initialHeroData={heroAbout} initialSocialLinks={socialLinks} />
+      <AboutSection
+        initialHeroData={heroAbout}
+        initialEducation={education}
+        initialProjectCount={projects.length}
+        initialCertCount={certifications.length}
+        initialTechCount={skills.length}
+      />
+      <SkillsSection initialSkills={skills} />
+      <EducationSection initialEducation={education} />
+      <ExperienceSection initialExperience={experience} />
+      <ProjectsSection
+        initialProjects={projects}
+        initialGithubUrl={heroAbout?.githubUrl}
+      />
+      <CertificationsSection initialCertifications={certifications} />
+      <ContactSection initialHeroData={heroAbout} />
     </PageWrapper>
   );
 }

@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Mail, MailOpen, Trash2, Calendar, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
+import { getSupabaseClient } from "@/lib/supabase-db";
+import { toggleMessageReadAction, deleteMessageAction } from "@/app/admin/actions";
 
 interface ContactMessage {
   id: string;
@@ -13,39 +15,64 @@ interface ContactMessage {
   created_at: string;
 }
 
-const DEFAULT_MESSAGES: ContactMessage[] = [
-  {
-    id: "msg-1",
-    name: "Test User",
-    email: "test@example.com",
-    subject: "Inquiry regarding Full-Stack Web Development",
-    message: "Hello Prasid! I saw your portfolio and would like to discuss a web project collaboration.",
-    is_read: false,
-    created_at: new Date().toISOString(),
-  },
-];
-
 export default function MessagesInboxPage() {
-  const [messages, setMessages] = useState<ContactMessage[]>(DEFAULT_MESSAGES);
+  const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    async function load() {
+      const client = getSupabaseClient();
+      if (client) {
+        const { data } = await client
+          .from("messages")
+          .select("*")
+          .order("created_at", { ascending: false });
+        if (active) {
+          setMessages(data ?? []);
+        }
+      }
+    }
+    load();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  const toggleReadStatus = (id: string) => {
-    setMessages(
-      messages.map((m) => (m.id === id ? { ...m, is_read: !m.is_read } : m))
-    );
-    showToast("Updated message status.");
+  const toggleReadStatus = async (id: string) => {
+    const target = messages.find((m) => m.id === id);
+    if (!target) return;
+    const nextStatus = !target.is_read;
+
+    try {
+      await toggleMessageReadAction(id, nextStatus);
+      setMessages(
+        messages.map((m) => (m.id === id ? { ...m, is_read: nextStatus } : m))
+      );
+      showToast("Updated message status.");
+    } catch (err) {
+      console.error("Toggle read status failed:", err);
+      showToast("Failed to update message status.");
+    }
   };
 
-  const handleDeleteMessage = (id: string) => {
-    setMessages(messages.filter((m) => m.id !== id));
-    showToast("Deleted message.");
+  const handleDeleteMessage = async (id: string) => {
+    try {
+      await deleteMessageAction(id);
+      setMessages(messages.filter((m) => m.id !== id));
+      showToast("Deleted message.");
+    } catch (err) {
+      console.error("Delete message failed:", err);
+      showToast("Failed to delete message.");
+    }
   };
+
 
   return (
     <div className="space-y-6">

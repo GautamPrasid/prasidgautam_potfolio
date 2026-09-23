@@ -1,10 +1,43 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { CERTIFICATIONS_DATA, CertificationItem } from "@/lib/data";
+import { CertificationItem } from "@/lib/data";
+import { getCertificationsFromDb } from "@/lib/supabase-db";
 import { Award, ExternalLink, Calendar, CheckSquare } from "lucide-react";
 
-export function CertificationsSection() {
+export interface CertificationsSectionProps {
+  initialCertifications?: CertificationItem[];
+}
+
+export function CertificationsSection({
+  initialCertifications = [],
+}: CertificationsSectionProps = {}) {
+  const [certifications, setCertifications] = useState<CertificationItem[]>(initialCertifications);
+
+  useEffect(() => {
+    if (initialCertifications && initialCertifications.length > 0) {
+      setCertifications(initialCertifications);
+    }
+  }, [initialCertifications]);
+
+  useEffect(() => {
+    if (initialCertifications && initialCertifications.length > 0) return;
+    let active = true;
+    async function fetchCerts() {
+      const data = await getCertificationsFromDb();
+      if (active) {
+        setCertifications(data ?? []);
+      }
+    }
+    fetchCerts();
+    return () => {
+      active = false;
+    };
+  }, [initialCertifications]);
+
+  const safeCerts = certifications ?? [];
+
   return (
     <section
       id="certifications"
@@ -17,6 +50,7 @@ export function CertificationsSection() {
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
         className="space-y-16"
+        suppressHydrationWarning
       >
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
@@ -32,8 +66,27 @@ export function CertificationsSection() {
         </div>
 
         {/* Certifications Grid (1 col mobile, 2 cols tablet, 2-4 cols desktop) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-          {CERTIFICATIONS_DATA.map((cert: CertificationItem, idx: number) => {
+        {safeCerts.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            suppressHydrationWarning
+            className="py-16 px-8 text-center rounded-3xl bg-card/60 border border-dashed border-border/80 max-w-lg mx-auto backdrop-blur-sm space-y-3"
+          >
+            <div className="p-3.5 rounded-2xl bg-primary/10 text-primary border border-primary/20 w-fit mx-auto">
+              <Award className="w-8 h-8" />
+            </div>
+            <h3 className="font-heading font-semibold text-base sm:text-lg text-foreground">
+              No Certifications Added Yet
+            </h3>
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-sm mx-auto">
+              Certifications, licenses, and verified credentials will appear here once published.
+            </p>
+          </motion.div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+            {safeCerts.map((cert: CertificationItem, idx: number) => {
+
             return (
               <motion.div
                 key={cert.id}
@@ -42,6 +95,7 @@ export function CertificationsSection() {
                 viewport={{ once: true, margin: "-50px" }}
                 whileHover={{ y: -6 }}
                 transition={{ duration: 0.4, delay: idx * 0.1 }}
+                suppressHydrationWarning
                 className="p-6 sm:p-8 rounded-3xl bg-card border border-border/80 hover:border-primary/40 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group relative overflow-hidden"
               >
                 {/* Top Decorative Gradient Accent Bar */}
@@ -112,7 +166,8 @@ export function CertificationsSection() {
               </motion.div>
             );
           })}
-        </div>
+          </div>
+        )}
       </motion.div>
     </section>
   );

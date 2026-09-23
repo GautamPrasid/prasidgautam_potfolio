@@ -4,6 +4,10 @@ import "./globals.css";
 import { ScrollProgress } from "@/components/scroll-progress";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { getHeroAboutFromDb, getSocialLinksFromDb } from "@/lib/supabase-db";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 const inter = Inter({
   subsets: ["latin"],
@@ -15,63 +19,75 @@ const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://prasidgautam.dev"),
-  title: {
-    default: "Prasid Gautam | Full-Stack Web Developer & BCA Student",
-    template: "%s | Prasid Gautam",
-  },
-  description:
-    "Personal portfolio of Prasid Gautam — Full-Stack Web Developer and BCA student at La Grande International College. Specializing in Next.js 14, React, TypeScript, Supabase, and Node.js.",
-  keywords: [
-    "Prasid Gautam",
-    "Full-Stack Developer",
-    "Next.js Developer",
-    "React Developer",
-    "TypeScript",
-    "BCA Student",
-    "La Grande International College",
-    "Pokhara Nepal Developer",
-    "Web Application Developer",
-  ],
-  authors: [{ name: "Prasid Gautam", url: "https://prasidgautam.dev" }],
-  creator: "Prasid Gautam",
-  openGraph: {
-    type: "website",
-    locale: "en_US",
-    url: "https://prasidgautam.dev",
-    title: "Prasid Gautam | Full-Stack Web Developer",
-    description:
-      "Full-Stack Web Developer specializing in Next.js 14, React, TypeScript, and Supabase.",
-    siteName: "Prasid Gautam Portfolio",
-    images: [
-      {
-        url: "/images/profile.jpg",
-        width: 1200,
-        height: 630,
-        alt: "Prasid Gautam - Full-Stack Developer",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Prasid Gautam | Full-Stack Web Developer",
-    description:
-      "Full-Stack Web Developer specializing in Next.js 14, React, TypeScript, and Supabase.",
-    creator: "@prasidgautam",
-    images: ["/images/profile.jpg"],
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const heroData = await getHeroAboutFromDb();
+  const profileImage = heroData?.profileImageUrl?.trim() || "";
+  const name = heroData?.name?.trim() || "";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://prasidgautam.dev";
+  const bio = heroData?.bioText?.trim() || "";
 
-export default function RootLayout({
+  const titleString = name
+    ? `${name} | Full-Stack Web Developer & BCA Student`
+    : "Portfolio | Full-Stack Web Developer";
+
+  return {
+    metadataBase: new URL(siteUrl),
+    title: {
+      default: titleString,
+      template: name ? `%s | ${name}` : "%s | Portfolio",
+    },
+    description: bio,
+    keywords: name
+      ? [
+          name,
+          "Full-Stack Developer",
+          "Next.js Developer",
+          "React Developer",
+          "TypeScript",
+          "BCA Student",
+          "Web Application Developer",
+        ]
+      : ["Full-Stack Developer", "Next.js", "React", "TypeScript", "Web Developer"],
+    authors: name ? [{ name, url: siteUrl }] : [],
+    creator: name || undefined,
+    openGraph: {
+      type: "website",
+      locale: "en_US",
+      url: siteUrl,
+      title: name ? `${name} | Full-Stack Web Developer` : "Portfolio",
+      description: bio,
+      siteName: name ? `${name} Portfolio` : "Portfolio",
+      images: profileImage
+        ? [
+            {
+              url: profileImage,
+              width: 1200,
+              height: 630,
+              alt: name ? `${name} profile photo` : "Profile photo",
+            },
+          ]
+        : [],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: name ? `${name} | Full-Stack Web Developer` : "Portfolio",
+      description: bio,
+      images: profileImage ? [profileImage] : [],
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
+  };
+}
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const socialLinks = await getSocialLinksFromDb();
+
   return (
     <html lang="en" suppressHydrationWarning className="scroll-smooth">
       <head>
@@ -99,7 +115,7 @@ export default function RootLayout({
         <ScrollProgress />
         <Navbar />
         <main className="flex-1">{children}</main>
-        <Footer />
+        <Footer initialSocialLinks={socialLinks} />
       </body>
     </html>
   );

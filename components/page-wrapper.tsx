@@ -1,6 +1,3 @@
-"use client";
-
-import { motion } from "framer-motion";
 import { ReactNode } from "react";
 
 interface PageWrapperProps {
@@ -9,13 +6,8 @@ interface PageWrapperProps {
 
 export function PageWrapper({ children }: PageWrapperProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
-      className="w-full flex flex-col flex-1"
-    >
+    <div className="w-full flex flex-col flex-1 animate-fadein">
       {children}
-    </motion.div>
+    </div>
   );
 }

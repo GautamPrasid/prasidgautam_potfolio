@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  SKILLS_DATA,
   SKILL_CATEGORIES,
   SkillCategory,
   Skill,
 } from "@/lib/data";
+import { getSkillsFromDb } from "@/lib/supabase-db";
+
 import {
   Code,
   FileCode,
@@ -61,13 +62,41 @@ const ICON_MAP: Record<string, LucideIcon> = {
   CheckSquare,
 };
 
-export function SkillsSection() {
+export interface SkillsSectionProps {
+  initialSkills?: Skill[];
+}
+
+export function SkillsSection({ initialSkills = [] }: SkillsSectionProps = {}) {
+  const [skills, setSkills] = useState<Skill[]>(initialSkills);
   const [selectedCategory, setSelectedCategory] = useState<SkillCategory>("All");
 
+  useEffect(() => {
+    if (initialSkills && initialSkills.length > 0) {
+      setSkills(initialSkills);
+    }
+  }, [initialSkills]);
+
+  useEffect(() => {
+    if (initialSkills && initialSkills.length > 0) return;
+    let active = true;
+    async function fetchSkills() {
+      const data = await getSkillsFromDb();
+      if (active) {
+        setSkills(data ?? []);
+      }
+    }
+    fetchSkills();
+    return () => {
+      active = false;
+    };
+  }, [initialSkills]);
+
+  const safeSkills = skills ?? [];
   const filteredSkills =
     selectedCategory === "All"
-      ? SKILLS_DATA
-      : SKILLS_DATA.filter((skill) => skill.category === selectedCategory);
+      ? safeSkills
+      : safeSkills.filter((skill) => skill.category === selectedCategory);
+
 
   return (
     <section
@@ -81,6 +110,7 @@ export function SkillsSection() {
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
         className="space-y-12"
+        suppressHydrationWarning
       >
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
@@ -116,12 +146,21 @@ export function SkillsSection() {
         </div>
 
         {/* Skill Card Grid (2 cols mobile, 3 cols tablet, 4 cols desktop) */}
-        <motion.div
-          layout
-          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"
-        >
-          <AnimatePresence mode="popLayout">
-            {filteredSkills.map((skill: Skill) => {
+        {filteredSkills.length === 0 ? (
+          <div className="py-12 text-center rounded-2xl bg-card border border-dashed border-border p-8 max-w-md mx-auto">
+            <Wrench className="w-8 h-8 text-muted-foreground/50 mx-auto mb-3" />
+            <p className="text-sm font-medium text-muted-foreground">
+              No skills added yet.
+            </p>
+          </div>
+        ) : (
+          <motion.div
+            layout
+            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"
+          >
+            <AnimatePresence mode="popLayout">
+              {filteredSkills.map((skill: Skill) => {
+
               const IconComponent = ICON_MAP[skill.iconName] || Wrench;
               return (
                 <motion.div
@@ -132,6 +171,7 @@ export function SkillsSection() {
                   exit={{ opacity: 0, scale: 0.9 }}
                   whileHover={{ y: -6, scale: 1.02 }}
                   transition={{ duration: 0.25 }}
+                  suppressHydrationWarning
                   className="p-5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group"
                 >
                   <div className="space-y-3">
@@ -181,10 +221,12 @@ export function SkillsSection() {
             })}
           </AnimatePresence>
         </motion.div>
+        )}
       </motion.div>
     </section>
   );
 }
+
 
 // Export alias for Skills
 export { SkillsSection as Skills };

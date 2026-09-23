@@ -16,42 +16,47 @@ export async function middleware(request: NextRequest) {
   });
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const supabaseKey =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  // If Supabase keys are not configured with real values, bypass middleware redirect in demo mode
+  let user = null;
+
+  // Retrieve authenticated user if valid Supabase configuration exists
   if (
-    !supabaseUrl ||
-    !supabaseKey ||
-    supabaseUrl.includes("your-project-ref") ||
-    supabaseKey.includes("your-anon-key")
+    supabaseUrl &&
+    supabaseKey &&
+    !supabaseUrl.includes("your-project-ref") &&
+    !supabaseKey.includes("your-anon-key")
   ) {
-    return NextResponse.next();
+    try {
+      const supabase = createServerClient(supabaseUrl, supabaseKey, {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value }) =>
+              request.cookies.set(name, value)
+            );
+            response = NextResponse.next({
+              request,
+            });
+            cookiesToSet.forEach(({ name, value, options }) =>
+              response.cookies.set(name, value, options)
+            );
+          },
+        },
+      });
+
+      const { data } = await supabase.auth.getUser();
+      user = data.user;
+    } catch {
+      user = null;
+    }
   }
 
-  const supabase = createServerClient(supabaseUrl, supabaseKey, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll();
-      },
-      setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) =>
-          request.cookies.set(name, value)
-        );
-        response = NextResponse.next({
-          request,
-        });
-        cookiesToSet.forEach(({ name, value, options }) =>
-          response.cookies.set(name, value, options)
-        );
-      },
-    },
-  });
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  // Redirect to /admin/login if not authenticated and trying to access admin dashboard
+  // Redirect to /admin/login if not authenticated and trying to access protected admin dashboard
   if (!user && pathname !== "/admin/login") {
     const loginUrl = new URL("/admin/login", request.url);
     return NextResponse.redirect(loginUrl);
@@ -69,4 +74,5 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: ["/admin/:path*"],
 };
+
 

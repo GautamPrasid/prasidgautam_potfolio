@@ -1,15 +1,35 @@
 "use client";
 
-import { useState } from "react";
-import { EDUCATION_DATA, EducationItem } from "@/lib/data";
+import { useState, useEffect } from "react";
+import { EducationItem } from "@/lib/data";
+import { getEducationFromDb } from "@/lib/supabase-db";
+import {
+  saveEducationAction,
+  deleteEducationAction,
+  reorderEducationAction,
+} from "@/app/admin/actions";
 import { Plus, Edit2, Trash2, ArrowUp, ArrowDown, GraduationCap, CheckCircle2, X } from "lucide-react";
 
 export default function EducationManagerPage() {
-  const [items, setItems] = useState<EducationItem[]>(EDUCATION_DATA);
+  const [items, setItems] = useState<EducationItem[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<EducationItem | null>(null);
   const [deletingItem, setDeletingItem] = useState<EducationItem | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    async function load() {
+      const data = await getEducationFromDb();
+      if (active) {
+        setItems(data ?? []);
+      }
+    }
+    load();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Form State
   const [degree, setDegree] = useState("");
@@ -49,7 +69,7 @@ export default function EducationManagerPage() {
     setIsModalOpen(true);
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!degree.trim() || !institution.trim()) return;
 
@@ -58,41 +78,75 @@ export default function EducationManagerPage() {
       .map((c) => c.trim())
       .filter((c) => c.length > 0);
 
-    if (editingItem) {
-      setItems(
-        items.map((it) =>
-          it.id === editingItem.id
-            ? { ...it, degree, institution, location, duration, status, description, courses: coursesArray }
-            : it
-        )
-      );
-      showToast(`Updated "${degree}".`);
-    } else {
-      const newItem: EducationItem = {
-        id: `edu-${Date.now()}`,
-        degree,
-        institution,
-        location,
-        duration,
-        status,
-        description,
-        courses: coursesArray,
-      };
-      setItems([...items, newItem]);
-      showToast(`Added "${degree}".`);
+    try {
+      if (editingItem) {
+        await saveEducationAction({
+          id: editingItem.id,
+          degree,
+          institution,
+          location,
+          duration,
+          status,
+          description,
+          courses: coursesArray,
+        });
+        setItems(
+          items.map((it) =>
+            it.id === editingItem.id
+              ? { ...it, degree, institution, location, duration, status, description, courses: coursesArray }
+              : it
+          )
+        );
+        showToast(`Updated "${degree}".`);
+      } else {
+        const res = await saveEducationAction({
+          degree,
+          institution,
+          location,
+          duration,
+          status,
+          description,
+          courses: coursesArray,
+          order_index: items.length + 1,
+        });
+
+        const newItem: EducationItem = {
+          id: res.data?.id || `edu-${Date.now()}`,
+          degree,
+          institution,
+          location,
+          duration,
+          status,
+          description,
+          courses: coursesArray,
+        };
+        setItems([...items, newItem]);
+        showToast(`Added "${degree}".`);
+      }
+    } catch (err) {
+      console.error("Save education failed:", err);
+      const msg = err instanceof Error ? err.message : "Unexpected error.";
+      showToast(`Failed to save education: ${msg}`);
     }
 
     setIsModalOpen(false);
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (!deletingItem) return;
-    setItems(items.filter((it) => it.id !== deletingItem.id));
-    showToast(`Deleted education record.`);
+    try {
+      await deleteEducationAction(deletingItem.id);
+      setItems(items.filter((it) => it.id !== deletingItem.id));
+      showToast(`Deleted education record.`);
+    } catch (err) {
+      console.error("Delete education failed:", err);
+      const msg = err instanceof Error ? err.message : "Unexpected error.";
+      showToast(`Failed to delete education: ${msg}`);
+    }
     setDeletingItem(null);
   };
 
-  const handleMove = (index: number, direction: "up" | "down") => {
+  const handleMove = async (index: number, direction: "up" | "down") => {
     const targetIndex = direction === "up" ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= items.length) return;
 
@@ -101,8 +155,20 @@ export default function EducationManagerPage() {
     updated[index] = updated[targetIndex];
     updated[targetIndex] = temp;
     setItems(updated);
-    showToast("Reordered education records.");
+
+    try {
+      await reorderEducationAction([
+        { id: updated[targetIndex].id, order_index: targetIndex + 1 },
+        { id: updated[index].id, order_index: index + 1 },
+      ]);
+      showToast("Reordered education records.");
+    } catch (err) {
+      console.error("Reorder education failed:", err);
+      const msg = err instanceof Error ? err.message : "Unexpected error.";
+      showToast(`Failed to reorder education: ${msg}`);
+    }
   };
+
 
   return (
     <div className="space-y-6">

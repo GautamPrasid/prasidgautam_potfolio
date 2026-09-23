@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Menu, X, Code2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -23,6 +24,7 @@ export const NAV_ITEMS: NavItem[] = [
 ];
 
 export function Navbar() {
+  const pathname = usePathname();
   const [activeSection, setActiveSection] = useState<string>("home");
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [scrolled, setScrolled] = useState<boolean>(false);
@@ -70,6 +72,11 @@ export function Navbar() {
       element.scrollIntoView({ behavior: "smooth" });
     }
   };
+
+  // Do not render public navbar on admin pages
+  if (pathname?.startsWith("/admin")) {
+    return null;
+  }
 
   return (
     <header
@@ -153,6 +160,7 @@ export function Navbar() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsOpen(false)}
+              suppressHydrationWarning
               className="fixed inset-0 top-16 bg-black/50 backdrop-blur-sm z-40 xl:hidden"
               aria-hidden="true"
             />

@@ -1,12 +1,32 @@
 "use client";
 
-import { useState } from "react";
-import { SKILLS_DATA, Skill, SKILL_CATEGORIES } from "@/lib/data";
+import { useState, useEffect } from "react";
+import { Skill, SKILL_CATEGORIES } from "@/lib/data";
+import { getSkillsFromDb } from "@/lib/supabase-db";
+import {
+  saveSkillAction,
+  deleteSkillAction,
+  reorderSkillsAction,
+} from "@/app/admin/actions";
 import { Plus, Edit2, Trash2, ArrowUp, ArrowDown, Wrench, CheckCircle2, X } from "lucide-react";
 
 export default function SkillsManagerPage() {
-  const [skills, setSkills] = useState<Skill[]>(SKILLS_DATA);
+  const [skills, setSkills] = useState<Skill[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>("All");
+
+  useEffect(() => {
+    let active = true;
+    async function load() {
+      const data = await getSkillsFromDb();
+      if (active) {
+        setSkills(data ?? []);
+      }
+    }
+    load();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -46,43 +66,73 @@ export default function SkillsManagerPage() {
     setIsModalOpen(true);
   };
 
-  const handleSaveSkill = (e: React.FormEvent) => {
+  const handleSaveSkill = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
 
-    if (editingSkill) {
-      setSkills(
-        skills.map((s) =>
-          s.id === editingSkill.id
-            ? { ...s, name, category, iconName, level, description }
-            : s
-        )
-      );
-      showToast(`Updated "${name}" successfully.`);
-    } else {
-      const newSkillItem: Skill = {
-        id: `skill-${Date.now()}`,
-        name,
-        category,
-        iconName,
-        level,
-        description,
-      };
-      setSkills([...skills, newSkillItem]);
-      showToast(`Added "${name}" successfully.`);
+    try {
+      if (editingSkill) {
+        await saveSkillAction({
+          id: editingSkill.id,
+          name,
+          category,
+          icon_name: iconName,
+          level,
+          description,
+        });
+        setSkills(
+          skills.map((s) =>
+            s.id === editingSkill.id
+              ? { ...s, name, category, iconName, level, description }
+              : s
+          )
+        );
+        showToast(`Updated "${name}" successfully.`);
+      } else {
+        const res = await saveSkillAction({
+          name,
+          category,
+          icon_name: iconName,
+          level,
+          description,
+          order_index: skills.length + 1,
+        });
+
+        const newSkillItem: Skill = {
+          id: res.data?.id || `skill-${Date.now()}`,
+          name,
+          category,
+          iconName,
+          level,
+          description,
+        };
+        setSkills([...skills, newSkillItem]);
+        showToast(`Added "${name}" successfully.`);
+      }
+    } catch (err) {
+      console.error("Save skill failed:", err);
+      const msg = err instanceof Error ? err.message : "Unexpected error.";
+      showToast(`Failed to save skill: ${msg}`);
     }
 
     setIsModalOpen(false);
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (!deletingSkill) return;
-    setSkills(skills.filter((s) => s.id !== deletingSkill.id));
-    showToast(`Deleted "${deletingSkill.name}".`);
+    try {
+      await deleteSkillAction(deletingSkill.id);
+      setSkills(skills.filter((s) => s.id !== deletingSkill.id));
+      showToast(`Deleted "${deletingSkill.name}".`);
+    } catch (err) {
+      console.error("Delete skill failed:", err);
+      const msg = err instanceof Error ? err.message : "Unexpected error.";
+      showToast(`Failed to delete skill: ${msg}`);
+    }
     setDeletingSkill(null);
   };
 
-  const handleMove = (index: number, direction: "up" | "down") => {
+  const handleMove = async (index: number, direction: "up" | "down") => {
     const targetIndex = direction === "up" ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= skills.length) return;
 
@@ -91,8 +141,20 @@ export default function SkillsManagerPage() {
     updated[index] = updated[targetIndex];
     updated[targetIndex] = temp;
     setSkills(updated);
-    showToast("Reordered skills.");
+
+    try {
+      await reorderSkillsAction([
+        { id: updated[targetIndex].id, order_index: targetIndex + 1 },
+        { id: updated[index].id, order_index: index + 1 },
+      ]);
+      showToast("Reordered skills.");
+    } catch (err) {
+      console.error("Reorder skills failed:", err);
+      const msg = err instanceof Error ? err.message : "Unexpected error.";
+      showToast(`Failed to reorder skills: ${msg}`);
+    }
   };
+
 
   const filteredSkills =
     activeCategory === "All"
