@@ -16,8 +16,55 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Portfolio | Full Stack Developer",
-  description: "Modern portfolio built with Next.js 14, TypeScript, and Tailwind CSS.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://prasidgautam.dev"),
+  title: {
+    default: "Prasid Gautam | Full-Stack Web Developer & BCA Student",
+    template: "%s | Prasid Gautam",
+  },
+  description:
+    "Personal portfolio of Prasid Gautam — Full-Stack Web Developer and BCA student at La Grande International College. Specializing in Next.js 14, React, TypeScript, Supabase, and Node.js.",
+  keywords: [
+    "Prasid Gautam",
+    "Full-Stack Developer",
+    "Next.js Developer",
+    "React Developer",
+    "TypeScript",
+    "BCA Student",
+    "La Grande International College",
+    "Pokhara Nepal Developer",
+    "Web Application Developer",
+  ],
+  authors: [{ name: "Prasid Gautam", url: "https://prasidgautam.dev" }],
+  creator: "Prasid Gautam",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://prasidgautam.dev",
+    title: "Prasid Gautam | Full-Stack Web Developer",
+    description:
+      "Full-Stack Web Developer specializing in Next.js 14, React, TypeScript, and Supabase.",
+    siteName: "Prasid Gautam Portfolio",
+    images: [
+      {
+        url: "/images/profile.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Prasid Gautam - Full-Stack Developer",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Prasid Gautam | Full-Stack Web Developer",
+    description:
+      "Full-Stack Web Developer specializing in Next.js 14, React, TypeScript, and Supabase.",
+    creator: "@prasidgautam",
+    images: ["/images/profile.jpg"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({

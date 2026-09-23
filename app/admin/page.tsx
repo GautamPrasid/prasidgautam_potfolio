@@ -1,0 +1,136 @@
+"use client";
+
+import Link from "next/link";
+import {
+  FolderGit2,
+  Wrench,
+  Award,
+  Mail,
+  ArrowRight,
+  User,
+  GraduationCap,
+  Briefcase,
+} from "lucide-react";
+import { SKILLS_DATA, CERTIFICATIONS_DATA, PROJECTS_DATA } from "@/lib/data";
+
+export default function AdminOverviewPage() {
+  const metrics = [
+    {
+      title: "Projects",
+      count: PROJECTS_DATA.length,
+      label: "Featured Work",
+      href: "/admin/projects",
+      icon: FolderGit2,
+      color: "text-blue-500 bg-blue-500/10 border-blue-500/20",
+    },
+    {
+      title: "Skills",
+      count: SKILLS_DATA.length,
+      label: "Technologies & Soft Skills",
+      href: "/admin/skills",
+      icon: Wrench,
+      color: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20",
+    },
+    {
+      title: "Certifications",
+      count: CERTIFICATIONS_DATA.length,
+      label: "Verified Credentials",
+      href: "/admin/certifications",
+      icon: Award,
+      color: "text-amber-500 bg-amber-500/10 border-amber-500/20",
+    },
+    {
+      title: "Messages",
+      count: 0,
+      label: "Contact Submissions",
+      href: "/admin/messages",
+      icon: Mail,
+      color: "text-purple-500 bg-purple-500/10 border-purple-500/20",
+    },
+  ];
+
+  const quickLinks = [
+    { title: "Hero & About", desc: "Edit name, roles, bio & stats", href: "/admin/hero", icon: User },
+    { title: "Skills Manager", desc: "Add, edit or reorder skills", href: "/admin/skills", icon: Wrench },
+    { title: "Education History", desc: "Update degrees & coursework", href: "/admin/education", icon: GraduationCap },
+    { title: "Experience & Roles", desc: "Manage career & hackathons", href: "/admin/experience", icon: Briefcase },
+    { title: "Certifications", desc: "Upload badge credentials", href: "/admin/certifications", icon: Award },
+    { title: "Projects Showcase", desc: "Manage GitHub & demo links", href: "/admin/projects", icon: FolderGit2 },
+  ];
+
+  return (
+    <div className="space-y-8">
+      {/* Page Title */}
+      <div className="space-y-1">
+        <h1 className="font-heading text-2xl sm:text-3xl font-bold text-foreground">
+          Dashboard Overview
+        </h1>
+        <p className="text-xs sm:text-sm text-muted-foreground">
+          Manage your portfolio content, view contact inquiries, and update section details.
+        </p>
+      </div>
+
+      {/* Metrics Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {metrics.map((m) => {
+          const Icon = m.icon;
+          return (
+            <Link
+              key={m.title}
+              href={m.href}
+              className="p-6 rounded-2xl bg-card border border-border shadow-sm hover:shadow-md hover:border-primary/40 transition-all flex items-center justify-between group"
+            >
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  {m.title}
+                </p>
+                <p className="font-heading text-3xl font-extrabold text-foreground">
+                  {m.count}
+                </p>
+                <p className="text-[11px] text-muted-foreground">{m.label}</p>
+              </div>
+              <div className={`p-3.5 rounded-2xl border ${m.color}`}>
+                <Icon className="w-6 h-6" />
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Quick Action Links Grid */}
+      <div className="space-y-4 pt-4">
+        <h2 className="font-heading text-lg font-bold text-foreground">
+          Content Managers
+        </h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {quickLinks.map((link) => {
+            const Icon = link.icon;
+            return (
+              <Link
+                key={link.title}
+                href={link.href}
+                className="p-5 rounded-2xl bg-card border border-border/80 hover:border-primary/50 shadow-sm hover:shadow-md transition-all flex items-start justify-between group"
+              >
+                <div className="flex items-start gap-3.5">
+                  <div className="p-2.5 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-heading font-semibold text-sm text-foreground group-hover:text-primary transition-colors">
+                      {link.title}
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {link.desc}
+                    </p>
+                  </div>
+                </div>
+                <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all mt-1" />
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}

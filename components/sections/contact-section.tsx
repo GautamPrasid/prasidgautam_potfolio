@@ -1,28 +1,403 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Mail,
+  Send,
+  Loader2,
+  CheckCircle2,
+  AlertCircle,
+  MapPin,
+  Clock,
+} from "lucide-react";
+
+interface FormState {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}
+
+interface FormErrors {
+  name?: string;
+  email?: string;
+  subject?: string;
+  message?: string;
+}
 
 export function ContactSection() {
+  const [formData, setFormData] = useState<FormState>({
+    name: "",
+    email: "",
+    subject: "",
+    message: "",
+  });
+
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [statusMessage, setStatusMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+
+  const validate = (): boolean => {
+    const newErrors: FormErrors = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = "Please enter your name.";
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = "Please enter your email address.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+      newErrors.email = "Please enter a valid email address.";
+    }
+
+    if (!formData.subject.trim()) {
+      newErrors.subject = "Please enter a subject.";
+    }
+
+    if (!formData.message.trim()) {
+      newErrors.message = "Please enter your message.";
+    } else if (formData.message.trim().length < 5) {
+      newErrors.message = "Message must be at least 5 characters long.";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name as keyof FormErrors]) {
+      setErrors((prev) => ({ ...prev, [name]: undefined }));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setStatusMessage(null);
+
+    if (!validate()) return;
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setStatusMessage({
+          type: "success",
+          text: result.message || "Thank you! Your message has been sent successfully.",
+        });
+        setFormData({ name: "", email: "", subject: "", message: "" });
+        setErrors({});
+      } else {
+        setStatusMessage({
+          type: "error",
+          text: result.error || "Failed to send message. Please try again.",
+        });
+      }
+    } catch {
+      setStatusMessage({
+        type: "error",
+        text: "Network error. Please check your connection and try again.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <section
       id="contact"
-      className="min-h-[60vh] flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 py-20 scroll-mt-20 border-t border-border/40"
+      className="py-20 md:py-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto scroll-mt-20"
       aria-label="Contact Section"
     >
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
-        className="max-w-4xl text-center space-y-4"
+        className="space-y-16"
       >
-        <h2 className="font-heading text-3xl sm:text-5xl font-bold text-foreground">
-          Get in Touch
-        </h2>
-        <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
-          Contact section placeholder — interactive contact form, email links, and availability details.
-        </p>
+        {/* Section Header */}
+        <div className="text-center max-w-3xl mx-auto space-y-4">
+          <span className="px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide bg-primary/10 text-primary border border-primary/20 inline-block uppercase">
+            Let&apos;s Connect
+          </span>
+          <h2 className="font-heading text-3xl sm:text-5xl font-extrabold text-foreground tracking-tight">
+            Get in Touch
+          </h2>
+          <p className="text-muted-foreground text-base sm:text-lg">
+            Have a project in mind, a question, or want to collaborate? Send me a message!
+          </p>
+        </div>
+
+        {/* Two-Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+          {/* Left Column: Direct Contact Info Cards */}
+          <div className="lg:col-span-5 space-y-6">
+            <div className="p-8 rounded-3xl bg-card border border-border shadow-md space-y-8">
+              <div className="space-y-2">
+                <h3 className="font-heading font-bold text-2xl text-foreground">
+                  Contact Information
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Feel free to reach out via the form or through direct contact channels below.
+                </p>
+              </div>
+
+              <div className="space-y-6">
+                {/* Email Card */}
+                <a
+                  href="mailto:prasid.gautam@example.com"
+                  className="flex items-center gap-4 p-4 rounded-2xl bg-muted/50 hover:bg-primary/10 border border-border/80 hover:border-primary/40 transition-all duration-200 group"
+                >
+                  <div className="p-3 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                    <Mail className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      Email Address
+                    </p>
+                    <p className="text-sm sm:text-base font-semibold text-foreground group-hover:text-primary transition-colors">
+                      prasid.gautam@example.com
+                    </p>
+                  </div>
+                </a>
+
+                {/* LinkedIn Card */}
+                <a
+                  href="https://linkedin.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-4 p-4 rounded-2xl bg-muted/50 hover:bg-primary/10 border border-border/80 hover:border-primary/40 transition-all duration-200 group"
+                >
+                  <div className="p-3 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                    <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                      <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.25V10.9H6.46M7.86 6.64a1.62 1.62 0 1 0 0 3.24 1.62 1.62 0 0 0 0-3.24z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      LinkedIn
+                    </p>
+                    <p className="text-sm sm:text-base font-semibold text-foreground group-hover:text-primary transition-colors">
+                      linkedin.com/in/prasidgautam
+                    </p>
+                  </div>
+                </a>
+
+                {/* Location Card */}
+                <div className="flex items-center gap-4 p-4 rounded-2xl bg-muted/50 border border-border/80">
+                  <div className="p-3 rounded-xl bg-accent/10 text-accent">
+                    <MapPin className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      Location
+                    </p>
+                    <p className="text-sm sm:text-base font-semibold text-foreground">
+                      Pokhara, Nepal
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Response Time Pill */}
+              <div className="p-4 rounded-2xl bg-primary/10 border border-primary/20 flex items-center gap-3">
+                <Clock className="w-5 h-5 text-primary shrink-0" />
+                <p className="text-xs text-primary font-medium">
+                  Average response time: Within 24 hours.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Interactive Contact Form */}
+          <div className="lg:col-span-7">
+            <div className="p-8 sm:p-10 rounded-3xl bg-card border border-border shadow-md space-y-6">
+              <div className="space-y-2">
+                <h3 className="font-heading font-bold text-2xl text-foreground">
+                  Send a Message
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Fill in your details below and I&apos;ll get back to you as soon as possible.
+                </p>
+              </div>
+
+              {/* Status Banner */}
+              <AnimatePresence>
+                {statusMessage && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className={`p-4 rounded-2xl flex items-start gap-3 border ${
+                      statusMessage.type === "success"
+                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                        : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
+                    }`}
+                  >
+                    {statusMessage.type === "success" ? (
+                      <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />
+                    ) : (
+                      <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                    )}
+                    <p className="text-sm font-medium">{statusMessage.text}</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Form */}
+              <form onSubmit={handleSubmit} noValidate className="space-y-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  {/* Name Input */}
+                  <div className="space-y-1.5">
+                    <label
+                      htmlFor="name"
+                      className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                    >
+                      Your Name <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="name"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      placeholder="Alex Sharma"
+                      disabled={isSubmitting}
+                      className={`w-full px-4 py-3 rounded-xl bg-background border text-sm text-foreground focus:outline-none focus:ring-2 transition-all ${
+                        errors.name
+                          ? "border-rose-500 focus:ring-rose-500/40"
+                          : "border-border focus:border-primary focus:ring-primary/40"
+                      }`}
+                    />
+                    {errors.name && (
+                      <p className="text-xs text-rose-500 font-medium">{errors.name}</p>
+                    )}
+                  </div>
+
+                  {/* Email Input */}
+                  <div className="space-y-1.5">
+                    <label
+                      htmlFor="email"
+                      className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                    >
+                      Your Email <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="alex@example.com"
+                      disabled={isSubmitting}
+                      className={`w-full px-4 py-3 rounded-xl bg-background border text-sm text-foreground focus:outline-none focus:ring-2 transition-all ${
+                        errors.email
+                          ? "border-rose-500 focus:ring-rose-500/40"
+                          : "border-border focus:border-primary focus:ring-primary/40"
+                      }`}
+                    />
+                    {errors.email && (
+                      <p className="text-xs text-rose-500 font-medium">{errors.email}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Subject Input */}
+                <div className="space-y-1.5">
+                  <label
+                    htmlFor="subject"
+                    className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                  >
+                    Subject <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="subject"
+                    name="subject"
+                    value={formData.subject}
+                    onChange={handleChange}
+                    placeholder="Project Inquiry / Collaboration"
+                    disabled={isSubmitting}
+                    className={`w-full px-4 py-3 rounded-xl bg-background border text-sm text-foreground focus:outline-none focus:ring-2 transition-all ${
+                      errors.subject
+                        ? "border-rose-500 focus:ring-rose-500/40"
+                        : "border-border focus:border-primary focus:ring-primary/40"
+                    }`}
+                  />
+                  {errors.subject && (
+                    <p className="text-xs text-rose-500 font-medium">{errors.subject}</p>
+                  )}
+                </div>
+
+                {/* Message Input */}
+                <div className="space-y-1.5">
+                  <label
+                    htmlFor="message"
+                    className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                  >
+                    Message <span className="text-rose-500">*</span>
+                  </label>
+                  <textarea
+                    id="message"
+                    name="message"
+                    rows={5}
+                    value={formData.message}
+                    onChange={handleChange}
+                    placeholder="Tell me about your project or idea..."
+                    disabled={isSubmitting}
+                    className={`w-full px-4 py-3 rounded-xl bg-background border text-sm text-foreground focus:outline-none focus:ring-2 transition-all resize-none ${
+                      errors.message
+                        ? "border-rose-500 focus:ring-rose-500/40"
+                        : "border-border focus:border-primary focus:ring-primary/40"
+                    }`}
+                  />
+                  {errors.message && (
+                    <p className="text-xs text-rose-500 font-medium">{errors.message}</p>
+                  )}
+                </div>
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full py-4 rounded-xl bg-primary text-primary-foreground font-semibold shadow-lg shadow-primary/20 hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2 group"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Sending Message...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Send Message</span>
+                      <Send className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
       </motion.div>
     </section>
   );
 }
+
+// Export alias for Contact
+export { ContactSection as Contact };
