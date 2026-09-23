@@ -87,7 +87,9 @@ $RECYCLE.BIN/
 *.sw?
 
 # ── AI Agent Files ───────────────────────────────
-# Agent skill bundles and lock files — project-specific config,
-# not part of the deployable application.
+# Agent skill bundles, lock files, and generated docs —
+# project-specific AI tooling, not part of the deployable application.
 .agents/
 skills-lock.json
+project-memory.md
+decisions.md
