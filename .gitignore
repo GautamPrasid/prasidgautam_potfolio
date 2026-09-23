@@ -38,6 +38,13 @@ coverage/
 .env.test.local
 .env.production.local
 
+# ── Supabase CLI ──────────────────────────────────
+supabase/.branches/
+supabase/.temp/
+supabase/functions/.eszip
+# Supabase CLI generates this with the local auth JWT secret
+supabase/.env
+
 # ── Logs & Temporary Files ────────────────────────
 *.log
 npm-debug.log*
@@ -48,11 +55,6 @@ lerna-debug.log*
 *.tmp
 *.bak
 *.swp
-
-# ── Supabase CLI ──────────────────────────────────
-supabase/.branches/
-supabase/.temp/
-supabase/functions/.eszip
 
 # ── OS & System Metadata ─────────────────────────
 # macOS
