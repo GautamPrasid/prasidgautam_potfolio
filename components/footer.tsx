@@ -94,7 +94,7 @@ export function Footer({ initialSocialLinks = [] }: FooterProps = {}) {
                 href={social.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label={`Open ${social.platform}`}
+                aria-label={`Visit ${social.platform}`}
                 className="p-2.5 rounded-xl bg-muted/60 hover:bg-primary hover:text-primary-foreground text-muted-foreground transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary shadow-sm"
               >
                 <DynamicIcon name={social.iconName} className="w-5 h-5" />
