@@ -93,3 +93,6 @@ $RECYCLE.BIN/
 skills-lock.json
 project-memory.md
 decisions.md
+
+.vercel
+.env*
