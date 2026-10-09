@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
-import { createClient, createAdminClient } from "@/utils/supabase/server";
+import { createClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/utils/supabase/admin";
 
 export type ActionResult<T = unknown> = {
   success: boolean;
@@ -50,7 +51,7 @@ async function requireAdmin() {
     return { ok: false as const, message: "Unauthorized access.", supabase };
   }
 
-  const adminClient = createAdminClient(cookieStore);
+  const adminClient = createAdminClient();
   return { ok: true as const, user, supabase: adminClient };
 }
 

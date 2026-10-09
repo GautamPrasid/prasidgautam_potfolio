@@ -4,12 +4,22 @@ import type { LucideProps } from "lucide-react";
 
 export function DynamicIcon({ name, ...props }: LucideProps & { name: string }) {
   const key = (name || "Share2").trim();
-  const pascal = key.charAt(0).toUpperCase() + key.slice(1);
+  
+  // Convert to PascalCase (handles lowercase, uppercase, mixed)
+  const pascal = key
+    .toLowerCase()
+    .split(/[-_\s]+/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join('');
+  
   const aliases: Record<string, string> = {
     X: "Twitter",
     Email: "Mail",
     Location: "MapPin",
+    Whatsapp: "MessageCircle",
+    Website: "Globe",
   };
+  
   const resolved = aliases[pascal] || pascal;
   const Icon =
     (Icons as unknown as Record<string, ComponentType<LucideProps>>)[resolved] || Icons.Share2;

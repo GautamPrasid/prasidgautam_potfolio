@@ -1,17 +1,24 @@
 -- ============================================================
 -- PORTFOLIO DATABASE SCHEMA
--- Re-runnable: every statement is idempotent (IF NOT EXISTS /
--- DROP … IF EXISTS / OR REPLACE / DO blocks with pg_constraint
--- checks). Run top-to-bottom in the Supabase SQL editor.
+-- Re-runnable: Run top-to-bottom in the Supabase SQL editor.
+-- ============================================================
+-- 
+-- This schema includes:
+-- 1. All database tables (hero_about, skills, projects, etc.)
+-- 2. Row Level Security (RLS) policies
+-- 3. Storage bucket configuration
+-- 4. Storage RLS policies (fixed for profile photo upload)
+-- 5. Admin verification functions
+-- 6. Verification queries
+-- 7. Data fixes (icon names to PascalCase)
+--
+-- To apply: Copy this entire file and run in Supabase SQL Editor
+-- Safe to run multiple times (idempotent)
 -- ============================================================
 
 -- ============================================================
 -- SECTION 1: TABLES
 -- ============================================================
-
--- Before running hero_about_one_row constraint, verify row count:
---   SELECT count(*) FROM hero_about;
--- It must be 0 or 1.
 
 CREATE TABLE IF NOT EXISTS public.hero_about (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -19,7 +26,6 @@ CREATE TABLE IF NOT EXISTS public.hero_about (
     roles JSONB NOT NULL DEFAULT '[]'::jsonb,
     bio_text TEXT NOT NULL,
     about_text TEXT NOT NULL,
-    -- stats and connect_heading are nullable so the UI can hide them when empty.
     stats JSONB,
     resume_url TEXT,
     profile_image_url TEXT,
@@ -167,23 +173,8 @@ CREATE INDEX IF NOT EXISTS idx_messages_is_read ON public.messages (is_read);
 CREATE INDEX IF NOT EXISTS idx_messages_created_at ON public.messages (created_at DESC);
 
 -- ============================================================
--- SECTION 3: CHECK CONSTRAINTS (re-run-safe via DO blocks)
+-- SECTION 3: CHECK CONSTRAINTS
 -- ============================================================
-
--- Before adding category constraints, find any violating rows first:
---   SELECT id, name, category FROM skills
---     WHERE category NOT IN ('Languages','Frontend','Backend','Database','Tools/DevOps','Soft Skills');
---
---   SELECT id, title, category FROM projects
---     WHERE category NOT IN ('Full-Stack','Web Apps','Backend','Mini Projects');
---
---   SELECT id, degree, status FROM education
---     WHERE status NOT IN ('Enrolled','Completed');
---
---   SELECT id, role, type FROM experience
---     WHERE type NOT IN ('Freelance','College Role','Project / Hackathon');
---
--- Fix any violations before running this block, or the DO block will fail.
 
 -- messages length constraints
 DO $$ BEGIN
@@ -210,7 +201,7 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- skills.category must match lib/data.ts SKILL_CATEGORIES
+-- skills.category constraint
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_skills_category' AND conrelid = 'public.skills'::regclass) THEN
     ALTER TABLE public.skills ADD CONSTRAINT chk_skills_category
@@ -218,7 +209,7 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- projects.category must match lib/data.ts PROJECT_CATEGORIES
+-- projects.category constraint
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_projects_category' AND conrelid = 'public.projects'::regclass) THEN
     ALTER TABLE public.projects ADD CONSTRAINT chk_projects_category
@@ -226,7 +217,7 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- education.status must match lib/data.ts EducationItem
+-- education.status constraint
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_education_status' AND conrelid = 'public.education'::regclass) THEN
     ALTER TABLE public.education ADD CONSTRAINT chk_education_status
@@ -234,7 +225,7 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- experience.type must match lib/data.ts ExperienceItem
+-- experience.type constraint
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_experience_type' AND conrelid = 'public.experience'::regclass) THEN
     ALTER TABLE public.experience ADD CONSTRAINT chk_experience_type
@@ -330,7 +321,7 @@ ALTER TABLE public.social_links ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.admins ENABLE ROW LEVEL SECURITY;
 
--- Public SELECT policies (portfolio visitors)
+-- Public read policies
 DROP POLICY IF EXISTS "Public Read HeroAbout" ON public.hero_about;
 CREATE POLICY "Public Read HeroAbout" ON public.hero_about FOR SELECT TO anon, authenticated USING (true);
 
@@ -355,11 +346,7 @@ CREATE POLICY "Public Read Blogs" ON public.blogs FOR SELECT TO anon, authentica
 DROP POLICY IF EXISTS "Public Read SocialLinks" ON public.social_links;
 CREATE POLICY "Public Read SocialLinks" ON public.social_links FOR SELECT TO anon, authenticated USING (true);
 
--- Messages: no public read. Contact form inserts via the service-role client
--- which bypasses RLS, so no "Public Insert Messages" policy is needed.
-DROP POLICY IF EXISTS "Public Insert Messages" ON public.messages;
-
--- Admin write policies (INSERT / UPDATE / DELETE only; SELECT covered by admin reads below)
+-- Admin write policies
 DROP POLICY IF EXISTS "Admin Full HeroAbout" ON public.hero_about;
 DROP POLICY IF EXISTS "Admin Insert HeroAbout" ON public.hero_about;
 DROP POLICY IF EXISTS "Admin Update HeroAbout" ON public.hero_about;
@@ -439,9 +426,7 @@ CREATE POLICY "Admin Read Admins" ON public.admins FOR SELECT TO authenticated U
 -- SECTION 7: STORAGE
 -- ============================================================
 
--- Upsert the bucket so it is always configured correctly.
--- file_size_limit: 10 MB (10 * 1024 * 1024 = 10485760).
--- allowed_mime_types covers profile images, project screenshots, blog covers, and PDF resumes.
+-- Portfolio assets bucket configuration
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES (
     'portfolio-assets',
@@ -454,35 +439,34 @@ ON CONFLICT (id) DO UPDATE SET
     file_size_limit = EXCLUDED.file_size_limit,
     allowed_mime_types = EXCLUDED.allowed_mime_types;
 
--- Storage object policies for portfolio-assets
+-- Storage policies for portfolio-assets bucket
 DROP POLICY IF EXISTS "Public Storage Read" ON storage.objects;
+CREATE POLICY "Public Storage Read" ON storage.objects
+    FOR SELECT TO public
+    USING (bucket_id = 'portfolio-assets');
 
 DROP POLICY IF EXISTS "Admin Storage Insert" ON storage.objects;
 CREATE POLICY "Admin Storage Insert" ON storage.objects
-    FOR INSERT TO public
-    WITH CHECK (bucket_id = 'portfolio-assets');
+    FOR INSERT TO authenticated
+    WITH CHECK (bucket_id = 'portfolio-assets' AND public.is_admin());
 
 DROP POLICY IF EXISTS "Admin Storage Update" ON storage.objects;
 CREATE POLICY "Admin Storage Update" ON storage.objects
-    FOR UPDATE TO public
-    USING (bucket_id = 'portfolio-assets')
-    WITH CHECK (bucket_id = 'portfolio-assets');
+    FOR UPDATE TO authenticated
+    USING (bucket_id = 'portfolio-assets' AND public.is_admin())
+    WITH CHECK (bucket_id = 'portfolio-assets' AND public.is_admin());
 
 DROP POLICY IF EXISTS "Admin Storage Delete" ON storage.objects;
 CREATE POLICY "Admin Storage Delete" ON storage.objects
-    FOR DELETE TO public
-    USING (bucket_id = 'portfolio-assets');
+    FOR DELETE TO authenticated
+    USING (bucket_id = 'portfolio-assets' AND public.is_admin());
 
 -- ============================================================
 -- SECTION 8: ALTER TABLE STATEMENTS FOR EXISTING DATABASES
--- Run these only if this schema was previously applied without
--- the changes above (e.g. on a live Supabase project).
 -- ============================================================
 
--- 8a. hero_about: make stats and connect_heading nullable,
---     and drop the old non-empty defaults.
+-- Make stats and connect_heading nullable in hero_about
 DO $$ BEGIN
-  -- Drop the NOT NULL constraint on stats if it still exists
   IF EXISTS (
     SELECT 1 FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'hero_about'
@@ -494,7 +478,6 @@ DO $$ BEGIN
 END $$;
 
 DO $$ BEGIN
-  -- Drop the default string value on connect_heading if it is not already null-default
   IF EXISTS (
     SELECT 1 FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'hero_about'
@@ -503,3 +486,93 @@ DO $$ BEGIN
     ALTER TABLE public.hero_about ALTER COLUMN connect_heading SET DEFAULT NULL;
   END IF;
 END $$;
+
+
+-- ============================================================
+-- SECTION 9: VERIFICATION QUERIES
+-- ============================================================
+-- Run these queries after applying the schema to verify everything is set up correctly
+
+-- Verify storage policies (should return 4 rows)
+SELECT 
+    policyname,
+    cmd as operation,
+    roles::text
+FROM pg_policies 
+WHERE schemaname = 'storage' 
+  AND tablename = 'objects' 
+  AND policyname LIKE '%Storage%'
+ORDER BY policyname;
+-- Expected: Admin Storage Delete, Admin Storage Insert, Admin Storage Update, Public Storage Read
+
+-- Verify is_admin() function exists
+SELECT proname, pronamespace::regnamespace 
+FROM pg_proc 
+WHERE proname = 'is_admin';
+-- Expected: 1 row
+
+-- Verify portfolio-assets bucket exists and is public
+SELECT id, name, public, file_size_limit 
+FROM storage.buckets 
+WHERE id = 'portfolio-assets';
+-- Expected: 1 row with public = true
+
+-- Check if current user is admin (run after adding yourself to admins table)
+-- SELECT public.is_admin() as am_i_admin;
+-- Expected: true (after adding your user_id to admins table)
+
+
+-- ============================================================
+-- SECTION 10: DATA FIXES
+-- ============================================================
+-- Fix existing data to match expected formats
+
+-- Fix social link icon names to PascalCase (required by Lucide React)
+-- This section fixes both icon_name column AND detects from platform/URL patterns
+
+-- Fix by icon_name (case-insensitive)
+UPDATE public.social_links SET icon_name = 'Github' WHERE LOWER(icon_name) = 'github';
+UPDATE public.social_links SET icon_name = 'Linkedin' WHERE LOWER(icon_name) = 'linkedin';
+UPDATE public.social_links SET icon_name = 'Twitter' WHERE LOWER(icon_name) IN ('twitter', 'x');
+UPDATE public.social_links SET icon_name = 'Instagram' WHERE LOWER(icon_name) = 'instagram';
+UPDATE public.social_links SET icon_name = 'Facebook' WHERE LOWER(icon_name) = 'facebook';
+UPDATE public.social_links SET icon_name = 'Youtube' WHERE LOWER(icon_name) = 'youtube';
+UPDATE public.social_links SET icon_name = 'Mail' WHERE LOWER(icon_name) IN ('mail', 'email');
+UPDATE public.social_links SET icon_name = 'MessageCircle' WHERE LOWER(icon_name) IN ('messagecircle', 'whatsapp');
+UPDATE public.social_links SET icon_name = 'Send' WHERE LOWER(icon_name) IN ('send', 'telegram');
+UPDATE public.social_links SET icon_name = 'Phone' WHERE LOWER(icon_name) = 'phone';
+UPDATE public.social_links SET icon_name = 'Globe' WHERE LOWER(icon_name) IN ('globe', 'website', 'web');
+UPDATE public.social_links SET icon_name = 'Link' WHERE LOWER(icon_name) = 'link';
+
+-- Fix by platform name (case-insensitive)
+UPDATE public.social_links SET icon_name = 'Github' WHERE LOWER(platform) LIKE '%github%';
+UPDATE public.social_links SET icon_name = 'Linkedin' WHERE LOWER(platform) LIKE '%linkedin%';
+UPDATE public.social_links SET icon_name = 'Twitter' WHERE LOWER(platform) LIKE '%twitter%' OR LOWER(platform) LIKE '%x%';
+UPDATE public.social_links SET icon_name = 'Instagram' WHERE LOWER(platform) LIKE '%instagram%';
+UPDATE public.social_links SET icon_name = 'Facebook' WHERE LOWER(platform) LIKE '%facebook%';
+UPDATE public.social_links SET icon_name = 'Youtube' WHERE LOWER(platform) LIKE '%youtube%';
+UPDATE public.social_links SET icon_name = 'Mail' WHERE LOWER(platform) LIKE '%mail%' OR LOWER(platform) LIKE '%email%';
+UPDATE public.social_links SET icon_name = 'MessageCircle' WHERE LOWER(platform) LIKE '%whatsapp%';
+UPDATE public.social_links SET icon_name = 'Send' WHERE LOWER(platform) LIKE '%telegram%';
+UPDATE public.social_links SET icon_name = 'Phone' WHERE LOWER(platform) LIKE '%phone%';
+
+-- Fix by URL pattern (most reliable)
+UPDATE public.social_links SET icon_name = 'Github' WHERE LOWER(url) LIKE '%github%';
+UPDATE public.social_links SET icon_name = 'Linkedin' WHERE LOWER(url) LIKE '%linkedin%';
+UPDATE public.social_links SET icon_name = 'Twitter' WHERE LOWER(url) LIKE '%twitter%' OR LOWER(url) LIKE '%x.com%';
+UPDATE public.social_links SET icon_name = 'Instagram' WHERE LOWER(url) LIKE '%instagram%';
+UPDATE public.social_links SET icon_name = 'Facebook' WHERE LOWER(url) LIKE '%facebook%';
+UPDATE public.social_links SET icon_name = 'Youtube' WHERE LOWER(url) LIKE '%youtube%';
+UPDATE public.social_links SET icon_name = 'Mail' WHERE LOWER(url) LIKE '%mailto:%' OR url LIKE '%@%';
+UPDATE public.social_links SET icon_name = 'MessageCircle' WHERE LOWER(url) LIKE '%whatsapp%';
+UPDATE public.social_links SET icon_name = 'Send' WHERE LOWER(url) LIKE '%telegram%' OR LOWER(url) LIKE '%t.me%';
+UPDATE public.social_links SET icon_name = 'Phone' WHERE LOWER(url) LIKE '%tel:%';
+
+-- Verification query (uncomment to check results)
+-- SELECT platform, icon_name, url,
+--   CASE 
+--     WHEN icon_name ~ '^[A-Z][a-z]+' THEN '✅ PascalCase'
+--     ELSE '❌ Wrong case'
+--   END as status
+-- FROM public.social_links
+-- ORDER BY order_index;
