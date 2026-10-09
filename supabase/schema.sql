@@ -105,6 +105,23 @@ CREATE TABLE IF NOT EXISTS public.projects (
     updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS public.blogs (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    title TEXT NOT NULL,
+    slug TEXT NOT NULL UNIQUE,
+    excerpt TEXT NOT NULL,
+    content TEXT NOT NULL,
+    cover_image TEXT,
+    category TEXT NOT NULL DEFAULT 'Web Development',
+    tags JSONB DEFAULT '[]'::jsonb NOT NULL,
+    read_time TEXT DEFAULT '5 min read' NOT NULL,
+    published BOOLEAN DEFAULT true NOT NULL,
+    published_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+    order_index INT DEFAULT 0 NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS public.social_links (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     platform TEXT NOT NULL,
@@ -142,6 +159,9 @@ CREATE INDEX IF NOT EXISTS idx_certifications_order ON public.certifications (or
 CREATE INDEX IF NOT EXISTS idx_projects_order ON public.projects (order_index);
 CREATE INDEX IF NOT EXISTS idx_projects_category ON public.projects (category);
 CREATE INDEX IF NOT EXISTS idx_projects_featured ON public.projects (featured);
+CREATE INDEX IF NOT EXISTS idx_blogs_order ON public.blogs (order_index);
+CREATE INDEX IF NOT EXISTS idx_blogs_published ON public.blogs (published);
+CREATE INDEX IF NOT EXISTS idx_blogs_slug ON public.blogs (slug);
 CREATE INDEX IF NOT EXISTS idx_social_links_order ON public.social_links (order_index);
 CREATE INDEX IF NOT EXISTS idx_messages_is_read ON public.messages (is_read);
 CREATE INDEX IF NOT EXISTS idx_messages_created_at ON public.messages (created_at DESC);
@@ -267,6 +287,11 @@ CREATE TRIGGER trg_projects_updated_at
     BEFORE UPDATE ON public.projects
     FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
+DROP TRIGGER IF EXISTS trg_blogs_updated_at ON public.blogs;
+CREATE TRIGGER trg_blogs_updated_at
+    BEFORE UPDATE ON public.blogs
+    FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
 DROP TRIGGER IF EXISTS trg_social_links_updated_at ON public.social_links;
 CREATE TRIGGER trg_social_links_updated_at
     BEFORE UPDATE ON public.social_links
@@ -300,6 +325,7 @@ ALTER TABLE public.education ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.experience ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.certifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.blogs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.social_links ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.admins ENABLE ROW LEVEL SECURITY;
@@ -322,6 +348,9 @@ CREATE POLICY "Public Read Certifications" ON public.certifications FOR SELECT T
 
 DROP POLICY IF EXISTS "Public Read Projects" ON public.projects;
 CREATE POLICY "Public Read Projects" ON public.projects FOR SELECT TO anon, authenticated USING (true);
+
+DROP POLICY IF EXISTS "Public Read Blogs" ON public.blogs;
+CREATE POLICY "Public Read Blogs" ON public.blogs FOR SELECT TO anon, authenticated USING (published = true OR public.is_admin());
 
 DROP POLICY IF EXISTS "Public Read SocialLinks" ON public.social_links;
 CREATE POLICY "Public Read SocialLinks" ON public.social_links FOR SELECT TO anon, authenticated USING (true);
@@ -378,6 +407,13 @@ DROP POLICY IF EXISTS "Admin Delete Projects" ON public.projects;
 CREATE POLICY "Admin Insert Projects" ON public.projects FOR INSERT TO authenticated WITH CHECK (public.is_admin());
 CREATE POLICY "Admin Update Projects" ON public.projects FOR UPDATE TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
 CREATE POLICY "Admin Delete Projects" ON public.projects FOR DELETE TO authenticated USING (public.is_admin());
+
+DROP POLICY IF EXISTS "Admin Insert Blogs" ON public.blogs;
+DROP POLICY IF EXISTS "Admin Update Blogs" ON public.blogs;
+DROP POLICY IF EXISTS "Admin Delete Blogs" ON public.blogs;
+CREATE POLICY "Admin Insert Blogs" ON public.blogs FOR INSERT TO authenticated WITH CHECK (public.is_admin());
+CREATE POLICY "Admin Update Blogs" ON public.blogs FOR UPDATE TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
+CREATE POLICY "Admin Delete Blogs" ON public.blogs FOR DELETE TO authenticated USING (public.is_admin());
 
 DROP POLICY IF EXISTS "Admin Full SocialLinks" ON public.social_links;
 DROP POLICY IF EXISTS "Admin Insert SocialLinks" ON public.social_links;

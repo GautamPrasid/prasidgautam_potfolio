@@ -16,18 +16,17 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Home", href: "#home", id: "home" },
   { label: "About", href: "#about", id: "about" },
   { label: "Skills", href: "#skills", id: "skills" },
-  { label: "Education", href: "#education", id: "education" },
-  { label: "Experience", href: "#experience", id: "experience" },
   { label: "Projects", href: "#projects", id: "projects" },
-  { label: "Certifications", href: "#certifications", id: "certifications" },
+  { label: "Resume", href: "#resume", id: "resume" },
+  { label: "Blog", href: "#blog", id: "blog" },
   { label: "Contact", href: "#contact", id: "contact" },
 ];
 
 /** Height of the sticky header in px — used to correct scrollIntoView offset. */
 const HEADER_HEIGHT = 64;
 
-/** Tailwind xl = 1280px — the breakpoint at which the desktop nav appears. */
-const DESKTOP_BREAKPOINT = 1280;
+/** Tailwind lg = 1024px — desktop nav breakpoint */
+const DESKTOP_BREAKPOINT = 1024;
 
 export function Navbar({ siteName }: { siteName?: string }) {
   const pathname = usePathname();
@@ -35,21 +34,17 @@ export function Navbar({ siteName }: { siteName?: string }) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [scrolled, setScrolled] = useState<boolean>(false);
   const prefersReducedMotion = useReducedMotion();
-  // Ref so Escape/resize listeners always see the current value without re-binding.
   const isOpenRef = useRef(isOpen);
   isOpenRef.current = isOpen;
 
-  // ─── Close helper ──────────────────────────────────────────────────────────
   const closeMenu = useCallback(() => setIsOpen(false), []);
 
-  // ─── Scroll shadow ─────────────────────────────────────────────────────────
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // ─── Active-section tracker via IntersectionObserver ───────────────────────
   useEffect(() => {
     const sectionElements = NAV_ITEMS.map((item) =>
       document.getElementById(item.id)
@@ -70,12 +65,10 @@ export function Navbar({ siteName }: { siteName?: string }) {
     return () => sectionElements.forEach((el) => observer.unobserve(el));
   }, []);
 
-  // ─── Close on route change ─────────────────────────────────────────────────
   useEffect(() => {
     closeMenu();
   }, [pathname, closeMenu]);
 
-  // ─── Escape key ────────────────────────────────────────────────────────────
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isOpenRef.current) closeMenu();
@@ -84,7 +77,6 @@ export function Navbar({ siteName }: { siteName?: string }) {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [closeMenu]);
 
-  // ─── Close on resize past desktop breakpoint ───────────────────────────────
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= DESKTOP_BREAKPOINT && isOpenRef.current) {
@@ -95,7 +87,6 @@ export function Navbar({ siteName }: { siteName?: string }) {
     return () => window.removeEventListener("resize", handleResize);
   }, [closeMenu]);
 
-  // ─── Body scroll lock ──────────────────────────────────────────────────────
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
@@ -107,7 +98,6 @@ export function Navbar({ siteName }: { siteName?: string }) {
     };
   }, [isOpen]);
 
-  // ─── Smooth scroll that corrects for the sticky header height ──────────────
   const scrollToSection = useCallback((id: string) => {
     const element = document.getElementById(id);
     if (!element) return;
@@ -125,10 +115,8 @@ export function Navbar({ siteName }: { siteName?: string }) {
     [closeMenu, scrollToSection]
   );
 
-  // ─── Admin pages: no nav ───────────────────────────────────────────────────
   if (pathname?.startsWith("/admin")) return null;
 
-  // ─── Animation variants (disabled when user prefers reduced motion) ─────────
   const backdropVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1 },
@@ -148,8 +136,6 @@ export function Navbar({ siteName }: { siteName?: string }) {
           ? "bg-background/80 backdrop-blur-md border-b border-border/60 shadow-sm"
           : "bg-background/40 backdrop-blur-sm border-b border-transparent"
       }`}
-      // Safe-area padding for notched phones (horizontal + top).
-      // env() falls back to 0 on non-notched devices — no visual change there.
       style={{ paddingLeft: "env(safe-area-inset-left)", paddingRight: "env(safe-area-inset-right)" }}
     >
       <nav
@@ -171,8 +157,8 @@ export function Navbar({ siteName }: { siteName?: string }) {
           </span>
         </a>
 
-        {/* Desktop links — only visible at xl (≥1280px) */}
-        <div className="hidden xl:flex items-center gap-1">
+        {/* Desktop links — visible at lg (≥1024px) */}
+        <div className="hidden lg:flex items-center gap-1">
           {NAV_ITEMS.map((item) => {
             const isActive = activeSection === item.id;
             return (
@@ -203,14 +189,13 @@ export function Navbar({ siteName }: { siteName?: string }) {
           })}
         </div>
 
-        <div className="hidden xl:flex items-center gap-3">
+        <div className="hidden lg:flex items-center gap-3">
           <ThemeToggle />
         </div>
 
-        {/* Mobile/tablet controls — visible below xl */}
-        <div className="flex xl:hidden items-center gap-2">
+        {/* Mobile/tablet controls — visible below lg (<1024px) */}
+        <div className="flex lg:hidden items-center gap-2">
           <ThemeToggle />
-          {/* Tap target is min-w-11 min-h-11 (44px) to meet WCAG 2.5.5 */}
           <button
             onClick={() => setIsOpen((v) => !v)}
             className="min-w-11 min-h-11 flex items-center justify-center rounded-xl text-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
@@ -226,7 +211,6 @@ export function Navbar({ siteName }: { siteName?: string }) {
       <AnimatePresence>
         {isOpen && (
           <>
-            {/* Backdrop — tapping it closes the menu */}
             <motion.div
               key="backdrop"
               variants={backdropVariants}
@@ -236,11 +220,10 @@ export function Navbar({ siteName }: { siteName?: string }) {
               transition={{ duration: prefersReducedMotion ? 0 : 0.2 }}
               onClick={closeMenu}
               suppressHydrationWarning
-              className="fixed inset-0 top-16 bg-black/50 backdrop-blur-sm z-40 xl:hidden"
+              className="fixed inset-0 top-16 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
               aria-hidden="true"
             />
 
-            {/* Slide-in drawer */}
             <motion.div
               key="drawer"
               id="mobile-menu"
@@ -253,19 +236,14 @@ export function Navbar({ siteName }: { siteName?: string }) {
               exit="hidden"
               transition={drawerTransition}
               suppressHydrationWarning
-              // Use dvh (dynamic viewport height) so the drawer never hides
-              // behind the browser chrome on iOS/Android.
-              // Falls back gracefully: dvh → svh → 100vh in order.
-              // inset-0 top-16 covers the remaining viewport below the header.
-              className="fixed right-0 top-16 bottom-0 w-72 bg-card border-l border-border z-50 flex flex-col justify-between shadow-2xl xl:hidden overflow-y-auto"
+              className="fixed right-0 top-16 bottom-0 w-72 max-w-[calc(100vw-2rem)] bg-card border-l border-border z-50 flex flex-col justify-between shadow-2xl lg:hidden overflow-y-auto"
               style={{
-                // Respect notch/home-bar insets on the right side and bottom
                 paddingRight: "env(safe-area-inset-right)",
                 paddingBottom: "env(safe-area-inset-bottom)",
               }}
             >
-              <div className="flex flex-col gap-2 p-6">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 mb-2">
+              <div className="flex flex-col gap-2 p-5 sm:p-6">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 mb-1">
                   Navigation
                 </p>
                 {NAV_ITEMS.map((item) => {
@@ -275,7 +253,6 @@ export function Navbar({ siteName }: { siteName?: string }) {
                       key={item.id}
                       href={item.href}
                       onClick={(e) => handleNavClick(e, item.id)}
-                      // min-h-11 ensures the tap target is always ≥44px
                       className={`min-h-11 px-4 py-3 text-base font-medium rounded-xl transition-all duration-200 flex items-center justify-between ${
                         isActive
                           ? "bg-primary/10 text-primary font-semibold"
@@ -291,13 +268,13 @@ export function Navbar({ siteName }: { siteName?: string }) {
                 })}
               </div>
 
-              <div className="p-6 pt-0 border-t border-border flex flex-col gap-3">
+              <div className="p-5 sm:p-6 pt-0 border-t border-border flex flex-col gap-3">
                 <a
                   href="#contact"
                   onClick={(e) => handleNavClick(e, "contact")}
                   className="min-h-11 w-full py-3 text-center text-sm font-semibold rounded-xl bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-all duration-200 flex items-center justify-center"
                 >
-                  Contact
+                  Contact Me
                 </a>
               </div>
             </motion.div>

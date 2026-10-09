@@ -46,9 +46,23 @@
   }
 }
 
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
 body {
   @apply bg-background text-foreground transition-colors duration-300;
   font-feature-settings: "rlh" 1;
+}
+
+/* Custom scrollbar utility for touch scroll containers */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }
 
 @keyframes fadein {

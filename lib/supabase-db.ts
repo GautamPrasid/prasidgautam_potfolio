@@ -6,6 +6,7 @@ import {
   CertificationItem,
   Project,
   SocialLinkItem,
+  BlogPost,
 } from "./data";
 
 export interface HeroAboutData {
@@ -195,5 +196,31 @@ export async function getProjectsFromDb(): Promise<Project[]> {
     demo: d.demo ?? undefined,
     category: d.category,
     featured: d.featured,
+  }));
+}
+
+export async function getBlogsFromDb(): Promise<BlogPost[]> {
+  const client = getSupabaseClient();
+  if (!client) return [];
+
+  const { data, error } = await client
+    .from("blogs")
+    .select("*")
+    .order("order_index", { ascending: true });
+
+  if (error || !data) return [];
+
+  return data.map((d) => ({
+    id: d.id,
+    title: d.title,
+    slug: d.slug,
+    excerpt: d.excerpt,
+    content: d.content,
+    coverImage: d.cover_image ?? undefined,
+    category: d.category,
+    tags: d.tags ?? [],
+    readTime: d.read_time ?? "5 min read",
+    published: d.published ?? true,
+    publishedAt: d.published_at ?? undefined,
   }));
 }

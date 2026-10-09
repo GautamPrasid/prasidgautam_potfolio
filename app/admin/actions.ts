@@ -81,7 +81,7 @@ export async function uploadAssetAction(formData: FormData): Promise<ActionResul
   const file = formData.get("file");
   const folder = String(formData.get("folder") || "uploads");
   const previousUrl = String(formData.get("previousUrl") || "");
-  const allowedFolders = new Set(["profile", "resume", "projects"]);
+  const allowedFolders = new Set(["profile", "resume", "projects", "blogs"]);
 
   if (!(file instanceof File)) {
     return { success: false, message: "No file provided." };
@@ -491,4 +491,59 @@ export async function deleteMessageAction(id: string): Promise<ActionResult> {
 
   revalidatePath("/admin/messages");
   return { success: true, message: "Message deleted." };
+}
+
+export async function saveBlogAction(payload: {
+  id?: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  cover_image?: string | null;
+  category: string;
+  tags: string[];
+  read_time: string;
+  published: boolean;
+  order_index?: number;
+}) {
+  return upsertRow(
+    "blogs",
+    payload.id,
+    {
+      title: payload.title,
+      slug: payload.slug,
+      excerpt: payload.excerpt,
+      content: payload.content,
+      cover_image: payload.cover_image || null,
+      category: payload.category,
+      tags: payload.tags,
+      read_time: payload.read_time,
+      published: payload.published,
+    },
+    { order_index: payload.order_index ?? 0 }
+  );
+}
+
+export async function deleteBlogAction(id: string): Promise<ActionResult> {
+  const auth = await requireAdmin();
+  if (!auth.ok) return { success: false, message: auth.message };
+
+  const { data, error: fetchError } = await auth.supabase
+    .from("blogs")
+    .select("cover_image")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (fetchError) return { success: false, message: fetchError.message };
+
+  const { error } = await auth.supabase.from("blogs").delete().eq("id", id);
+  if (error) return { success: false, message: error.message };
+
+  await removeStorageFile(auth.supabase, data?.cover_image);
+  revalidateAllPaths();
+  return { success: true, message: "Deleted successfully." };
+}
+
+export async function reorderBlogsAction(updates: { id: string; order_index: number }[]) {
+  return reorderRows("blogs", updates);
 }

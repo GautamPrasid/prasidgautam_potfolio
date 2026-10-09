@@ -82,3 +82,29 @@ export interface SocialLinkItem {
   iconName: string;
   orderIndex: number;
 }
+
+export const BLOG_CATEGORIES = [
+  "Web Development",
+  "AI & Machine Learning",
+  "Software Engineering",
+  "Tutorials",
+  "Career & Insights",
+] as const;
+
+export type BlogCategory = (typeof BLOG_CATEGORIES)[number];
+export type BlogFilter = BlogCategory | "All";
+export const BLOG_FILTERS = ["All", ...BLOG_CATEGORIES] as const;
+
+export interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  coverImage?: string;
+  category: BlogCategory;
+  tags: string[];
+  readTime: string;
+  published: boolean;
+  publishedAt?: string;
+}

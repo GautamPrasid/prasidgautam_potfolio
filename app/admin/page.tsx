@@ -4,20 +4,22 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   FolderGit2,
+  BookOpen,
   Wrench,
   Award,
-  Mail,
   ArrowRight,
   User,
   GraduationCap,
   Briefcase,
   Share2,
+  Mail,
 } from "lucide-react";
 import { getSupabaseClient } from "@/lib/supabase-db";
 
 export default function AdminOverviewPage() {
   const [counts, setCounts] = useState({
     projects: 0,
+    blogs: 0,
     skills: 0,
     certifications: 0,
     messages: 0,
@@ -30,8 +32,9 @@ export default function AdminOverviewPage() {
       if (!client) return;
 
       try {
-        const [proj, skl, cert, msg] = await Promise.all([
+        const [proj, blg, skl, cert, msg] = await Promise.all([
           client.from("projects").select("*", { count: "exact", head: true }),
+          client.from("blogs").select("*", { count: "exact", head: true }),
           client.from("skills").select("*", { count: "exact", head: true }),
           client.from("certifications").select("*", { count: "exact", head: true }),
           client.from("messages").select("*", { count: "exact", head: true }),
@@ -40,6 +43,7 @@ export default function AdminOverviewPage() {
         if (active) {
           setCounts({
             projects: proj.count ?? 0,
+            blogs: blg.count ?? 0,
             skills: skl.count ?? 0,
             certifications: cert.count ?? 0,
             messages: msg.count ?? 0,
@@ -65,6 +69,14 @@ export default function AdminOverviewPage() {
       color: "text-blue-500 bg-blue-500/10 border-blue-500/20",
     },
     {
+      title: "Blogs",
+      count: counts.blogs,
+      label: "Published Articles",
+      href: "/admin/blogs",
+      icon: BookOpen,
+      color: "text-indigo-500 bg-indigo-500/10 border-indigo-500/20",
+    },
+    {
       title: "Skills",
       count: counts.skills,
       label: "Technologies & Soft Skills",
@@ -80,25 +92,18 @@ export default function AdminOverviewPage() {
       icon: Award,
       color: "text-amber-500 bg-amber-500/10 border-amber-500/20",
     },
-    {
-      title: "Messages",
-      count: counts.messages,
-      label: "Contact Submissions",
-      href: "/admin/messages",
-      icon: Mail,
-      color: "text-purple-500 bg-purple-500/10 border-purple-500/20",
-    },
   ];
-
 
   const quickLinks = [
     { title: "Hero & About", desc: "Edit name, roles, bio & stats", href: "/admin/hero", icon: User },
-    { title: "Social Links", desc: "Manage header/footer profiles", href: "/admin/social-links", icon: Share2 },
     { title: "Skills Manager", desc: "Add, edit or reorder skills", href: "/admin/skills", icon: Wrench },
+    { title: "Projects Showcase", desc: "Manage GitHub & demo links", href: "/admin/projects", icon: FolderGit2 },
     { title: "Education History", desc: "Update degrees & coursework", href: "/admin/education", icon: GraduationCap },
     { title: "Experience & Roles", desc: "Manage career & hackathons", href: "/admin/experience", icon: Briefcase },
-    { title: "Projects Showcase", desc: "Manage GitHub & demo links", href: "/admin/projects", icon: FolderGit2 },
     { title: "Certifications", desc: "Upload badge credentials", href: "/admin/certifications", icon: Award },
+    { title: "Blogs CMS", desc: "Write articles & tutorials", href: "/admin/blogs", icon: BookOpen },
+    { title: "Social Links", desc: "Manage header/footer profiles", href: "/admin/social-links", icon: Share2 },
+    { title: "Messages Inbox", desc: "View contact form submissions", href: "/admin/messages", icon: Mail },
   ];
 
   return (

@@ -12,6 +12,7 @@ import {
   Briefcase,
   Award,
   FolderGit2,
+  BookOpen,
   Mail,
   ExternalLink,
   LogOut,
@@ -24,12 +25,13 @@ import {
 const ADMIN_NAV = [
   { label: "Overview", href: "/admin", icon: LayoutDashboard },
   { label: "Hero & About", href: "/admin/hero", icon: User },
-  { label: "Social Links", href: "/admin/social-links", icon: Share2 },
   { label: "Skills", href: "/admin/skills", icon: Wrench },
+  { label: "Projects", href: "/admin/projects", icon: FolderGit2 },
   { label: "Education", href: "/admin/education", icon: GraduationCap },
   { label: "Experience", href: "/admin/experience", icon: Briefcase },
-  { label: "Projects", href: "/admin/projects", icon: FolderGit2 },
   { label: "Certifications", href: "/admin/certifications", icon: Award },
+  { label: "Blogs", href: "/admin/blogs", icon: BookOpen },
+  { label: "Social Links", href: "/admin/social-links", icon: Share2 },
   { label: "Messages Inbox", href: "/admin/messages", icon: Mail },
 ];
 

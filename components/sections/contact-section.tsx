@@ -147,7 +147,7 @@ export function ContactSection({ initialHeroData = null }: ContactSectionProps =
   return (
     <section
       id="contact"
-      className="py-20 md:py-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto scroll-mt-20"
+      className="py-16 sm:py-20 md:py-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto scroll-mt-20"
       aria-label="Contact Section"
     >
       <motion.div
@@ -155,47 +155,47 @@ export function ContactSection({ initialHeroData = null }: ContactSectionProps =
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
-        className="space-y-16"
+        className="space-y-10 sm:space-y-16"
         suppressHydrationWarning
       >
-        <div className="text-center max-w-3xl mx-auto space-y-4">
+        <div className="text-center max-w-3xl mx-auto space-y-3 sm:space-y-4">
           <span className="px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide bg-primary/10 text-primary border border-primary/20 inline-block uppercase">
             Contact
           </span>
-          <h2 className="font-heading text-3xl sm:text-5xl font-extrabold text-foreground tracking-tight">
+          <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground tracking-tight">
             Get in Touch
           </h2>
-          <p className="text-muted-foreground text-base sm:text-lg">
+          <p className="text-muted-foreground text-sm sm:text-base md:text-lg">
             Have a project in mind, a question, or want to collaborate? Send me a message.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           <div className="lg:col-span-5 space-y-6">
-            <div className="p-8 rounded-3xl bg-card border border-border shadow-md space-y-8">
-              <div className="space-y-2">
-                <h3 className="font-heading font-bold text-2xl text-foreground">
+            <div className="p-5 sm:p-8 rounded-3xl bg-card border border-border shadow-md space-y-6 sm:space-y-8">
+              <div className="space-y-1.5 sm:space-y-2">
+                <h3 className="font-heading font-bold text-xl sm:text-2xl text-foreground">
                   Contact Information
                 </h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   Reach out using the form or direct contact details below.
                 </p>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 {heroData?.contactEmail && (
                   <a
                     href={`mailto:${heroData.contactEmail}`}
-                    className="flex items-center gap-4 p-4 rounded-2xl bg-muted/50 hover:bg-primary/10 border border-border/80 hover:border-primary/40 transition-all duration-200 group"
+                    className="flex items-center gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-2xl bg-muted/50 hover:bg-primary/10 border border-border/80 hover:border-primary/40 transition-all duration-200 group min-w-0"
                   >
-                    <div className="p-3 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                    <div className="p-2.5 sm:p-3 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors shrink-0">
                       <Mail className="w-5 h-5" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                         Email
                       </p>
-                      <p className="text-sm sm:text-base font-semibold text-foreground group-hover:text-primary transition-colors">
+                      <p className="text-xs sm:text-base font-semibold text-foreground group-hover:text-primary transition-colors break-all sm:break-normal truncate">
                         {heroData.contactEmail}
                       </p>
                     </div>
@@ -205,16 +205,16 @@ export function ContactSection({ initialHeroData = null }: ContactSectionProps =
                 {heroData?.contactPhone && (
                   <a
                     href={`tel:${heroData.contactPhone.replace(/\s+/g, "")}`}
-                    className="flex items-center gap-4 p-4 rounded-2xl bg-muted/50 hover:bg-primary/10 border border-border/80 hover:border-primary/40 transition-all duration-200 group"
+                    className="flex items-center gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-2xl bg-muted/50 hover:bg-primary/10 border border-border/80 hover:border-primary/40 transition-all duration-200 group min-w-0"
                   >
-                    <div className="p-3 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                    <div className="p-2.5 sm:p-3 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors shrink-0">
                       <Phone className="w-5 h-5" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                         Phone
                       </p>
-                      <p className="text-sm sm:text-base font-semibold text-foreground group-hover:text-primary transition-colors">
+                      <p className="text-xs sm:text-base font-semibold text-foreground group-hover:text-primary transition-colors truncate">
                         {heroData.contactPhone}
                       </p>
                     </div>
@@ -222,15 +222,15 @@ export function ContactSection({ initialHeroData = null }: ContactSectionProps =
                 )}
 
                 {heroData?.location && (
-                  <div className="flex items-center gap-4 p-4 rounded-2xl bg-muted/50 border border-border/80">
-                    <div className="p-3 rounded-xl bg-accent/10 text-accent">
+                  <div className="flex items-center gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-2xl bg-muted/50 border border-border/80 min-w-0">
+                    <div className="p-2.5 sm:p-3 rounded-xl bg-accent/10 text-accent shrink-0">
                       <MapPin className="w-5 h-5" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                         Location
                       </p>
-                      <p className="text-sm sm:text-base font-semibold text-foreground">
+                      <p className="text-xs sm:text-base font-semibold text-foreground truncate">
                         {heroData.location}
                       </p>
                     </div>
@@ -239,9 +239,9 @@ export function ContactSection({ initialHeroData = null }: ContactSectionProps =
               </div>
 
               {heroData?.responseTimeText && (
-                <div className="p-4 rounded-2xl bg-primary/10 border border-primary/20 flex items-center gap-3">
+                <div className="p-3.5 sm:p-4 rounded-2xl bg-primary/10 border border-primary/20 flex items-center gap-3">
                   <Clock className="w-5 h-5 text-primary shrink-0" />
-                  <p className="text-xs text-primary font-medium">
+                  <p className="text-xs text-primary font-medium leading-relaxed">
                     {heroData.responseTimeText}
                   </p>
                 </div>
@@ -250,12 +250,12 @@ export function ContactSection({ initialHeroData = null }: ContactSectionProps =
           </div>
 
           <div className="lg:col-span-7">
-            <div className="p-8 sm:p-10 rounded-3xl bg-card border border-border shadow-md space-y-6">
-              <div className="space-y-2">
-                <h3 className="font-heading font-bold text-2xl text-foreground">
+            <div className="p-5 sm:p-8 md:p-10 rounded-3xl bg-card border border-border shadow-md space-y-5 sm:space-y-6">
+              <div className="space-y-1.5 sm:space-y-2">
+                <h3 className="font-heading font-bold text-xl sm:text-2xl text-foreground">
                   Send a Message
                 </h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   Fill in your details below and I will get back to you promptly.
                 </p>
               </div>
@@ -278,12 +278,12 @@ export function ContactSection({ initialHeroData = null }: ContactSectionProps =
                     ) : (
                       <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
                     )}
-                    <p className="text-sm font-medium">{statusMessage.text}</p>
+                    <p className="text-xs sm:text-sm font-medium">{statusMessage.text}</p>
                   </motion.div>
                 )}
               </AnimatePresence>
 
-              <form onSubmit={handleSubmit} noValidate className="space-y-5">
+              <form onSubmit={handleSubmit} noValidate className="space-y-4 sm:space-y-5">
                 <input
                   type="text"
                   name="website"
@@ -295,7 +295,7 @@ export function ContactSection({ initialHeroData = null }: ContactSectionProps =
                   aria-hidden="true"
                 />
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                   <div className="space-y-1.5">
                     <label
                       htmlFor="name"
@@ -310,7 +310,7 @@ export function ContactSection({ initialHeroData = null }: ContactSectionProps =
                       value={formData.name}
                       onChange={handleChange}
                       disabled={isSubmitting}
-                      className={`w-full px-4 py-3 rounded-xl bg-background border text-sm text-foreground focus:outline-none focus:ring-2 transition-all ${
+                      className={`w-full px-4 py-3 rounded-xl bg-background border text-sm text-foreground focus:outline-none focus:ring-2 transition-all min-h-[44px] ${
                         errors.name
                           ? "border-rose-500 focus:ring-rose-500/40"
                           : "border-border focus:border-primary focus:ring-primary/40"
@@ -335,7 +335,7 @@ export function ContactSection({ initialHeroData = null }: ContactSectionProps =
                       value={formData.email}
                       onChange={handleChange}
                       disabled={isSubmitting}
-                      className={`w-full px-4 py-3 rounded-xl bg-background border text-sm text-foreground focus:outline-none focus:ring-2 transition-all ${
+                      className={`w-full px-4 py-3 rounded-xl bg-background border text-sm text-foreground focus:outline-none focus:ring-2 transition-all min-h-[44px] ${
                         errors.email
                           ? "border-rose-500 focus:ring-rose-500/40"
                           : "border-border focus:border-primary focus:ring-primary/40"
@@ -361,7 +361,7 @@ export function ContactSection({ initialHeroData = null }: ContactSectionProps =
                     value={formData.subject}
                     onChange={handleChange}
                     disabled={isSubmitting}
-                    className={`w-full px-4 py-3 rounded-xl bg-background border text-sm text-foreground focus:outline-none focus:ring-2 transition-all ${
+                    className={`w-full px-4 py-3 rounded-xl bg-background border text-sm text-foreground focus:outline-none focus:ring-2 transition-all min-h-[44px] ${
                       errors.subject
                         ? "border-rose-500 focus:ring-rose-500/40"
                         : "border-border focus:border-primary focus:ring-primary/40"
@@ -400,7 +400,7 @@ export function ContactSection({ initialHeroData = null }: ContactSectionProps =
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-4 rounded-xl bg-primary text-primary-foreground font-semibold shadow-lg shadow-primary/20 hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2 group"
+                  className="w-full py-3.5 sm:py-4 rounded-xl bg-primary text-primary-foreground font-semibold shadow-lg shadow-primary/20 hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2 group min-h-[44px]"
                 >
                   {isSubmitting ? (
                     <>

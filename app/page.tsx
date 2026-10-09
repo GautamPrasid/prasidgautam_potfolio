@@ -2,10 +2,9 @@ import { PageWrapper } from "@/components/page-wrapper";
 import { HeroSection } from "@/components/sections/hero-section";
 import { AboutSection } from "@/components/sections/about-section";
 import { SkillsSection } from "@/components/sections/skills-section";
-import { EducationSection } from "@/components/sections/education-section";
-import { ExperienceSection } from "@/components/sections/experience-section";
 import { ProjectsSection } from "@/components/sections/projects-section";
-import { CertificationsSection } from "@/components/sections/certifications-section";
+import { ResumeSection } from "@/components/sections/resume-section";
+import { BlogSection } from "@/components/sections/blog-section";
 import { ContactSection } from "@/components/sections/contact-section";
 import {
   getHeroAboutFromDb,
@@ -15,6 +14,7 @@ import {
   getExperienceFromDb,
   getProjectsFromDb,
   getCertificationsFromDb,
+  getBlogsFromDb,
 } from "@/lib/supabase-db";
 
 export const revalidate = 0;
@@ -29,6 +29,7 @@ export default async function Home() {
     experience,
     projects,
     certifications,
+    blogs,
   ] = await Promise.all([
     getHeroAboutFromDb(),
     getSocialLinksFromDb(),
@@ -37,11 +38,15 @@ export default async function Home() {
     getExperienceFromDb(),
     getProjectsFromDb(),
     getCertificationsFromDb(),
+    getBlogsFromDb(),
   ]);
 
   return (
     <PageWrapper>
+      {/* 1. Home — Name, title, intro, View Projects and Contact Me buttons */}
       <HeroSection initialHeroData={heroAbout} initialSocialLinks={socialLinks} />
+
+      {/* 2. About — Background, interests, and career goals */}
       <AboutSection
         initialHeroData={heroAbout}
         initialEducation={education}
@@ -49,14 +54,29 @@ export default async function Home() {
         initialCertCount={certifications.length}
         initialTechCount={skills.length}
       />
+
+      {/* 3. Skills — Technical abilities and tools */}
       <SkillsSection initialSkills={skills} />
-      <EducationSection initialEducation={education} />
-      <ExperienceSection initialExperience={experience} />
+
+      {/* 4. Projects — Strongest work with GitHub & live demo links */}
       <ProjectsSection
         initialProjects={projects}
         initialGithubUrl={heroAbout?.githubUrl}
       />
-      <CertificationsSection initialCertifications={certifications} />
+
+      {/* 5. Resume — Education, experience, certifications & downloadable CV */}
+      <ResumeSection
+        initialEducation={education}
+        initialExperience={experience}
+        initialCertifications={certifications}
+        resumeUrl={heroAbout?.resumeUrl}
+        name={heroAbout?.name}
+      />
+
+      {/* 6. Blog — Technical articles & tutorials */}
+      <BlogSection initialBlogs={blogs} />
+
+      {/* 7. Contact — Email, social profiles & contact form */}
       <ContactSection initialHeroData={heroAbout} />
     </PageWrapper>
   );

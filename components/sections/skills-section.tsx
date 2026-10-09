@@ -99,7 +99,7 @@ export function SkillsSection({ initialSkills = [] }: SkillsSectionProps = {}) {
   return (
     <section
       id="skills"
-      className="py-20 md:py-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto scroll-mt-20"
+      className="py-16 sm:py-20 md:py-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto scroll-mt-20"
       aria-label="Skills Section"
     >
       <motion.div
@@ -107,29 +107,29 @@ export function SkillsSection({ initialSkills = [] }: SkillsSectionProps = {}) {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
-        className="space-y-12"
+        className="space-y-10 sm:space-y-12"
         suppressHydrationWarning
       >
-        <div className="text-center max-w-3xl mx-auto space-y-4">
+        <div className="text-center max-w-3xl mx-auto space-y-3 sm:space-y-4">
           <span className="px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide bg-primary/10 text-primary border border-primary/20 inline-block uppercase">
             Technical Expertise
           </span>
-          <h2 className="font-heading text-3xl sm:text-5xl font-extrabold text-foreground tracking-tight">
+          <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground tracking-tight">
             Skills &amp; Technologies
           </h2>
-          <p className="text-muted-foreground text-base sm:text-lg">
+          <p className="text-muted-foreground text-sm sm:text-base md:text-lg">
             A comprehensive overview of languages, frameworks, databases, tools, and professional capabilities.
           </p>
         </div>
 
-        <div className="flex items-center justify-center gap-2 flex-wrap">
+        <div className="flex items-center justify-center gap-1.5 sm:gap-2 flex-wrap max-w-full">
           {SKILL_FILTERS.map((category) => {
             const isActive = selectedCategory === category;
             return (
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
-                className={`relative px-4 py-2 text-xs sm:text-sm font-medium rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary ${
+                className={`relative px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary ${
                   isActive
                     ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
                     : "bg-card hover:bg-muted text-muted-foreground hover:text-foreground border border-border shadow-sm"
@@ -151,7 +151,7 @@ export function SkillsSection({ initialSkills = [] }: SkillsSectionProps = {}) {
         ) : (
           <motion.div
             layout
-            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"
           >
             <AnimatePresence mode="popLayout">
               {filteredSkills.map((skill: Skill) => {
@@ -167,24 +167,24 @@ export function SkillsSection({ initialSkills = [] }: SkillsSectionProps = {}) {
                     whileHover={{ y: -6, scale: 1.02 }}
                     transition={{ duration: 0.25 }}
                     suppressHydrationWarning
-                    className="p-5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group"
+                    className="p-4 sm:p-5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group min-w-0"
                   >
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="p-3 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-200">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="p-2.5 sm:p-3 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-200 shrink-0">
                           <IconComponent className="w-5 h-5 sm:w-6 sm:h-6" />
                         </div>
-                        <span className="text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-foreground uppercase tracking-wider">
+                        <span className="text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-foreground uppercase tracking-wider truncate max-w-[110px]">
                           {skill.category}
                         </span>
                       </div>
 
                       <div>
-                        <h3 className="font-heading font-bold text-base sm:text-lg text-foreground group-hover:text-primary transition-colors">
+                        <h3 className="font-heading font-bold text-base sm:text-lg text-foreground group-hover:text-primary transition-colors truncate">
                           {skill.name}
                         </h3>
                         {skill.description?.trim() ? (
-                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
+                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed break-words">
                             {skill.description}
                           </p>
                         ) : null}
