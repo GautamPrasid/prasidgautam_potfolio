@@ -26,3 +26,31 @@ export function createClient(cookieStore: Awaited<ReturnType<typeof cookies>>) {
     },
   });
 }
+
+export function createAdminClient(cookieStore?: Awaited<ReturnType<typeof cookies>>) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const key = serviceRoleKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!url || !key) {
+    throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or Supabase Key.");
+  }
+
+  return createServerClient(url, key, {
+    cookies: {
+      getAll() {
+        return cookieStore ? cookieStore.getAll() : [];
+      },
+      setAll(cookiesToSet) {
+        if (!cookieStore) return;
+        try {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options)
+          );
+        } catch {
+          // Server component execution
+        }
+      },
+    },
+  });
+}

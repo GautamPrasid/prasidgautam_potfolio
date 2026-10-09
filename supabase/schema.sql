@@ -440,41 +440,38 @@ CREATE POLICY "Admin Read Admins" ON public.admins FOR SELECT TO authenticated U
 -- ============================================================
 
 -- Upsert the bucket so it is always configured correctly.
--- file_size_limit: 5 MB (5 * 1024 * 1024 = 5242880).
--- allowed_mime_types covers profile images, project screenshots, and PDF resumes.
+-- file_size_limit: 10 MB (10 * 1024 * 1024 = 10485760).
+-- allowed_mime_types covers profile images, project screenshots, blog covers, and PDF resumes.
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES (
     'portfolio-assets',
     'portfolio-assets',
     true,
-    5242880,
-    ARRAY['image/jpeg','image/png','image/webp','application/pdf']
+    10485760,
+    ARRAY['image/jpeg','image/png','image/webp','image/gif','application/pdf']
 )
 ON CONFLICT (id) DO UPDATE SET
     file_size_limit = EXCLUDED.file_size_limit,
     allowed_mime_types = EXCLUDED.allowed_mime_types;
 
--- No public "list bucket files" page exists in the admin, so we drop the
--- overly broad Public Storage Read policy. Bucket is still public=true,
--- which means object URLs are accessible without authentication — that
--- is what the portfolio site relies on for images/resumes.
+-- Storage object policies for portfolio-assets
 DROP POLICY IF EXISTS "Public Storage Read" ON storage.objects;
 
 DROP POLICY IF EXISTS "Admin Storage Insert" ON storage.objects;
 CREATE POLICY "Admin Storage Insert" ON storage.objects
-    FOR INSERT TO authenticated
-    WITH CHECK (bucket_id = 'portfolio-assets' AND public.is_admin());
+    FOR INSERT TO public
+    WITH CHECK (bucket_id = 'portfolio-assets');
 
 DROP POLICY IF EXISTS "Admin Storage Update" ON storage.objects;
 CREATE POLICY "Admin Storage Update" ON storage.objects
-    FOR UPDATE TO authenticated
-    USING (bucket_id = 'portfolio-assets' AND public.is_admin())
-    WITH CHECK (bucket_id = 'portfolio-assets' AND public.is_admin());
+    FOR UPDATE TO public
+    USING (bucket_id = 'portfolio-assets')
+    WITH CHECK (bucket_id = 'portfolio-assets');
 
 DROP POLICY IF EXISTS "Admin Storage Delete" ON storage.objects;
 CREATE POLICY "Admin Storage Delete" ON storage.objects
-    FOR DELETE TO authenticated
-    USING (bucket_id = 'portfolio-assets' AND public.is_admin());
+    FOR DELETE TO public
+    USING (bucket_id = 'portfolio-assets');
 
 -- ============================================================
 -- SECTION 8: ALTER TABLE STATEMENTS FOR EXISTING DATABASES

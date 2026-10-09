@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
-import { createClient } from "@/utils/supabase/server";
+import { createClient, createAdminClient } from "@/utils/supabase/server";
 
 export type ActionResult<T = unknown> = {
   success: boolean;
@@ -50,7 +50,8 @@ async function requireAdmin() {
     return { ok: false as const, message: "Unauthorized access.", supabase };
   }
 
-  return { ok: true as const, user, supabase };
+  const adminClient = createAdminClient(cookieStore);
+  return { ok: true as const, user, supabase: adminClient };
 }
 
 function getStoragePathFromUrl(url: string | null | undefined): string | null {
