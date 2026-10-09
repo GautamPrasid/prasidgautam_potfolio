@@ -196,11 +196,10 @@ export default function SkillsManagerPage() {
           <button
             key={cat}
             onClick={() => setActiveCategory(cat)}
-            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
-              activeCategory === cat
+            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${activeCategory === cat
                 ? "bg-primary text-primary-foreground font-semibold"
                 : "bg-card text-muted-foreground hover:bg-muted hover:text-foreground border border-border"
-            }`}
+              }`}
           >
             {cat}
           </button>

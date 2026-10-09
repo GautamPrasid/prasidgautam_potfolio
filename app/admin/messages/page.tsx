@@ -113,11 +113,10 @@ export default function MessagesInboxPage() {
                     <button
                       onClick={() => toggleReadStatus(msg.id)}
                       title={msg.is_read ? "Mark as unread" : "Mark as read"}
-                      className={`p-2.5 rounded-xl shrink-0 ${
-                        msg.is_read
+                      className={`p-2.5 rounded-xl shrink-0 ${msg.is_read
                           ? "bg-muted text-muted-foreground"
                           : "bg-primary/10 text-primary border border-primary/20"
-                      }`}
+                        }`}
                     >
                       {msg.is_read ? <MailOpen className="w-4 h-4" /> : <Mail className="w-4 h-4" />}
                     </button>
