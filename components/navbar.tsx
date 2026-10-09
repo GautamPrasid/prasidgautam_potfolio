@@ -99,18 +99,27 @@ export function Navbar({ siteName }: { siteName?: string }) {
   }, [isOpen]);
 
   const scrollToSection = useCallback((id: string) => {
-    const element = document.getElementById(id);
-    if (!element) return;
-    const top =
-      element.getBoundingClientRect().top + window.scrollY - HEADER_HEIGHT;
-    window.scrollTo({ top, behavior: prefersReducedMotion ? "instant" : "smooth" });
+    // Use rAF to ensure DOM has settled (important after drawer close animation)
+    requestAnimationFrame(() => {
+      const element = document.getElementById(id);
+      if (!element) return;
+      const top =
+        element.getBoundingClientRect().top + window.scrollY - HEADER_HEIGHT;
+      window.scrollTo({ top, behavior: prefersReducedMotion ? "instant" : "smooth" });
+    });
   }, [prefersReducedMotion]);
 
   const handleNavClick = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
       e.preventDefault();
+      const menuWasOpen = isOpenRef.current;
       closeMenu();
-      scrollToSection(id);
+      // On mobile: wait for drawer slide-out before scrolling so scroll target is correct
+      if (menuWasOpen) {
+        setTimeout(() => scrollToSection(id), 50);
+      } else {
+        scrollToSection(id);
+      }
     },
     [closeMenu, scrollToSection]
   );
@@ -130,84 +139,94 @@ export function Navbar({ siteName }: { siteName?: string }) {
     : { type: "spring" as const, damping: 25, stiffness: 200 };
 
   return (
-    <header
-      className={`sticky top-0 z-40 w-full transition-all duration-300 ${
-        scrolled
-          ? "bg-background/80 backdrop-blur-md border-b border-border/60 shadow-sm"
-          : "bg-background/40 backdrop-blur-sm border-b border-transparent"
-      }`}
-      style={{ paddingLeft: "env(safe-area-inset-left)", paddingRight: "env(safe-area-inset-right)" }}
-    >
-      <nav
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between"
-        aria-label="Main navigation"
+    <>
+      {/* ── Sticky header ─────────────────────────────────────────────────── */}
+      <header
+        className={`sticky top-0 z-40 w-full transition-all duration-300 ${
+          scrolled
+            ? "bg-background/80 backdrop-blur-md border-b border-border/60 shadow-sm"
+            : "bg-background/40 backdrop-blur-sm border-b border-transparent"
+        }`}
+        style={{ paddingLeft: "env(safe-area-inset-left)", paddingRight: "env(safe-area-inset-right)" }}
       >
-        <a
-          href="#home"
-          onClick={(e) => handleNavClick(e, "home")}
-          className="flex items-center gap-2 group focus:outline-none focus:ring-2 focus:ring-primary rounded-lg p-1"
-          aria-label="Home page"
+        <nav
+          className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between"
+          aria-label="Main navigation"
         >
-          <div className="p-2 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-200">
-            <Code2 className="w-5 h-5" />
-          </div>
-          <span className="font-heading font-bold text-lg tracking-tight text-foreground">
-            {siteName?.trim() || "Portfolio"}
-            <span className="text-primary">.</span>
-          </span>
-        </a>
-
-        {/* Desktop links — visible at lg (≥1024px) */}
-        <div className="hidden lg:flex items-center gap-1">
-          {NAV_ITEMS.map((item) => {
-            const isActive = activeSection === item.id;
-            return (
-              <a
-                key={item.id}
-                href={item.href}
-                onClick={(e) => handleNavClick(e, item.id)}
-                className={`relative px-3 py-1.5 text-sm font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary ${
-                  isActive
-                    ? "text-primary font-semibold"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                }`}
-              >
-                {item.label}
-                {isActive && (
-                  <motion.div
-                    layoutId="activeNavIndicator"
-                    className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-full"
-                    transition={
-                      prefersReducedMotion
-                        ? { duration: 0 }
-                        : { type: "spring", stiffness: 380, damping: 30 }
-                    }
-                  />
-                )}
-              </a>
-            );
-          })}
-        </div>
-
-        <div className="hidden lg:flex items-center gap-3">
-          <ThemeToggle />
-        </div>
-
-        {/* Mobile/tablet controls — visible below lg (<1024px) */}
-        <div className="flex lg:hidden items-center gap-2">
-          <ThemeToggle />
-          <button
-            onClick={() => setIsOpen((v) => !v)}
-            className="min-w-11 min-h-11 flex items-center justify-center rounded-xl text-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
-            aria-label={isOpen ? "Close menu" : "Open menu"}
-            aria-expanded={isOpen}
-            aria-controls="mobile-menu"
+          <a
+            href="#home"
+            onClick={(e) => handleNavClick(e, "home")}
+            className="flex items-center gap-2 group focus:outline-none focus:ring-2 focus:ring-primary rounded-lg p-1"
+            aria-label="Home page"
           >
-            {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
-        </div>
-      </nav>
+            <div className="p-2 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-200">
+              <Code2 className="w-5 h-5" />
+            </div>
+            <span className="font-heading font-bold text-lg tracking-tight text-foreground">
+              {siteName?.trim() || "Portfolio"}
+              <span className="text-primary">.</span>
+            </span>
+          </a>
 
+          {/* Desktop links — visible at lg (≥1024px) */}
+          <div className="hidden lg:flex items-center gap-1">
+            {NAV_ITEMS.map((item) => {
+              const isActive = activeSection === item.id;
+              return (
+                <a
+                  key={item.id}
+                  href={item.href}
+                  onClick={(e) => handleNavClick(e, item.id)}
+                  className={`relative px-3 py-1.5 text-sm font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary ${
+                    isActive
+                      ? "text-primary font-semibold"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  }`}
+                >
+                  {item.label}
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeNavIndicator"
+                      className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-full"
+                      transition={
+                        prefersReducedMotion
+                          ? { duration: 0 }
+                          : { type: "spring", stiffness: 380, damping: 30 }
+                      }
+                    />
+                  )}
+                </a>
+              );
+            })}
+          </div>
+
+          <div className="hidden lg:flex items-center gap-3">
+            <ThemeToggle />
+          </div>
+
+          {/* Mobile/tablet controls — visible below lg (<1024px) */}
+          <div className="flex lg:hidden items-center gap-2">
+            <ThemeToggle />
+            <button
+              onClick={() => setIsOpen((v) => !v)}
+              className="min-w-11 min-h-11 flex items-center justify-center rounded-xl text-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+              aria-label={isOpen ? "Close menu" : "Open menu"}
+              aria-expanded={isOpen}
+              aria-controls="mobile-menu"
+            >
+              {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+        </nav>
+      </header>
+
+      {/* ── Mobile drawer + backdrop ────────────────────────────────────────
+          IMPORTANT: Rendered as siblings of <header>, NOT inside it.
+          The <header> has z-40 which creates a stacking context — any fixed
+          children are clipped to that context and can appear under page
+          content. By placing these here at the root level, their z-indexes
+          (z-40 backdrop, z-50 drawer) are global and properly overlay all
+          page elements. */}
       <AnimatePresence>
         {isOpen && (
           <>
@@ -281,6 +300,6 @@ export function Navbar({ siteName }: { siteName?: string }) {
           </>
         )}
       </AnimatePresence>
-    </header>
+    </>
   );
 }

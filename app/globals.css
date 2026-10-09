@@ -46,12 +46,17 @@
   }
 }
 
-html, body {
-  overflow-x: hidden;
-  max-width: 100vw;
+html {
+  /* scroll-padding-top ensures anchor links clear the 64px sticky navbar */
+  scroll-padding-top: 64px;
+  /* smooth scroll as CSS fallback (JS handler already handles this for nav clicks) */
+  scroll-behavior: smooth;
 }
 
 body {
+  /* overflow-x ONLY on body — setting it on html breaks window.scrollTo() smooth scroll */
+  overflow-x: hidden;
+  max-width: 100vw;
   @apply bg-background text-foreground transition-colors duration-300;
   font-feature-settings: "rlh" 1;
 }

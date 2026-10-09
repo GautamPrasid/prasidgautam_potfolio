@@ -15,7 +15,10 @@ import {
   UserCheck,
 } from "lucide-react";
 import { getHeroAboutFromDb, getSupabaseClient } from "@/lib/supabase-db";
-import { saveHeroAboutAction } from "@/app/admin/actions";
+import {
+  saveHeroAboutAction,
+  uploadAssetAction,
+} from "@/app/admin/actions";
 
 export default function HeroAboutManagerPage() {
   const [heroId, setHeroId] = useState<string | null>(null);
@@ -155,37 +158,18 @@ export default function HeroAboutManagerPage() {
     setProfileUploadError(null);
 
     try {
-      const client = getSupabaseClient();
-      if (!client) {
-        throw new Error("Supabase client not initialized.");
+      const formData = new FormData();
+      formData.set("file", file);
+      formData.set("folder", "profile");
+      formData.set("previousUrl", profileImageUrl);
+
+      const result = await uploadAssetAction(formData);
+
+      if (!result.success || !result.data) {
+        throw new Error(result.message || "Profile photo upload failed.");
       }
 
-      // Delete old file from storage if present to avoid orphaned files
-      const oldPath = extractStoragePath(profileImageUrl, "profile");
-      if (oldPath) {
-        await client.storage.from("portfolio-assets").remove([oldPath]);
-      }
-
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
-      const filePath = `profile/${fileName}`;
-
-      const { error: uploadErr } = await client.storage
-        .from("portfolio-assets")
-        .upload(filePath, file, {
-          cacheControl: "3600",
-          upsert: true,
-        });
-
-      if (uploadErr) {
-        throw uploadErr;
-      }
-
-      const {
-        data: { publicUrl },
-      } = client.storage.from("portfolio-assets").getPublicUrl(filePath);
-
-      setProfileImageUrl(publicUrl);
+      setProfileImageUrl(result.data.publicUrl);
     } catch (err: unknown) {
       console.error("Profile photo upload failed:", err);
       const message =
