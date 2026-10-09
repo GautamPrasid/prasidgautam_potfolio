@@ -97,8 +97,8 @@ export default function AdminOverviewPage() {
     { title: "Skills Manager", desc: "Add, edit or reorder skills", href: "/admin/skills", icon: Wrench },
     { title: "Education History", desc: "Update degrees & coursework", href: "/admin/education", icon: GraduationCap },
     { title: "Experience & Roles", desc: "Manage career & hackathons", href: "/admin/experience", icon: Briefcase },
-    { title: "Certifications", desc: "Upload badge credentials", href: "/admin/certifications", icon: Award },
     { title: "Projects Showcase", desc: "Manage GitHub & demo links", href: "/admin/projects", icon: FolderGit2 },
+    { title: "Certifications", desc: "Upload badge credentials", href: "/admin/certifications", icon: Award },
   ];
 
   return (

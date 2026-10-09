@@ -28,8 +28,8 @@ const ADMIN_NAV = [
   { label: "Skills", href: "/admin/skills", icon: Wrench },
   { label: "Education", href: "/admin/education", icon: GraduationCap },
   { label: "Experience", href: "/admin/experience", icon: Briefcase },
-  { label: "Certifications", href: "/admin/certifications", icon: Award },
   { label: "Projects", href: "/admin/projects", icon: FolderGit2 },
+  { label: "Certifications", href: "/admin/certifications", icon: Award },
   { label: "Messages Inbox", href: "/admin/messages", icon: Mail },
 ];
 
