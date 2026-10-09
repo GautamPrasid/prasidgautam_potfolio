@@ -147,7 +147,7 @@ export function ContactSection({ initialHeroData = null }: ContactSectionProps =
   return (
     <section
       id="contact"
-      className="py-16 sm:py-20 md:py-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto scroll-mt-20"
+      className="pt-16 sm:pt-20 md:pt-28 pb-6 sm:pb-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto scroll-mt-20"
       aria-label="Contact Section"
     >
       <motion.div

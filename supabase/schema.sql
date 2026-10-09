@@ -526,20 +526,33 @@ WHERE id = 'portfolio-assets';
 -- SECTION 10: DATA FIXES
 -- ============================================================
 -- Fix existing data to match expected formats
+-- Updated: Now uses Simple Icons for brand logos + Lucide React for generic icons
 
--- Fix social link icon names to PascalCase (required by Lucide React)
--- This section fixes both icon_name column AND detects from platform/URL patterns
+-- Fix social link icon names to PascalCase
+-- Brand icons (Simple Icons): Github, Linkedin, Twitter, Instagram, etc.
+-- Generic icons (Lucide React): Mail, Phone, Globe, Link
 
 -- Fix by icon_name (case-insensitive)
 UPDATE public.social_links SET icon_name = 'Github' WHERE LOWER(icon_name) = 'github';
 UPDATE public.social_links SET icon_name = 'Linkedin' WHERE LOWER(icon_name) = 'linkedin';
 UPDATE public.social_links SET icon_name = 'Twitter' WHERE LOWER(icon_name) IN ('twitter', 'x');
+UPDATE public.social_links SET icon_name = 'X' WHERE LOWER(icon_name) = 'x';
 UPDATE public.social_links SET icon_name = 'Instagram' WHERE LOWER(icon_name) = 'instagram';
 UPDATE public.social_links SET icon_name = 'Facebook' WHERE LOWER(icon_name) = 'facebook';
 UPDATE public.social_links SET icon_name = 'Youtube' WHERE LOWER(icon_name) = 'youtube';
+UPDATE public.social_links SET icon_name = 'Whatsapp' WHERE LOWER(icon_name) IN ('whatsapp', 'messagecircle');
+UPDATE public.social_links SET icon_name = 'Telegram' WHERE LOWER(icon_name) IN ('telegram', 'send');
+UPDATE public.social_links SET icon_name = 'Discord' WHERE LOWER(icon_name) = 'discord';
+UPDATE public.social_links SET icon_name = 'Slack' WHERE LOWER(icon_name) = 'slack';
+UPDATE public.social_links SET icon_name = 'Reddit' WHERE LOWER(icon_name) = 'reddit';
+UPDATE public.social_links SET icon_name = 'Tiktok' WHERE LOWER(icon_name) = 'tiktok';
+UPDATE public.social_links SET icon_name = 'Medium' WHERE LOWER(icon_name) = 'medium';
+UPDATE public.social_links SET icon_name = 'Dribbble' WHERE LOWER(icon_name) = 'dribbble';
+UPDATE public.social_links SET icon_name = 'Behance' WHERE LOWER(icon_name) = 'behance';
+UPDATE public.social_links SET icon_name = 'Figma' WHERE LOWER(icon_name) = 'figma';
+UPDATE public.social_links SET icon_name = 'Codepen' WHERE LOWER(icon_name) = 'codepen';
+UPDATE public.social_links SET icon_name = 'Stackoverflow' WHERE LOWER(icon_name) = 'stackoverflow';
 UPDATE public.social_links SET icon_name = 'Mail' WHERE LOWER(icon_name) IN ('mail', 'email');
-UPDATE public.social_links SET icon_name = 'MessageCircle' WHERE LOWER(icon_name) IN ('messagecircle', 'whatsapp');
-UPDATE public.social_links SET icon_name = 'Send' WHERE LOWER(icon_name) IN ('send', 'telegram');
 UPDATE public.social_links SET icon_name = 'Phone' WHERE LOWER(icon_name) = 'phone';
 UPDATE public.social_links SET icon_name = 'Globe' WHERE LOWER(icon_name) IN ('globe', 'website', 'web');
 UPDATE public.social_links SET icon_name = 'Link' WHERE LOWER(icon_name) = 'link';
@@ -547,32 +560,43 @@ UPDATE public.social_links SET icon_name = 'Link' WHERE LOWER(icon_name) = 'link
 -- Fix by platform name (case-insensitive)
 UPDATE public.social_links SET icon_name = 'Github' WHERE LOWER(platform) LIKE '%github%';
 UPDATE public.social_links SET icon_name = 'Linkedin' WHERE LOWER(platform) LIKE '%linkedin%';
-UPDATE public.social_links SET icon_name = 'Twitter' WHERE LOWER(platform) LIKE '%twitter%' OR LOWER(platform) LIKE '%x%';
+UPDATE public.social_links SET icon_name = 'Twitter' WHERE LOWER(platform) LIKE '%twitter%';
+UPDATE public.social_links SET icon_name = 'X' WHERE LOWER(platform) = 'x';
 UPDATE public.social_links SET icon_name = 'Instagram' WHERE LOWER(platform) LIKE '%instagram%';
 UPDATE public.social_links SET icon_name = 'Facebook' WHERE LOWER(platform) LIKE '%facebook%';
 UPDATE public.social_links SET icon_name = 'Youtube' WHERE LOWER(platform) LIKE '%youtube%';
+UPDATE public.social_links SET icon_name = 'Whatsapp' WHERE LOWER(platform) LIKE '%whatsapp%';
+UPDATE public.social_links SET icon_name = 'Telegram' WHERE LOWER(platform) LIKE '%telegram%';
+UPDATE public.social_links SET icon_name = 'Discord' WHERE LOWER(platform) LIKE '%discord%';
 UPDATE public.social_links SET icon_name = 'Mail' WHERE LOWER(platform) LIKE '%mail%' OR LOWER(platform) LIKE '%email%';
-UPDATE public.social_links SET icon_name = 'MessageCircle' WHERE LOWER(platform) LIKE '%whatsapp%';
-UPDATE public.social_links SET icon_name = 'Send' WHERE LOWER(platform) LIKE '%telegram%';
 UPDATE public.social_links SET icon_name = 'Phone' WHERE LOWER(platform) LIKE '%phone%';
 
 -- Fix by URL pattern (most reliable)
 UPDATE public.social_links SET icon_name = 'Github' WHERE LOWER(url) LIKE '%github%';
 UPDATE public.social_links SET icon_name = 'Linkedin' WHERE LOWER(url) LIKE '%linkedin%';
-UPDATE public.social_links SET icon_name = 'Twitter' WHERE LOWER(url) LIKE '%twitter%' OR LOWER(url) LIKE '%x.com%';
+UPDATE public.social_links SET icon_name = 'Twitter' WHERE LOWER(url) LIKE '%twitter%';
+UPDATE public.social_links SET icon_name = 'X' WHERE LOWER(url) LIKE '%x.com%';
 UPDATE public.social_links SET icon_name = 'Instagram' WHERE LOWER(url) LIKE '%instagram%';
 UPDATE public.social_links SET icon_name = 'Facebook' WHERE LOWER(url) LIKE '%facebook%';
 UPDATE public.social_links SET icon_name = 'Youtube' WHERE LOWER(url) LIKE '%youtube%';
+UPDATE public.social_links SET icon_name = 'Whatsapp' WHERE LOWER(url) LIKE '%whatsapp%' OR LOWER(url) LIKE '%wa.me%';
+UPDATE public.social_links SET icon_name = 'Telegram' WHERE LOWER(url) LIKE '%telegram%' OR LOWER(url) LIKE '%t.me%';
+UPDATE public.social_links SET icon_name = 'Discord' WHERE LOWER(url) LIKE '%discord%';
+UPDATE public.social_links SET icon_name = 'Slack' WHERE LOWER(url) LIKE '%slack%';
+UPDATE public.social_links SET icon_name = 'Reddit' WHERE LOWER(url) LIKE '%reddit%';
 UPDATE public.social_links SET icon_name = 'Mail' WHERE LOWER(url) LIKE '%mailto:%' OR url LIKE '%@%';
-UPDATE public.social_links SET icon_name = 'MessageCircle' WHERE LOWER(url) LIKE '%whatsapp%';
-UPDATE public.social_links SET icon_name = 'Send' WHERE LOWER(url) LIKE '%telegram%' OR LOWER(url) LIKE '%t.me%';
 UPDATE public.social_links SET icon_name = 'Phone' WHERE LOWER(url) LIKE '%tel:%';
 
 -- Verification query (uncomment to check results)
 -- SELECT platform, icon_name, url,
 --   CASE 
---     WHEN icon_name ~ '^[A-Z][a-z]+' THEN '✅ PascalCase'
---     ELSE '❌ Wrong case'
+--     WHEN icon_name IN ('Github', 'Linkedin', 'Twitter', 'X', 'Instagram', 'Facebook', 
+--                        'Youtube', 'Whatsapp', 'Telegram', 'Discord', 'Slack', 
+--                        'Reddit', 'Tiktok', 'Medium', 'Dribbble', 'Behance', 
+--                        'Figma', 'Codepen', 'Stackoverflow') THEN '✅ Brand Icon (Simple Icons)'
+--     WHEN icon_name IN ('Mail', 'Phone', 'Globe', 'Link') THEN '✅ Generic Icon (Lucide)'
+--     WHEN icon_name ~ '^[A-Z][a-z]+' THEN '⚠️ PascalCase but unknown icon'
+--     ELSE '❌ Wrong format'
 --   END as status
 -- FROM public.social_links
 -- ORDER BY order_index;

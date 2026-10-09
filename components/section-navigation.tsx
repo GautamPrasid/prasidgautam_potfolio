@@ -19,7 +19,6 @@ const SECTION_ICONS = {
 
 export function SectionNavigation() {
   const [activeSection, setActiveSection] = useState<string>("home");
-  const [isVisible, setIsVisible] = useState(true);
 
   // Track active section with IntersectionObserver
   useEffect(() => {
@@ -42,37 +41,6 @@ export function SectionNavigation() {
     return () => sectionElements.forEach((el) => observer.unobserve(el));
   }, []);
 
-  // Show/hide on scroll (optional enhancement)
-  useEffect(() => {
-    let lastScrollY = window.scrollY;
-    let ticking = false;
-
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      
-      // Show navigation when scrolling up or at top
-      if (currentScrollY < lastScrollY || currentScrollY < 100) {
-        setIsVisible(true);
-      } else if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        // Hide when scrolling down (optional - can remove this for always visible)
-        // setIsVisible(false);
-      }
-      
-      lastScrollY = currentScrollY;
-      ticking = false;
-    };
-
-    const requestTick = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(handleScroll);
-        ticking = true;
-      }
-    };
-
-    window.addEventListener("scroll", requestTick, { passive: true });
-    return () => window.removeEventListener("scroll", requestTick);
-  }, []);
-
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, sectionId: string) => {
     e.preventDefault();
     const element = document.getElementById(sectionId);
@@ -92,19 +60,16 @@ export function SectionNavigation() {
       {/* Mobile: Bottom Navigation Bar */}
       <motion.nav
         initial={{ y: 100, opacity: 0 }}
-        animate={{ 
-          y: isVisible ? 0 : 100, 
-          opacity: isVisible ? 1 : 0 
-        }}
-        transition={{ duration: 0.3, ease: "easeInOut" }}
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-30 pb-safe"
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-30"
         style={{
           paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)",
         }}
         aria-label="Section Navigation"
       >
         <div className="mx-2 mb-2 px-2 py-2.5 rounded-2xl bg-card/95 backdrop-blur-md border border-border shadow-xl">
-          <div className="flex items-center justify-around gap-1 overflow-x-auto scrollbar-hide snap-x snap-mandatory">
+          <div className="flex items-center justify-around gap-1 overflow-x-auto scrollbar-hide">
             {NAV_ITEMS.map((item) => {
               const Icon = SECTION_ICONS[item.id as keyof typeof SECTION_ICONS];
               const isActive = activeSection === item.id;
@@ -116,7 +81,7 @@ export function SectionNavigation() {
                   onClick={(e) => handleNavClick(e, item.id)}
                   aria-label={`Navigate to ${item.label}`}
                   aria-current={isActive ? "page" : undefined}
-                  className="relative flex flex-col items-center justify-center min-w-[60px] min-h-[56px] px-2 py-2 rounded-xl transition-colors snap-center flex-shrink-0"
+                  className="relative flex flex-col items-center justify-center min-w-[60px] min-h-[56px] px-2 py-2 rounded-xl transition-colors flex-shrink-0"
                 >
                   {isActive && (
                     <motion.div
@@ -146,15 +111,15 @@ export function SectionNavigation() {
         </div>
       </motion.nav>
 
-      {/* Desktop: Left Sidebar */}
+      {/* Desktop: Left Sidebar - Only show on very large screens */}
       <motion.nav
         initial={{ x: -100, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.2 }}
-        className="hidden lg:flex fixed left-4 top-1/2 -translate-y-1/2 z-30"
+        className="hidden xl:flex fixed left-6 top-1/2 -translate-y-1/2 z-30"
         aria-label="Section Navigation"
       >
-        <div className="flex flex-col gap-3 px-3 py-4 rounded-2xl bg-card/95 backdrop-blur-md border border-border shadow-xl">
+        <div className="flex flex-col gap-3 px-3 py-4 rounded-2xl bg-card border border-border shadow-xl">
           {NAV_ITEMS.map((item) => {
             const Icon = SECTION_ICONS[item.id as keyof typeof SECTION_ICONS];
             const isActive = activeSection === item.id;

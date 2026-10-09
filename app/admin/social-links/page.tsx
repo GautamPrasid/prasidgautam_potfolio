@@ -22,48 +22,61 @@ import {
 import { DynamicIcon } from "@/components/ui/dynamic-icon";
 
 const ICON_PRESETS = [
+  // Brand icons (Simple Icons)
   "Github",
   "Linkedin",
   "Twitter",
+  "X",
   "Instagram",
   "Facebook",
   "Youtube",
+  "Whatsapp",
+  "Telegram",
+  "Discord",
+  "Slack",
+  "Reddit",
+  "Tiktok",
+  "Medium",
+  "Dribbble",
+  "Behance",
+  "Figma",
+  "Codepen",
+  "Stackoverflow",
+  // Generic icons (Lucide)
   "Mail",
-  "MessageCircle",
+  "Phone",
   "Globe",
   "Link",
-  "Send",
-  "Phone",
-  "AtSign",
-  "Chrome",
-  "Twitch",
-  "Slack",
-  "Figma",
-  "Dribbble",
-  "CodepenIcon",
-  "GitlabIcon",
 ];
 
 // Auto-detect icon based on URL
 function detectIconFromUrl(url: string): string {
   const lowercaseUrl = url.toLowerCase();
   
+  // Brand detection (Simple Icons)
   if (lowercaseUrl.includes("github")) return "Github";
   if (lowercaseUrl.includes("linkedin")) return "Linkedin";
-  if (lowercaseUrl.includes("twitter") || lowercaseUrl.includes("x.com")) return "Twitter";
+  if (lowercaseUrl.includes("twitter")) return "Twitter";
+  if (lowercaseUrl.includes("x.com")) return "X";
   if (lowercaseUrl.includes("instagram")) return "Instagram";
   if (lowercaseUrl.includes("facebook")) return "Facebook";
   if (lowercaseUrl.includes("youtube")) return "Youtube";
-  if (lowercaseUrl.includes("mailto:") || lowercaseUrl.includes("@")) return "Mail";
-  if (lowercaseUrl.includes("whatsapp")) return "MessageCircle";
-  if (lowercaseUrl.includes("telegram")) return "Send";
-  if (lowercaseUrl.includes("phone") || lowercaseUrl.includes("tel:")) return "Phone";
-  if (lowercaseUrl.includes("twitch")) return "Twitch";
+  if (lowercaseUrl.includes("whatsapp") || lowercaseUrl.includes("wa.me")) return "Whatsapp";
+  if (lowercaseUrl.includes("telegram") || lowercaseUrl.includes("t.me")) return "Telegram";
+  if (lowercaseUrl.includes("discord")) return "Discord";
   if (lowercaseUrl.includes("slack")) return "Slack";
-  if (lowercaseUrl.includes("figma")) return "Figma";
+  if (lowercaseUrl.includes("reddit")) return "Reddit";
+  if (lowercaseUrl.includes("tiktok")) return "Tiktok";
+  if (lowercaseUrl.includes("medium")) return "Medium";
   if (lowercaseUrl.includes("dribbble")) return "Dribbble";
-  if (lowercaseUrl.includes("codepen")) return "CodepenIcon";
-  if (lowercaseUrl.includes("gitlab")) return "GitlabIcon";
+  if (lowercaseUrl.includes("behance")) return "Behance";
+  if (lowercaseUrl.includes("figma")) return "Figma";
+  if (lowercaseUrl.includes("codepen")) return "Codepen";
+  if (lowercaseUrl.includes("stackoverflow")) return "Stackoverflow";
+  
+  // Generic detection (Lucide)
+  if (lowercaseUrl.includes("mailto:") || lowercaseUrl.includes("@")) return "Mail";
+  if (lowercaseUrl.includes("tel:")) return "Phone";
   
   return "Globe"; // Default fallback
 }
@@ -412,18 +425,27 @@ export default function SocialLinksManagerPage() {
                   required
                   value={iconName}
                   onChange={(e) => setIconName(e.target.value)}
-                  placeholder="Or type custom Lucide icon name"
+                  placeholder="Or type custom icon name"
                   className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 />
                 <p className="text-[10px] text-muted-foreground">
-                  Browse all icons at{" "}
+                  Browse icons: Brand logos at{" "}
+                  <a
+                    href="https://simpleicons.org"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    simpleicons.org
+                  </a>
+                  , Generic at{" "}
                   <a
                     href="https://lucide.dev/icons"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-primary hover:underline"
                   >
-                    lucide.dev/icons
+                    lucide.dev
                   </a>
                 </p>
               </div>

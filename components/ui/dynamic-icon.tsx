@@ -1,6 +1,32 @@
-import type { ComponentType } from "react";
+import type { ComponentType, SVGProps } from "react";
 import * as Icons from "lucide-react";
 import type { LucideProps } from "lucide-react";
+import * as SimpleIcons from "simple-icons";
+
+// Brand icons mapping (Simple Icons uses lowercase with "si" prefix)
+const BRAND_ICONS: Record<string, string> = {
+  Github: "siGithub",
+  Linkedin: "siLinkedin",
+  Twitter: "siTwitter",
+  X: "siX",
+  Instagram: "siInstagram",
+  Facebook: "siFacebook",
+  Youtube: "siYoutube",
+  Whatsapp: "siWhatsapp",
+  Telegram: "siTelegram",
+  Discord: "siDiscord",
+  Slack: "siSlack",
+  Reddit: "siReddit",
+  Tiktok: "siTiktok",
+  Snapchat: "siSnapchat",
+  Pinterest: "siPinterest",
+  Codepen: "siCodepen",
+  Stackoverflow: "siStackoverflow",
+  Medium: "siMedium",
+  Dribbble: "siDribbble",
+  Behance: "siBehance",
+  Figma: "siFigma",
+};
 
 export function DynamicIcon({ name, ...props }: LucideProps & { name: string }) {
   const key = (name || "Share2").trim();
@@ -30,14 +56,33 @@ export function DynamicIcon({ name, ...props }: LucideProps & { name: string }) 
     .join("");
 
   const aliases: Record<string, string> = {
-    X: "Twitter",
     Email: "Mail",
     Location: "MapPin",
-    Whatsapp: "MessageCircle",
     Website: "Globe",
   };
 
   const resolved = aliases[pascal] || pascal;
+  
+  // Check if it's a brand icon first
+  if (BRAND_ICONS[resolved]) {
+    const iconSlug = resolved.toLowerCase();
+    const iconData = SimpleIcons[`si${resolved}` as keyof typeof SimpleIcons];
+    
+    if (iconData && typeof iconData === 'object' && 'path' in iconData) {
+      return (
+        <svg
+          role="img"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          {...(props as SVGProps<SVGSVGElement>)}
+        >
+          <path d={(iconData as { path: string }).path} />
+        </svg>
+      );
+    }
+  }
+  
+  // Fall back to Lucide icons
   const Icon =
     (Icons as unknown as Record<string, ComponentType<LucideProps>>)[resolved] ||
     Icons.Share2;

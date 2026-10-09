@@ -6,7 +6,7 @@ interface PageWrapperProps {
 
 export function PageWrapper({ children }: PageWrapperProps) {
   return (
-    <div className="w-full flex flex-col flex-1 animate-fadein">
+    <div className="w-full flex flex-col flex-1 animate-fadein pb-20 lg:pb-0">
       {children}
     </div>
   );
