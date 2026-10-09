@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Menu, X, Code2 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
 export interface NavItem {
   label: string;
@@ -23,22 +23,33 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Contact", href: "#contact", id: "contact" },
 ];
 
-export function Navbar() {
+/** Height of the sticky header in px — used to correct scrollIntoView offset. */
+const HEADER_HEIGHT = 64;
+
+/** Tailwind xl = 1280px — the breakpoint at which the desktop nav appears. */
+const DESKTOP_BREAKPOINT = 1280;
+
+export function Navbar({ siteName }: { siteName?: string }) {
   const pathname = usePathname();
   const [activeSection, setActiveSection] = useState<string>("home");
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [scrolled, setScrolled] = useState<boolean>(false);
+  const prefersReducedMotion = useReducedMotion();
+  // Ref so Escape/resize listeners always see the current value without re-binding.
+  const isOpenRef = useRef(isOpen);
+  isOpenRef.current = isOpen;
 
-  // Scroll background state
+  // ─── Close helper ──────────────────────────────────────────────────────────
+  const closeMenu = useCallback(() => setIsOpen(false), []);
+
+  // ─── Scroll shadow ─────────────────────────────────────────────────────────
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-    };
-    window.addEventListener("scroll", handleScroll);
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // IntersectionObserver for active link highlighting
+  // ─── Active-section tracker via IntersectionObserver ───────────────────────
   useEffect(() => {
     const sectionElements = NAV_ITEMS.map((item) =>
       document.getElementById(item.id)
@@ -52,44 +63,99 @@ export function Navbar() {
           }
         });
       },
-      {
-        rootMargin: "-20% 0px -60% 0px",
-        threshold: 0.1,
-      }
+      { rootMargin: "-20% 0px -60% 0px", threshold: 0.1 }
     );
 
     sectionElements.forEach((el) => observer.observe(el));
-    return () => {
-      sectionElements.forEach((el) => observer.unobserve(el));
-    };
+    return () => sectionElements.forEach((el) => observer.unobserve(el));
   }, []);
 
-  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
-    e.preventDefault();
-    setIsOpen(false);
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-    }
-  };
+  // ─── Close on route change ─────────────────────────────────────────────────
+  useEffect(() => {
+    closeMenu();
+  }, [pathname, closeMenu]);
 
-  // Do not render public navbar on admin pages
-  if (pathname?.startsWith("/admin")) {
-    return null;
-  }
+  // ─── Escape key ────────────────────────────────────────────────────────────
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpenRef.current) closeMenu();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [closeMenu]);
+
+  // ─── Close on resize past desktop breakpoint ───────────────────────────────
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= DESKTOP_BREAKPOINT && isOpenRef.current) {
+        closeMenu();
+      }
+    };
+    window.addEventListener("resize", handleResize, { passive: true });
+    return () => window.removeEventListener("resize", handleResize);
+  }, [closeMenu]);
+
+  // ─── Body scroll lock ──────────────────────────────────────────────────────
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
+  // ─── Smooth scroll that corrects for the sticky header height ──────────────
+  const scrollToSection = useCallback((id: string) => {
+    const element = document.getElementById(id);
+    if (!element) return;
+    const top =
+      element.getBoundingClientRect().top + window.scrollY - HEADER_HEIGHT;
+    window.scrollTo({ top, behavior: prefersReducedMotion ? "instant" : "smooth" });
+  }, [prefersReducedMotion]);
+
+  const handleNavClick = useCallback(
+    (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+      e.preventDefault();
+      closeMenu();
+      scrollToSection(id);
+    },
+    [closeMenu, scrollToSection]
+  );
+
+  // ─── Admin pages: no nav ───────────────────────────────────────────────────
+  if (pathname?.startsWith("/admin")) return null;
+
+  // ─── Animation variants (disabled when user prefers reduced motion) ─────────
+  const backdropVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1 },
+  };
+  const drawerVariants = {
+    hidden: { x: prefersReducedMotion ? 0 : "100%", opacity: prefersReducedMotion ? 0 : 1 },
+    visible: { x: 0, opacity: 1 },
+  };
+  const drawerTransition = prefersReducedMotion
+    ? { duration: 0 }
+    : { type: "spring" as const, damping: 25, stiffness: 200 };
 
   return (
     <header
-      className={`sticky top-0 z-40 w-full transition-all duration-300 ${scrolled
+      className={`sticky top-0 z-40 w-full transition-all duration-300 ${
+        scrolled
           ? "bg-background/80 backdrop-blur-md border-b border-border/60 shadow-sm"
           : "bg-background/40 backdrop-blur-sm border-b border-transparent"
-        }`}
+      }`}
+      // Safe-area padding for notched phones (horizontal + top).
+      // env() falls back to 0 on non-notched devices — no visual change there.
+      style={{ paddingLeft: "env(safe-area-inset-left)", paddingRight: "env(safe-area-inset-right)" }}
     >
       <nav
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between"
         aria-label="Main navigation"
       >
-        {/* Brand Logo */}
         <a
           href="#home"
           onClick={(e) => handleNavClick(e, "home")}
@@ -100,11 +166,12 @@ export function Navbar() {
             <Code2 className="w-5 h-5" />
           </div>
           <span className="font-heading font-bold text-lg tracking-tight text-foreground">
-            Portfolio<span className="text-primary">.</span>
+            {siteName?.trim() || "Portfolio"}
+            <span className="text-primary">.</span>
           </span>
         </a>
 
-        {/* Desktop Nav Items */}
+        {/* Desktop links — only visible at xl (≥1280px) */}
         <div className="hidden xl:flex items-center gap-1">
           {NAV_ITEMS.map((item) => {
             const isActive = activeSection === item.id;
@@ -113,17 +180,22 @@ export function Navbar() {
                 key={item.id}
                 href={item.href}
                 onClick={(e) => handleNavClick(e, item.id)}
-                className={`relative px-3 py-1.5 text-sm font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary ${isActive
+                className={`relative px-3 py-1.5 text-sm font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary ${
+                  isActive
                     ? "text-primary font-semibold"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                  }`}
+                }`}
               >
                 {item.label}
                 {isActive && (
                   <motion.div
                     layoutId="activeNavIndicator"
                     className="absolute bottom-0 left-2 right-2 h-0.5 bg-primary rounded-full"
-                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    transition={
+                      prefersReducedMotion
+                        ? { duration: 0 }
+                        : { type: "spring", stiffness: 380, damping: 30 }
+                    }
                   />
                 )}
               </a>
@@ -131,49 +203,68 @@ export function Navbar() {
           })}
         </div>
 
-        {/* Desktop Theme Toggle & Action */}
         <div className="hidden xl:flex items-center gap-3">
           <ThemeToggle />
         </div>
 
-        {/* Mobile Hamburger & Theme Toggle Controls */}
+        {/* Mobile/tablet controls — visible below xl */}
         <div className="flex xl:hidden items-center gap-2">
           <ThemeToggle />
+          {/* Tap target is min-w-11 min-h-11 (44px) to meet WCAG 2.5.5 */}
           <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="p-2 rounded-xl text-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+            onClick={() => setIsOpen((v) => !v)}
+            className="min-w-11 min-h-11 flex items-center justify-center rounded-xl text-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
             aria-label={isOpen ? "Close menu" : "Open menu"}
             aria-expanded={isOpen}
+            aria-controls="mobile-menu"
           >
             {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
       </nav>
 
-      {/* Mobile Slide-in Drawer */}
       <AnimatePresence>
         {isOpen && (
           <>
-            {/* Backdrop */}
+            {/* Backdrop — tapping it closes the menu */}
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsOpen(false)}
+              key="backdrop"
+              variants={backdropVariants}
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
+              transition={{ duration: prefersReducedMotion ? 0 : 0.2 }}
+              onClick={closeMenu}
               suppressHydrationWarning
               className="fixed inset-0 top-16 bg-black/50 backdrop-blur-sm z-40 xl:hidden"
               aria-hidden="true"
             />
 
-            {/* Slide-in Drawer */}
+            {/* Slide-in drawer */}
             <motion.div
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed right-0 top-16 bottom-0 w-72 bg-card border-l border-border z-50 p-6 flex flex-col justify-between shadow-2xl xl:hidden overflow-y-auto"
+              key="drawer"
+              id="mobile-menu"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Navigation menu"
+              variants={drawerVariants}
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
+              transition={drawerTransition}
+              suppressHydrationWarning
+              // Use dvh (dynamic viewport height) so the drawer never hides
+              // behind the browser chrome on iOS/Android.
+              // Falls back gracefully: dvh → svh → 100vh in order.
+              // inset-0 top-16 covers the remaining viewport below the header.
+              className="fixed right-0 top-16 bottom-0 w-72 bg-card border-l border-border z-50 flex flex-col justify-between shadow-2xl xl:hidden overflow-y-auto"
+              style={{
+                // Respect notch/home-bar insets on the right side and bottom
+                paddingRight: "env(safe-area-inset-right)",
+                paddingBottom: "env(safe-area-inset-bottom)",
+              }}
             >
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2 p-6">
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 mb-2">
                   Navigation
                 </p>
@@ -184,27 +275,29 @@ export function Navbar() {
                       key={item.id}
                       href={item.href}
                       onClick={(e) => handleNavClick(e, item.id)}
-                      className={`px-4 py-3 text-base font-medium rounded-xl transition-all duration-200 flex items-center justify-between ${isActive
+                      // min-h-11 ensures the tap target is always ≥44px
+                      className={`min-h-11 px-4 py-3 text-base font-medium rounded-xl transition-all duration-200 flex items-center justify-between ${
+                        isActive
                           ? "bg-primary/10 text-primary font-semibold"
                           : "text-foreground hover:bg-muted"
-                        }`}
+                      }`}
                     >
                       {item.label}
                       {isActive && (
-                        <span className="w-2 h-2 rounded-full bg-primary" />
+                        <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
                       )}
                     </a>
                   );
                 })}
               </div>
 
-              <div className="pt-6 border-t border-border flex flex-col gap-3">
+              <div className="p-6 pt-0 border-t border-border flex flex-col gap-3">
                 <a
                   href="#contact"
                   onClick={(e) => handleNavClick(e, "contact")}
-                  className="w-full py-3 text-center text-sm font-semibold rounded-xl bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-all duration-200"
+                  className="min-h-11 w-full py-3 text-center text-sm font-semibold rounded-xl bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-all duration-200 flex items-center justify-center"
                 >
-                  Get in Touch
+                  Contact
                 </a>
               </div>
             </motion.div>

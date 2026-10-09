@@ -1,0 +1,56 @@
+---
+title: 'Project setup'
+description: 'Prepare Supabase and run the portfolio on your machine.'
+---
+
+## Prerequisites
+
+- Node.js and npm
+- A Supabase project
+
+## Install the application
+
+Clone the repository and install its dependencies:
+
+```bash
+git clone https://github.com/GautamPrasid/prasidgautam_potfolio.git
+cd prasidgautam_potfolio
+npm install
+```
+
+## Configure Supabase
+
+1. Create a project in [Supabase](https://supabase.com/).
+2. Open the project's SQL Editor and run [`supabase/schema.sql`](https://github.com/GautamPrasid/prasidgautam_potfolio/blob/main/supabase/schema.sql). This creates the portfolio tables, row-level security policies, and the public `portfolio-assets` storage bucket.
+3. In Supabase Authentication, create an email/password user for the administrator.
+4. Copy that user's ID from Authentication and register it in the `admins` table using the SQL Editor:
+
+```sql
+insert into public.admins (user_id)
+values ('<auth-user-uuid>')
+on conflict (user_id) do nothing;
+```
+
+Only user IDs registered in `public.admins` are authorized to manage portfolio content.
+
+## Configure environment variables
+
+Create `.env.local` in the project root:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+```
+
+Get the Supabase URL and anon key from the project's API settings. The site URL is used when generating canonical and social metadata; use the production URL in the deployed environment.
+
+Do not expose a Supabase service-role key in client-side code or variables prefixed with `NEXT_PUBLIC_`.
+
+## Start the development server
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) for the portfolio and [http://localhost:3000/admin/login](http://localhost:3000/admin/login) to sign in to the dashboard.

@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  SKILL_CATEGORIES,
-  SkillCategory,
+  SKILL_FILTERS,
+  SkillFilter,
   Skill,
 } from "@/lib/data";
 import { getSkillsFromDb } from "@/lib/supabase-db";
@@ -36,7 +36,6 @@ import {
   LucideIcon,
 } from "lucide-react";
 
-// Icon mapping helper
 const ICON_MAP: Record<string, LucideIcon> = {
   Code,
   FileCode,
@@ -68,7 +67,7 @@ export interface SkillsSectionProps {
 
 export function SkillsSection({ initialSkills = [] }: SkillsSectionProps = {}) {
   const [skills, setSkills] = useState<Skill[]>(initialSkills);
-  const [selectedCategory, setSelectedCategory] = useState<SkillCategory>("All");
+  const [selectedCategory, setSelectedCategory] = useState<SkillFilter>("All");
 
   useEffect(() => {
     if (initialSkills && initialSkills.length > 0) {
@@ -97,7 +96,6 @@ export function SkillsSection({ initialSkills = [] }: SkillsSectionProps = {}) {
       ? safeSkills
       : safeSkills.filter((skill) => skill.category === selectedCategory);
 
-
   return (
     <section
       id="skills"
@@ -112,7 +110,6 @@ export function SkillsSection({ initialSkills = [] }: SkillsSectionProps = {}) {
         className="space-y-12"
         suppressHydrationWarning
       >
-        {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
           <span className="px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide bg-primary/10 text-primary border border-primary/20 inline-block uppercase">
             Technical Expertise
@@ -121,13 +118,12 @@ export function SkillsSection({ initialSkills = [] }: SkillsSectionProps = {}) {
             Skills &amp; Technologies
           </h2>
           <p className="text-muted-foreground text-base sm:text-lg">
-            A comprehensive overview of languages, frameworks, databases, tools, and professional capabilities I leverage daily.
+            A comprehensive overview of languages, frameworks, databases, tools, and professional capabilities.
           </p>
         </div>
 
-        {/* Category Tabs */}
         <div className="flex items-center justify-center gap-2 flex-wrap">
-          {SKILL_CATEGORIES.map((category) => {
+          {SKILL_FILTERS.map((category) => {
             const isActive = selectedCategory === category;
             return (
               <button
@@ -145,7 +141,6 @@ export function SkillsSection({ initialSkills = [] }: SkillsSectionProps = {}) {
           })}
         </div>
 
-        {/* Skill Card Grid (2 cols mobile, 3 cols tablet, 4 cols desktop) */}
         {filteredSkills.length === 0 ? (
           <div className="py-12 text-center rounded-2xl bg-card border border-dashed border-border p-8 max-w-md mx-auto">
             <Wrench className="w-8 h-8 text-muted-foreground/50 mx-auto mb-3" />
@@ -160,73 +155,70 @@ export function SkillsSection({ initialSkills = [] }: SkillsSectionProps = {}) {
           >
             <AnimatePresence mode="popLayout">
               {filteredSkills.map((skill: Skill) => {
-
-              const IconComponent = ICON_MAP[skill.iconName] || Wrench;
-              return (
-                <motion.div
-                  key={skill.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  whileHover={{ y: -6, scale: 1.02 }}
-                  transition={{ duration: 0.25 }}
-                  suppressHydrationWarning
-                  className="p-5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group"
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="p-3 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-200">
-                        <IconComponent className="w-5 h-5 sm:w-6 sm:h-6" />
-                      </div>
-                      <span className="text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-foreground uppercase tracking-wider">
-                        {skill.category}
-                      </span>
-                    </div>
-
-                    <div>
-                      <h3 className="font-heading font-bold text-base sm:text-lg text-foreground group-hover:text-primary transition-colors">
-                        {skill.name}
-                      </h3>
-                      {skill.description && (
-                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
-                          {skill.description}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Level indicator bar if present */}
-                  {skill.level && (
-                    <div className="pt-4 space-y-1.5">
-                      <div className="flex justify-between text-[11px] font-medium text-muted-foreground">
-                        <span>Proficiency</span>
-                        <span className="text-foreground font-semibold">
-                          {skill.level}%
+                const IconComponent = ICON_MAP[skill.iconName] || Wrench;
+                const hasLevel = typeof skill.level === "number" && skill.level > 0;
+                return (
+                  <motion.div
+                    key={skill.id}
+                    layout
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    whileHover={{ y: -6, scale: 1.02 }}
+                    transition={{ duration: 0.25 }}
+                    suppressHydrationWarning
+                    className="p-5 rounded-2xl bg-card border border-border/80 hover:border-primary/40 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group"
+                  >
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="p-3 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-200">
+                          <IconComponent className="w-5 h-5 sm:w-6 sm:h-6" />
+                        </div>
+                        <span className="text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-foreground uppercase tracking-wider">
+                          {skill.category}
                         </span>
                       </div>
-                      <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          whileInView={{ width: `${skill.level}%` }}
-                          viewport={{ once: true }}
-                          transition={{ duration: 0.8, ease: "easeOut" }}
-                          className="h-full bg-gradient-to-r from-primary to-accent rounded-full"
-                        />
+
+                      <div>
+                        <h3 className="font-heading font-bold text-base sm:text-lg text-foreground group-hover:text-primary transition-colors">
+                          {skill.name}
+                        </h3>
+                        {skill.description?.trim() ? (
+                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
+                            {skill.description}
+                          </p>
+                        ) : null}
                       </div>
                     </div>
-                  )}
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
-        </motion.div>
+
+                    {hasLevel && (
+                      <div className="pt-4 space-y-1.5">
+                        <div className="flex justify-between text-[11px] font-medium text-muted-foreground">
+                          <span>Proficiency</span>
+                          <span className="text-foreground font-semibold">
+                            {skill.level}%
+                          </span>
+                        </div>
+                        <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            whileInView={{ width: `${skill.level}%` }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.8, ease: "easeOut" }}
+                            className="h-full bg-gradient-to-r from-primary to-accent rounded-full"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </motion.div>
         )}
       </motion.div>
     </section>
   );
 }
 
-
-// Export alias for Skills
 export { SkillsSection as Skills };

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { ScrollProgress } from "@/components/scroll-progress";
@@ -8,6 +8,12 @@ import { getHeroAboutFromDb, getSocialLinksFromDb } from "@/lib/supabase-db";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 const inter = Inter({
   subsets: ["latin"],
@@ -23,12 +29,10 @@ export async function generateMetadata(): Promise<Metadata> {
   const heroData = await getHeroAboutFromDb();
   const profileImage = heroData?.profileImageUrl?.trim() || "";
   const name = heroData?.name?.trim() || "";
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://prasidgautam.dev";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://prasidgautam.com.np";
   const bio = heroData?.bioText?.trim() || "";
 
-  const titleString = name
-    ? `${name} | Full-Stack Web Developer & BCA Student`
-    : "Portfolio | Full-Stack Web Developer";
+  const titleString = name ? `${name} | Portfolio` : "Portfolio";
 
   return {
     metadataBase: new URL(siteUrl),
@@ -37,24 +41,13 @@ export async function generateMetadata(): Promise<Metadata> {
       template: name ? `%s | ${name}` : "%s | Portfolio",
     },
     description: bio,
-    keywords: name
-      ? [
-          name,
-          "Full-Stack Developer",
-          "Next.js Developer",
-          "React Developer",
-          "TypeScript",
-          "BCA Student",
-          "Web Application Developer",
-        ]
-      : ["Full-Stack Developer", "Next.js", "React", "TypeScript", "Web Developer"],
     authors: name ? [{ name, url: siteUrl }] : [],
     creator: name || undefined,
     openGraph: {
       type: "website",
       locale: "en_US",
       url: siteUrl,
-      title: name ? `${name} | Full-Stack Web Developer` : "Portfolio",
+      title: titleString,
       description: bio,
       siteName: name ? `${name} Portfolio` : "Portfolio",
       images: profileImage
@@ -70,7 +63,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     twitter: {
       card: "summary_large_image",
-      title: name ? `${name} | Full-Stack Web Developer` : "Portfolio",
+      title: titleString,
       description: bio,
       images: profileImage ? [profileImage] : [],
     },
@@ -86,7 +79,10 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const socialLinks = await getSocialLinksFromDb();
+  const [socialLinks, heroData] = await Promise.all([
+    getSocialLinksFromDb(),
+    getHeroAboutFromDb(),
+  ]);
 
   return (
     <html lang="en" suppressHydrationWarning className="scroll-smooth">
@@ -113,9 +109,14 @@ export default async function RootLayout({
         className={`${inter.variable} ${spaceGrotesk.variable} font-sans antialiased bg-background text-foreground min-h-screen flex flex-col selection:bg-primary/20 selection:text-primary`}
       >
         <ScrollProgress />
-        <Navbar />
+        <Navbar siteName={heroData?.name} />
         <main className="flex-1">{children}</main>
-        <Footer initialSocialLinks={socialLinks} />
+        <Footer
+          initialSocialLinks={socialLinks}
+          siteName={heroData?.name}
+          bio={heroData?.bioText}
+          location={heroData?.location}
+        />
       </body>
     </html>
   );

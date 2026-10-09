@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Skill, SKILL_CATEGORIES } from "@/lib/data";
+import { Skill, SKILL_FILTERS } from "@/lib/data";
 import { getSkillsFromDb } from "@/lib/supabase-db";
 import {
   saveSkillAction,
@@ -192,7 +192,7 @@ export default function SkillsManagerPage() {
 
       {/* Category Filter Tabs */}
       <div className="flex items-center gap-2 flex-wrap">
-        {SKILL_CATEGORIES.map((cat) => (
+        {SKILL_FILTERS.map((cat) => (
           <button
             key={cat}
             onClick={() => setActiveCategory(cat)}

@@ -1,14 +1,4 @@
-export interface Skill {
-  id: string;
-  name: string;
-  category: "Languages" | "Frontend" | "Backend" | "Database" | "Tools/DevOps" | "Soft Skills";
-  iconName: string;
-  level?: number;
-  description?: string;
-}
-
 export const SKILL_CATEGORIES = [
-  "All",
   "Languages",
   "Frontend",
   "Backend",
@@ -18,6 +8,17 @@ export const SKILL_CATEGORIES = [
 ] as const;
 
 export type SkillCategory = (typeof SKILL_CATEGORIES)[number];
+export type SkillFilter = SkillCategory | "All";
+export const SKILL_FILTERS = ["All", ...SKILL_CATEGORIES] as const;
+
+export interface Skill {
+  id: string;
+  name: string;
+  category: SkillCategory;
+  iconName: string;
+  level?: number;
+  description?: string;
+}
 
 export interface EducationItem {
   id: string;
@@ -51,6 +52,17 @@ export interface CertificationItem {
   issuerColor?: string;
 }
 
+export const PROJECT_CATEGORIES = [
+  "Full-Stack",
+  "Web Apps",
+  "Backend",
+  "Mini Projects",
+] as const;
+
+export type ProjectCategory = (typeof PROJECT_CATEGORIES)[number];
+export type ProjectFilter = ProjectCategory | "All";
+export const PROJECT_FILTERS = ["All", ...PROJECT_CATEGORIES] as const;
+
 export interface Project {
   id: string;
   title: string;
@@ -59,19 +71,9 @@ export interface Project {
   image?: string;
   github?: string;
   demo?: string;
-  category: "Web Apps" | "Full-Stack" | "Backend" | "Mini Projects";
+  category: ProjectCategory;
   featured?: boolean;
 }
-
-export const PROJECT_CATEGORIES = [
-  "All",
-  "Full-Stack",
-  "Web Apps",
-  "Backend",
-  "Mini Projects",
-] as const;
-
-export type ProjectCategory = (typeof PROJECT_CATEGORIES)[number];
 
 export interface SocialLinkItem {
   id: string;

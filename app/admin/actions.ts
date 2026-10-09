@@ -4,38 +4,130 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
 
-async function getActionClient() {
+export type ActionResult<T = unknown> = {
+  success: boolean;
+  message: string;
+  data?: T;
+};
+
+const HERO_DEFAULT_ID = "00000000-0000-0000-0000-000000000001";
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_PDF_BYTES = 8 * 1024 * 1024;
+const ASSETS_BUCKET = "portfolio-assets";
+
+function isValidUuid(id?: string): boolean {
+  return !!id && UUID_REGEX.test(id);
+}
+
+function revalidateAllPaths() {
+  revalidatePath("/", "layout");
+  revalidatePath("/");
+  revalidatePath("/admin");
+}
+
+async function requireAdmin() {
   const cookieStore = await cookies();
-  return createClient(cookieStore);
+  const supabase = createClient(cookieStore);
+
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    return { ok: false as const, message: "Authentication required.", supabase };
+  }
+
+  const { data: admin, error: adminError } = await supabase
+    .from("admins")
+    .select("user_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (adminError || !admin) {
+    return { ok: false as const, message: "Unauthorized access.", supabase };
+  }
+
+  return { ok: true as const, user, supabase };
 }
 
-function triggerRevalidateAll() {
+function getStoragePathFromUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  const marker = `/storage/v1/object/public/${ASSETS_BUCKET}/`;
+  const index = url.indexOf(marker);
+  if (index === -1) return null;
   try {
-    revalidatePath("/", "layout");
-    revalidatePath("/");
-    revalidatePath("/admin");
-  } catch (err) {
-    console.error("Revalidation error:", err);
+    return decodeURIComponent(url.slice(index + marker.length).split("?")[0]);
+  } catch {
+    return null;
   }
 }
 
-/**
- * Server Action to revalidate public routes and admin dashboard cache
- */
-export async function revalidatePublicPath(path: string = "/") {
-  try {
-    revalidatePath(path, "layout");
-    revalidatePath(path);
-    revalidatePath("/admin");
-  } catch (err) {
-    console.error("Revalidation error:", err);
-  }
-  return { success: true };
+async function removeStorageFile(
+  supabase: ReturnType<typeof createClient>,
+  url: string | null | undefined
+) {
+  const path = getStoragePathFromUrl(url);
+  if (!path) return;
+  await supabase.storage.from(ASSETS_BUCKET).remove([path]);
 }
 
-/**
- * Hero & About Server Actions
- */
+export async function uploadAssetAction(formData: FormData): Promise<ActionResult<{ publicUrl: string }>> {
+  const auth = await requireAdmin();
+  if (!auth.ok) return { success: false, message: auth.message };
+
+  const file = formData.get("file");
+  const folder = String(formData.get("folder") || "uploads");
+  const previousUrl = String(formData.get("previousUrl") || "");
+  const allowedFolders = new Set(["profile", "resume", "projects"]);
+
+  if (!(file instanceof File)) {
+    return { success: false, message: "No file provided." };
+  }
+  if (!allowedFolders.has(folder)) {
+    return { success: false, message: "Invalid upload destination." };
+  }
+
+  if (folder === "resume") {
+    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+      return { success: false, message: "Resume file must be a PDF." };
+    }
+    if (file.size > MAX_PDF_BYTES) {
+      return { success: false, message: "PDF size must be 8MB or less." };
+    }
+  } else {
+    if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+      return { success: false, message: "Image must be JPEG, PNG, WebP, or GIF." };
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      return { success: false, message: "Image size must be 5MB or less." };
+    }
+  }
+
+  const ext = file.name.split(".").pop()?.toLowerCase() || (folder === "resume" ? "pdf" : "jpg");
+  const filePath = `${folder}/${crypto.randomUUID()}.${ext}`;
+
+  const { error: uploadError } = await auth.supabase.storage
+    .from(ASSETS_BUCKET)
+    .upload(filePath, file, { cacheControl: "3600", upsert: false });
+
+  if (uploadError) {
+    return { success: false, message: uploadError.message };
+  }
+
+  if (previousUrl) {
+    await removeStorageFile(auth.supabase, previousUrl);
+  }
+
+  const {
+    data: { publicUrl },
+  } = auth.supabase.storage.from(ASSETS_BUCKET).getPublicUrl(filePath);
+
+  return { success: true, message: "File uploaded successfully.", data: { publicUrl } };
+}
+
 export async function saveHeroAboutAction(payload: {
   id?: string;
   name: string;
@@ -57,11 +149,12 @@ export async function saveHeroAboutAction(payload: {
     certifications: number;
     technologies: number;
   };
-}) {
-  const supabase = await getActionClient();
-  const { data, error } = await supabase.from("hero_about").upsert({
-    id: payload.id || "a0000000-0000-0000-0000-000000000001",
-    name: payload.name,
+}): Promise<ActionResult> {
+  const auth = await requireAdmin();
+  if (!auth.ok) return { success: false, message: auth.message };
+
+  const row = {
+    name: payload.name.trim(),
     roles: payload.roles,
     bio_text: payload.bio_text,
     about_text: payload.about_text,
@@ -71,25 +164,99 @@ export async function saveHeroAboutAction(payload: {
     contact_email: payload.contact_email || null,
     contact_phone: payload.contact_phone || null,
     location: payload.location || null,
-    connect_heading: payload.connect_heading || "Connect With Me",
+    connect_heading: payload.connect_heading || null,
     highlights: payload.highlights || [],
     philosophy_quote: payload.philosophy_quote || null,
     response_time_text: payload.response_time_text || null,
-    stats: payload.stats,
-    updated_at: new Date().toISOString(),
-  });
+    stats: payload.stats ?? null,
+  };
 
-  if (error) {
-    throw new Error(error.message);
+  const { data: existing, error: fetchError } = await auth.supabase
+    .from("hero_about")
+    .select("id")
+    .limit(1)
+    .maybeSingle();
+
+  if (fetchError) {
+    return { success: false, message: fetchError.message };
   }
 
-  triggerRevalidateAll();
-  return { success: true, data };
+  if (existing?.id) {
+    const { error } = await auth.supabase.from("hero_about").update(row).eq("id", existing.id);
+    if (error) return { success: false, message: error.message };
+  } else {
+    const { error } = await auth.supabase.from("hero_about").insert({ id: HERO_DEFAULT_ID, ...row });
+    if (error) return { success: false, message: error.message };
+  }
+
+  revalidateAllPaths();
+  return { success: true, message: "Saved successfully." };
 }
 
-/**
- * Social Links Server Actions
- */
+async function upsertRow(
+  table: string,
+  id: string | undefined,
+  values: Record<string, unknown>,
+  insertExtras: Record<string, unknown>
+): Promise<ActionResult<{ id: string }>> {
+  const auth = await requireAdmin();
+  if (!auth.ok) return { success: false, message: auth.message };
+
+  if (isValidUuid(id)) {
+    const { data, error } = await auth.supabase
+      .from(table)
+      .update(values)
+      .eq("id", id)
+      .select("id")
+      .single();
+
+    if (error) return { success: false, message: error.message };
+    revalidateAllPaths();
+    return { success: true, message: "Saved successfully.", data };
+  }
+
+  const { data, error } = await auth.supabase
+    .from(table)
+    .insert([{ ...values, ...insertExtras }])
+    .select("id")
+    .single();
+
+  if (error) return { success: false, message: error.message };
+  revalidateAllPaths();
+  return { success: true, message: "Saved successfully.", data };
+}
+
+async function deleteRow(table: string, id: string): Promise<ActionResult> {
+  const auth = await requireAdmin();
+  if (!auth.ok) return { success: false, message: auth.message };
+
+  const { error } = await auth.supabase.from(table).delete().eq("id", id);
+  if (error) return { success: false, message: error.message };
+
+  revalidateAllPaths();
+  return { success: true, message: "Deleted successfully." };
+}
+
+async function reorderRows(
+  table: string,
+  updates: { id: string; order_index: number }[]
+): Promise<ActionResult> {
+  const auth = await requireAdmin();
+  if (!auth.ok) return { success: false, message: auth.message };
+
+  const results = await Promise.all(
+    updates.map((item) =>
+      auth.supabase.from(table).update({ order_index: item.order_index }).eq("id", item.id)
+    )
+  );
+
+  const failed = results.find((r) => r.error);
+  if (failed?.error) return { success: false, message: failed.error.message };
+
+  revalidateAllPaths();
+  return { success: true, message: "Reordered successfully." };
+}
+
 export async function saveSocialLinkAction(payload: {
   id?: string;
   platform: string;
@@ -97,68 +264,26 @@ export async function saveSocialLinkAction(payload: {
   icon_name: string;
   order_index?: number;
 }) {
-  const supabase = await getActionClient();
-  let result;
-
-  if (payload.id && !payload.id.startsWith("social-")) {
-    result = await supabase
-      .from("social_links")
-      .update({
-        platform: payload.platform,
-        url: payload.url,
-        icon_name: payload.icon_name,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", payload.id)
-      .select()
-      .single();
-  } else {
-    result = await supabase
-      .from("social_links")
-      .insert([
-        {
-          platform: payload.platform,
-          url: payload.url,
-          icon_name: payload.icon_name,
-          order_index: payload.order_index ?? 0,
-        },
-      ])
-      .select()
-      .single();
-  }
-
-  if (result.error) {
-    throw new Error(result.error.message);
-  }
-
-  triggerRevalidateAll();
-  return { success: true, data: result.data };
+  return upsertRow(
+    "social_links",
+    payload.id,
+    {
+      platform: payload.platform,
+      url: payload.url,
+      icon_name: payload.icon_name,
+    },
+    { order_index: payload.order_index ?? 0 }
+  );
 }
 
 export async function deleteSocialLinkAction(id: string) {
-  const supabase = await getActionClient();
-  const { error } = await supabase.from("social_links").delete().eq("id", id);
-  if (error) throw new Error(error.message);
-
-  triggerRevalidateAll();
-  return { success: true };
+  return deleteRow("social_links", id);
 }
 
 export async function reorderSocialLinksAction(updates: { id: string; order_index: number }[]) {
-  const supabase = await getActionClient();
-  await Promise.all(
-    updates.map((u) =>
-      supabase.from("social_links").update({ order_index: u.order_index }).eq("id", u.id)
-    )
-  );
-
-  triggerRevalidateAll();
-  return { success: true };
+  return reorderRows("social_links", updates);
 }
 
-/**
- * Skills Server Actions
- */
 export async function saveSkillAction(payload: {
   id?: string;
   name: string;
@@ -168,70 +293,28 @@ export async function saveSkillAction(payload: {
   description?: string;
   order_index?: number;
 }) {
-  const supabase = await getActionClient();
-  let result;
-
-  if (payload.id && !payload.id.startsWith("skill-")) {
-    result = await supabase
-      .from("skills")
-      .update({
-        name: payload.name,
-        category: payload.category,
-        icon_name: payload.icon_name,
-        level: payload.level,
-        description: payload.description,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", payload.id)
-      .select()
-      .single();
-  } else {
-    result = await supabase
-      .from("skills")
-      .insert([
-        {
-          name: payload.name,
-          category: payload.category,
-          icon_name: payload.icon_name,
-          level: payload.level,
-          description: payload.description,
-          order_index: payload.order_index ?? 0,
-        },
-      ])
-      .select()
-      .single();
-  }
-
-  if (result.error) throw new Error(result.error.message);
-
-  triggerRevalidateAll();
-  return { success: true, data: result.data };
+  return upsertRow(
+    "skills",
+    payload.id,
+    {
+      name: payload.name,
+      category: payload.category,
+      icon_name: payload.icon_name,
+      level: payload.level,
+      description: payload.description,
+    },
+    { order_index: payload.order_index ?? 0 }
+  );
 }
 
 export async function deleteSkillAction(id: string) {
-  const supabase = await getActionClient();
-  const { error } = await supabase.from("skills").delete().eq("id", id);
-  if (error) throw new Error(error.message);
-
-  triggerRevalidateAll();
-  return { success: true };
+  return deleteRow("skills", id);
 }
 
 export async function reorderSkillsAction(updates: { id: string; order_index: number }[]) {
-  const supabase = await getActionClient();
-  await Promise.all(
-    updates.map((u) =>
-      supabase.from("skills").update({ order_index: u.order_index }).eq("id", u.id)
-    )
-  );
-
-  triggerRevalidateAll();
-  return { success: true };
+  return reorderRows("skills", updates);
 }
 
-/**
- * Education Server Actions
- */
 export async function saveEducationAction(payload: {
   id?: string;
   degree: string;
@@ -243,74 +326,30 @@ export async function saveEducationAction(payload: {
   courses?: string[];
   order_index?: number;
 }) {
-  const supabase = await getActionClient();
-  let result;
-
-  if (payload.id && !payload.id.startsWith("edu-")) {
-    result = await supabase
-      .from("education")
-      .update({
-        degree: payload.degree,
-        institution: payload.institution,
-        location: payload.location,
-        duration: payload.duration,
-        status: payload.status,
-        description: payload.description,
-        courses: payload.courses ?? [],
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", payload.id)
-      .select()
-      .single();
-  } else {
-    result = await supabase
-      .from("education")
-      .insert([
-        {
-          degree: payload.degree,
-          institution: payload.institution,
-          location: payload.location,
-          duration: payload.duration,
-          status: payload.status,
-          description: payload.description,
-          courses: payload.courses ?? [],
-          order_index: payload.order_index ?? 0,
-        },
-      ])
-      .select()
-      .single();
-  }
-
-  if (result.error) throw new Error(result.error.message);
-
-  triggerRevalidateAll();
-  return { success: true, data: result.data };
+  return upsertRow(
+    "education",
+    payload.id,
+    {
+      degree: payload.degree,
+      institution: payload.institution,
+      location: payload.location,
+      duration: payload.duration,
+      status: payload.status,
+      description: payload.description,
+      courses: payload.courses ?? [],
+    },
+    { order_index: payload.order_index ?? 0 }
+  );
 }
 
 export async function deleteEducationAction(id: string) {
-  const supabase = await getActionClient();
-  const { error } = await supabase.from("education").delete().eq("id", id);
-  if (error) throw new Error(error.message);
-
-  triggerRevalidateAll();
-  return { success: true };
+  return deleteRow("education", id);
 }
 
 export async function reorderEducationAction(updates: { id: string; order_index: number }[]) {
-  const supabase = await getActionClient();
-  await Promise.all(
-    updates.map((u) =>
-      supabase.from("education").update({ order_index: u.order_index }).eq("id", u.id)
-    )
-  );
-
-  triggerRevalidateAll();
-  return { success: true };
+  return reorderRows("education", updates);
 }
 
-/**
- * Experience Server Actions
- */
 export async function saveExperienceAction(payload: {
   id?: string;
   role: string;
@@ -322,74 +361,30 @@ export async function saveExperienceAction(payload: {
   technologies: string[];
   order_index?: number;
 }) {
-  const supabase = await getActionClient();
-  let result;
-
-  if (payload.id && !payload.id.startsWith("exp-")) {
-    result = await supabase
-      .from("experience")
-      .update({
-        role: payload.role,
-        company: payload.company,
-        location: payload.location,
-        duration: payload.duration,
-        type: payload.type,
-        bullets: payload.bullets,
-        technologies: payload.technologies,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", payload.id)
-      .select()
-      .single();
-  } else {
-    result = await supabase
-      .from("experience")
-      .insert([
-        {
-          role: payload.role,
-          company: payload.company,
-          location: payload.location,
-          duration: payload.duration,
-          type: payload.type,
-          bullets: payload.bullets,
-          technologies: payload.technologies,
-          order_index: payload.order_index ?? 0,
-        },
-      ])
-      .select()
-      .single();
-  }
-
-  if (result.error) throw new Error(result.error.message);
-
-  triggerRevalidateAll();
-  return { success: true, data: result.data };
+  return upsertRow(
+    "experience",
+    payload.id,
+    {
+      role: payload.role,
+      company: payload.company,
+      location: payload.location,
+      duration: payload.duration,
+      type: payload.type,
+      bullets: payload.bullets,
+      technologies: payload.technologies,
+    },
+    { order_index: payload.order_index ?? 0 }
+  );
 }
 
 export async function deleteExperienceAction(id: string) {
-  const supabase = await getActionClient();
-  const { error } = await supabase.from("experience").delete().eq("id", id);
-  if (error) throw new Error(error.message);
-
-  triggerRevalidateAll();
-  return { success: true };
+  return deleteRow("experience", id);
 }
 
 export async function reorderExperienceAction(updates: { id: string; order_index: number }[]) {
-  const supabase = await getActionClient();
-  await Promise.all(
-    updates.map((u) =>
-      supabase.from("experience").update({ order_index: u.order_index }).eq("id", u.id)
-    )
-  );
-
-  triggerRevalidateAll();
-  return { success: true };
+  return reorderRows("experience", updates);
 }
 
-/**
- * Certifications Server Actions
- */
 export async function saveCertificationAction(payload: {
   id?: string;
   title: string;
@@ -400,72 +395,29 @@ export async function saveCertificationAction(payload: {
   issuer_color?: string;
   order_index?: number;
 }) {
-  const supabase = await getActionClient();
-  let result;
-
-  if (payload.id && !payload.id.startsWith("cert-")) {
-    result = await supabase
-      .from("certifications")
-      .update({
-        title: payload.title,
-        issuer: payload.issuer,
-        date: payload.date,
-        credential_url: payload.credential_url,
-        skills: payload.skills,
-        issuer_color: payload.issuer_color,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", payload.id)
-      .select()
-      .single();
-  } else {
-    result = await supabase
-      .from("certifications")
-      .insert([
-        {
-          title: payload.title,
-          issuer: payload.issuer,
-          date: payload.date,
-          credential_url: payload.credential_url,
-          skills: payload.skills,
-          issuer_color: payload.issuer_color,
-          order_index: payload.order_index ?? 0,
-        },
-      ])
-      .select()
-      .single();
-  }
-
-  if (result.error) throw new Error(result.error.message);
-
-  triggerRevalidateAll();
-  return { success: true, data: result.data };
+  return upsertRow(
+    "certifications",
+    payload.id,
+    {
+      title: payload.title,
+      issuer: payload.issuer,
+      date: payload.date,
+      credential_url: payload.credential_url,
+      skills: payload.skills,
+      issuer_color: payload.issuer_color,
+    },
+    { order_index: payload.order_index ?? 0 }
+  );
 }
 
 export async function deleteCertificationAction(id: string) {
-  const supabase = await getActionClient();
-  const { error } = await supabase.from("certifications").delete().eq("id", id);
-  if (error) throw new Error(error.message);
-
-  triggerRevalidateAll();
-  return { success: true };
+  return deleteRow("certifications", id);
 }
 
 export async function reorderCertificationsAction(updates: { id: string; order_index: number }[]) {
-  const supabase = await getActionClient();
-  await Promise.all(
-    updates.map((u) =>
-      supabase.from("certifications").update({ order_index: u.order_index }).eq("id", u.id)
-    )
-  );
-
-  triggerRevalidateAll();
-  return { success: true };
+  return reorderRows("certifications", updates);
 }
 
-/**
- * Projects Server Actions
- */
 export async function saveProjectAction(payload: {
   id?: string;
   title: string;
@@ -478,88 +430,65 @@ export async function saveProjectAction(payload: {
   featured: boolean;
   order_index?: number;
 }) {
-  const supabase = await getActionClient();
-  let result;
-
-  if (payload.id && !payload.id.startsWith("proj-")) {
-    result = await supabase
-      .from("projects")
-      .update({
-        title: payload.title,
-        description: payload.description,
-        tags: payload.tags,
-        image: payload.image || null,
-        github: payload.github || null,
-        demo: payload.demo || null,
-        category: payload.category,
-        featured: payload.featured,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", payload.id)
-      .select()
-      .single();
-  } else {
-    result = await supabase
-      .from("projects")
-      .insert([
-        {
-          title: payload.title,
-          description: payload.description,
-          tags: payload.tags,
-          image: payload.image || null,
-          github: payload.github || null,
-          demo: payload.demo || null,
-          category: payload.category,
-          featured: payload.featured,
-          order_index: payload.order_index ?? 0,
-        },
-      ])
-      .select()
-      .single();
-  }
-
-  if (result.error) throw new Error(result.error.message);
-
-  triggerRevalidateAll();
-  return { success: true, data: result.data };
+  return upsertRow(
+    "projects",
+    payload.id,
+    {
+      title: payload.title,
+      description: payload.description,
+      tags: payload.tags,
+      image: payload.image || null,
+      github: payload.github || null,
+      demo: payload.demo || null,
+      category: payload.category,
+      featured: payload.featured,
+    },
+    { order_index: payload.order_index ?? 0 }
+  );
 }
 
-export async function deleteProjectAction(id: string) {
-  const supabase = await getActionClient();
-  const { error } = await supabase.from("projects").delete().eq("id", id);
-  if (error) throw new Error(error.message);
+export async function deleteProjectAction(id: string): Promise<ActionResult> {
+  const auth = await requireAdmin();
+  if (!auth.ok) return { success: false, message: auth.message };
 
-  triggerRevalidateAll();
-  return { success: true };
+  const { data, error: fetchError } = await auth.supabase
+    .from("projects")
+    .select("image")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (fetchError) return { success: false, message: fetchError.message };
+
+  const { error } = await auth.supabase.from("projects").delete().eq("id", id);
+  if (error) return { success: false, message: error.message };
+
+  await removeStorageFile(auth.supabase, data?.image);
+  revalidateAllPaths();
+  return { success: true, message: "Deleted successfully." };
 }
 
 export async function reorderProjectsAction(updates: { id: string; order_index: number }[]) {
-  const supabase = await getActionClient();
-  await Promise.all(
-    updates.map((u) =>
-      supabase.from("projects").update({ order_index: u.order_index }).eq("id", u.id)
-    )
-  );
-
-  triggerRevalidateAll();
-  return { success: true };
+  return reorderRows("projects", updates);
 }
 
-/**
- * Message Server Actions
- */
-export async function toggleMessageReadAction(id: string, is_read: boolean) {
-  const supabase = await getActionClient();
-  const { error } = await supabase.from("messages").update({ is_read }).eq("id", id);
-  if (error) throw new Error(error.message);
+export async function toggleMessageReadAction(id: string, is_read: boolean): Promise<ActionResult> {
+  const auth = await requireAdmin();
+  if (!auth.ok) return { success: false, message: auth.message };
+
+  const { error } = await auth.supabase.from("messages").update({ is_read }).eq("id", id);
+  if (error) return { success: false, message: error.message };
+
   revalidatePath("/admin/messages");
-  return { success: true };
+  return { success: true, message: "Message status updated." };
 }
 
-export async function deleteMessageAction(id: string) {
-  const supabase = await getActionClient();
-  const { error } = await supabase.from("messages").delete().eq("id", id);
-  if (error) throw new Error(error.message);
+export async function deleteMessageAction(id: string): Promise<ActionResult> {
+  const auth = await requireAdmin();
+  if (!auth.ok) return { success: false, message: auth.message };
+
+  const { error } = await auth.supabase.from("messages").delete().eq("id", id);
+  if (error) return { success: false, message: error.message };
+
   revalidatePath("/admin/messages");
-  return { success: true };
+  return { success: true, message: "Message deleted." };
 }

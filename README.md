@@ -102,6 +102,16 @@ Open [http://localhost:3000/admin](http://localhost:3000/admin) and log in with 
 3. Add the same environment variables from `.env.local` in **Project Settings → Environment Variables**
 4. Deploy — Next.js is auto-detected, no extra config needed
 
+## Documentation (Mintlify)
+
+Project setup, content management, and deployment guides are available in the Mintlify docs. The docs configuration is at the repository root in `docs.json`; connect the repository in Mintlify with the repository root as the docs directory.
+
+Preview the documentation locally from the repository root with:
+
+```bash
+npx mint dev
+```
+
 ## License
 
 MIT — feel free to fork and adapt for your own portfolio.

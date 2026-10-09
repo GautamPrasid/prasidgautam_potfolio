@@ -1,0 +1,34 @@
+---
+title: 'Content management'
+description: 'Use the protected admin dashboard to update portfolio data.'
+---
+
+## Sign in
+
+Open `/admin/login` and sign in with the Supabase email/password account whose user ID is registered in `public.admins`. The dashboard uses Supabase authentication and row-level security; signing in alone does not grant administrator access.
+
+## Dashboard sections
+
+| Admin page              | Content                                                            |
+| ----------------------- | ------------------------------------------------------------------ |
+| `/admin/hero`           | Name, biography, roles, profile image, resume, and contact details |
+| `/admin/social-links`   | Social profile links                                               |
+| `/admin/skills`         | Skills, categories, icons, and proficiency levels                  |
+| `/admin/education`      | Education history                                                  |
+| `/admin/experience`     | Work experience                                                    |
+| `/admin/projects`       | Project descriptions, tags, images, and links                      |
+| `/admin/certifications` | Certification details and credential links                         |
+| `/admin/messages`       | Messages submitted through the public contact form                 |
+
+Changes to public portfolio content are reflected on the site after the application revalidates its routes.
+
+## Uploads
+
+The dashboard stores profile photos, resume PDFs, and project images in the Supabase Storage bucket named `portfolio-assets`. The schema configures public reads and administrator-only uploads, updates, and deletes.
+
+- Images must be JPEG, PNG, WebP, or GIF and no larger than 5 MB.
+- Resumes must be PDF files and no larger than 8 MB.
+
+## Contact form
+
+Messages submitted by visitors are saved in the `messages` table. The endpoint requires the Supabase URL and anon key to be configured. The admin inbox can mark messages as read or delete them.

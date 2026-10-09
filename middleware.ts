@@ -1,71 +1,52 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createServerClient } from "@supabase/ssr";
+import { createClient } from "@/utils/supabase/middleware";
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const isLoginPage = pathname === "/admin/login";
 
-  // Only protect routes under /admin
-  if (!pathname.startsWith("/admin")) {
-    return NextResponse.next();
+  const { supabase, response } = createClient(request);
+
+  if (!supabase) {
+    if (!isLoginPage) {
+      const redirectResponse = NextResponse.redirect(new URL("/admin/login", request.url));
+      response.cookies.getAll().forEach((c) => redirectResponse.cookies.set(c.name, c.value, c));
+      return redirectResponse;
+    }
+    return response;
   }
 
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  });
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey =
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  let isAdmin = false;
+  if (user) {
+    const { data: admin } = await supabase
+      .from("admins")
+      .select("user_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
 
-  const isSupabaseConfigured =
-    supabaseUrl &&
-    supabaseKey &&
-    !supabaseUrl.includes("your-project-ref") &&
-    !supabaseKey.includes("your-anon-key");
-
-  let user = null;
-
-  if (isSupabaseConfigured) {
-    try {
-      const supabase = createServerClient(supabaseUrl, supabaseKey, {
-        cookies: {
-          getAll() {
-            return request.cookies.getAll();
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value }) =>
-              request.cookies.set(name, value)
-            );
-            response = NextResponse.next({
-              request,
-            });
-            cookiesToSet.forEach(({ name, value, options }) =>
-              response.cookies.set(name, value, options)
-            );
-          },
-        },
-      });
-
-      const { data } = await supabase.auth.getUser();
-      user = data.user;
-    } catch {
-      user = null;
+    if (admin) {
+      isAdmin = true;
     }
+  }
 
-    // Redirect to /admin/login if not authenticated and trying to access protected admin dashboard
-    if (!user && pathname !== "/admin/login") {
-      const loginUrl = new URL("/admin/login", request.url);
-      return NextResponse.redirect(loginUrl);
+  if (!user || !isAdmin) {
+    if (!isLoginPage) {
+      const errorParam = user && !isAdmin ? "?error=unauthorized" : "";
+      const redirectResponse = NextResponse.redirect(new URL(`/admin/login${errorParam}`, request.url));
+      response.cookies.getAll().forEach((c) => redirectResponse.cookies.set(c.name, c.value, c));
+      return redirectResponse;
     }
+    return response;
+  }
 
-    // Redirect to /admin dashboard if already authenticated and accessing login page
-    if (user && pathname === "/admin/login") {
-      const adminUrl = new URL("/admin", request.url);
-      return NextResponse.redirect(adminUrl);
-    }
+  if (isLoginPage) {
+    const redirectResponse = NextResponse.redirect(new URL("/admin", request.url));
+    response.cookies.getAll().forEach((c) => redirectResponse.cookies.set(c.name, c.value, c));
+    return redirectResponse;
   }
 
   return response;
@@ -74,5 +55,3 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: ["/admin/:path*"],
 };
-
-

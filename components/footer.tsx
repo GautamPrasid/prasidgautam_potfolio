@@ -10,6 +10,9 @@ import { DynamicIcon } from "@/components/ui/dynamic-icon";
 
 export interface FooterProps {
   initialSocialLinks?: SocialLinkItem[];
+  siteName?: string;
+  bio?: string;
+  location?: string;
 }
 
 const QUICK_LINKS = [
@@ -22,7 +25,7 @@ const QUICK_LINKS = [
   { label: "Contact", href: "#contact" },
 ];
 
-export function Footer({ initialSocialLinks = [] }: FooterProps = {}) {
+export function Footer({ initialSocialLinks = [], siteName, bio }: FooterProps = {}) {
   const pathname = usePathname();
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [socialLinks, setSocialLinks] = useState<SocialLinkItem[]>(initialSocialLinks);
@@ -97,13 +100,15 @@ export function Footer({ initialSocialLinks = [] }: FooterProps = {}) {
                 <Code2 className="w-5 h-5" />
               </div>
               <span className="font-heading font-bold text-xl tracking-tight text-foreground">
-                Prasid Gautam<span className="text-primary">.</span>
+                {siteName || "Prasid Gautam"}<span className="text-primary">.</span>
               </span>
             </a>
 
-            <p className="text-sm text-muted-foreground leading-relaxed max-w-sm">
-              Full-Stack Web Developer &amp; BCA Student specializing in building modern, high-performance web applications with clean architecture and delightful user experiences.
-            </p>
+            {bio && (
+              <p className="text-sm text-muted-foreground leading-relaxed max-w-sm">
+                {bio}
+              </p>
+            )}
 
             {/* Availability Status Badge */}
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs font-medium text-emerald-600 dark:text-emerald-400">

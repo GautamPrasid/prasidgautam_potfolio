@@ -19,6 +19,7 @@ interface FormState {
   email: string;
   subject: string;
   message: string;
+  website: string;
 }
 
 interface FormErrors {
@@ -39,6 +40,7 @@ export function ContactSection({ initialHeroData = null }: ContactSectionProps =
     email: "",
     subject: "",
     message: "",
+    website: "",
   });
 
   useEffect(() => {
@@ -84,8 +86,8 @@ export function ContactSection({ initialHeroData = null }: ContactSectionProps =
 
     if (!formData.message.trim()) {
       newErrors.message = "Please enter your message.";
-    } else if (formData.message.trim().length < 5) {
-      newErrors.message = "Message must be at least 5 characters long.";
+    } else if (formData.message.trim().length < 10) {
+      newErrors.message = "Message must be at least 10 characters long.";
     }
 
     setErrors(newErrors);
@@ -124,7 +126,7 @@ export function ContactSection({ initialHeroData = null }: ContactSectionProps =
           type: "success",
           text: result.message || "Thank you! Your message has been sent successfully.",
         });
-        setFormData({ name: "", email: "", subject: "", message: "" });
+        setFormData({ name: "", email: "", subject: "", message: "", website: "" });
         setErrors({});
       } else {
         setStatusMessage({
@@ -156,22 +158,19 @@ export function ContactSection({ initialHeroData = null }: ContactSectionProps =
         className="space-y-16"
         suppressHydrationWarning
       >
-        {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
           <span className="px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide bg-primary/10 text-primary border border-primary/20 inline-block uppercase">
-            Let&apos;s Connect
+            Contact
           </span>
           <h2 className="font-heading text-3xl sm:text-5xl font-extrabold text-foreground tracking-tight">
             Get in Touch
           </h2>
           <p className="text-muted-foreground text-base sm:text-lg">
-            Have a project in mind, a question, or want to collaborate? Send me a message!
+            Have a project in mind, a question, or want to collaborate? Send me a message.
           </p>
         </div>
 
-        {/* Two-Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-          {/* Left Column: Direct Contact Info Cards */}
           <div className="lg:col-span-5 space-y-6">
             <div className="p-8 rounded-3xl bg-card border border-border shadow-md space-y-8">
               <div className="space-y-2">
@@ -179,12 +178,11 @@ export function ContactSection({ initialHeroData = null }: ContactSectionProps =
                   Contact Information
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Feel free to reach out via the form or through direct contact channels below.
+                  Reach out using the form or direct contact details below.
                 </p>
               </div>
 
               <div className="space-y-6">
-                {/* Email Card */}
                 {heroData?.contactEmail && (
                   <a
                     href={`mailto:${heroData.contactEmail}`}
@@ -195,7 +193,7 @@ export function ContactSection({ initialHeroData = null }: ContactSectionProps =
                     </div>
                     <div>
                       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                        Email Address
+                        Email
                       </p>
                       <p className="text-sm sm:text-base font-semibold text-foreground group-hover:text-primary transition-colors">
                         {heroData.contactEmail}
@@ -204,7 +202,6 @@ export function ContactSection({ initialHeroData = null }: ContactSectionProps =
                   </a>
                 )}
 
-                {/* Phone Card */}
                 {heroData?.contactPhone && (
                   <a
                     href={`tel:${heroData.contactPhone.replace(/\s+/g, "")}`}
@@ -215,7 +212,7 @@ export function ContactSection({ initialHeroData = null }: ContactSectionProps =
                     </div>
                     <div>
                       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                        Phone Number
+                        Phone
                       </p>
                       <p className="text-sm sm:text-base font-semibold text-foreground group-hover:text-primary transition-colors">
                         {heroData.contactPhone}
@@ -224,7 +221,6 @@ export function ContactSection({ initialHeroData = null }: ContactSectionProps =
                   </a>
                 )}
 
-                {/* Location Card */}
                 {heroData?.location && (
                   <div className="flex items-center gap-4 p-4 rounded-2xl bg-muted/50 border border-border/80">
                     <div className="p-3 rounded-xl bg-accent/10 text-accent">
@@ -242,7 +238,6 @@ export function ContactSection({ initialHeroData = null }: ContactSectionProps =
                 )}
               </div>
 
-              {/* Response Time Pill */}
               {heroData?.responseTimeText && (
                 <div className="p-4 rounded-2xl bg-primary/10 border border-primary/20 flex items-center gap-3">
                   <Clock className="w-5 h-5 text-primary shrink-0" />
@@ -254,7 +249,6 @@ export function ContactSection({ initialHeroData = null }: ContactSectionProps =
             </div>
           </div>
 
-          {/* Right Column: Interactive Contact Form */}
           <div className="lg:col-span-7">
             <div className="p-8 sm:p-10 rounded-3xl bg-card border border-border shadow-md space-y-6">
               <div className="space-y-2">
@@ -262,11 +256,10 @@ export function ContactSection({ initialHeroData = null }: ContactSectionProps =
                   Send a Message
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Fill in your details below and I&apos;ll get back to you as soon as possible.
+                  Fill in your details below and I will get back to you promptly.
                 </p>
               </div>
 
-              {/* Status Banner */}
               <AnimatePresence>
                 {statusMessage && (
                   <motion.div
@@ -290,16 +283,25 @@ export function ContactSection({ initialHeroData = null }: ContactSectionProps =
                 )}
               </AnimatePresence>
 
-              {/* Form */}
               <form onSubmit={handleSubmit} noValidate className="space-y-5">
+                <input
+                  type="text"
+                  name="website"
+                  value={formData.website}
+                  onChange={handleChange}
+                  tabIndex={-1}
+                  autoComplete="off"
+                  className="hidden"
+                  aria-hidden="true"
+                />
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  {/* Name Input */}
                   <div className="space-y-1.5">
                     <label
                       htmlFor="name"
                       className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground"
                     >
-                      Your Name <span className="text-rose-500">*</span>
+                      Name <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -319,13 +321,12 @@ export function ContactSection({ initialHeroData = null }: ContactSectionProps =
                     )}
                   </div>
 
-                  {/* Email Input */}
                   <div className="space-y-1.5">
                     <label
                       htmlFor="email"
                       className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground"
                     >
-                      Your Email <span className="text-rose-500">*</span>
+                      Email <span className="text-rose-500">*</span>
                     </label>
                     <input
                       type="email"
@@ -346,7 +347,6 @@ export function ContactSection({ initialHeroData = null }: ContactSectionProps =
                   </div>
                 </div>
 
-                {/* Subject Input */}
                 <div className="space-y-1.5">
                   <label
                     htmlFor="subject"
@@ -372,7 +372,6 @@ export function ContactSection({ initialHeroData = null }: ContactSectionProps =
                   )}
                 </div>
 
-                {/* Message Input */}
                 <div className="space-y-1.5">
                   <label
                     htmlFor="message"
@@ -398,7 +397,6 @@ export function ContactSection({ initialHeroData = null }: ContactSectionProps =
                   )}
                 </div>
 
-                {/* Submit Button */}
                 <button
                   type="submit"
                   disabled={isSubmitting}
@@ -407,7 +405,7 @@ export function ContactSection({ initialHeroData = null }: ContactSectionProps =
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      <span>Sending Message...</span>
+                      <span>Sending...</span>
                     </>
                   ) : (
                     <>
@@ -425,5 +423,4 @@ export function ContactSection({ initialHeroData = null }: ContactSectionProps =
   );
 }
 
-// Export alias for Contact
 export { ContactSection as Contact };

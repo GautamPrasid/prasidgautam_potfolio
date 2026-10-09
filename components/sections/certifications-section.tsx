@@ -153,15 +153,17 @@ export function CertificationsSection({
                   <span className="text-xs text-muted-foreground font-medium">
                     Verified Credential
                   </span>
-                  <a
-                    href={cert.credentialUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-xl bg-muted hover:bg-primary hover:text-primary-foreground text-foreground transition-all duration-200 group/link"
-                  >
-                    <span>View Certificate</span>
-                    <ExternalLink className="w-3.5 h-3.5 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-transform" />
-                  </a>
+                  {cert.credentialUrl?.trim() ? (
+                    <a
+                      href={cert.credentialUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-xl bg-muted hover:bg-primary hover:text-primary-foreground text-foreground transition-all duration-200 group/link"
+                    >
+                      <span>View Certificate</span>
+                      <ExternalLink className="w-3.5 h-3.5 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-transform" />
+                    </a>
+                  ) : null}
                 </div>
               </motion.div>
             );

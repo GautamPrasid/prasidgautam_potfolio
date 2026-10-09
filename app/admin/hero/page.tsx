@@ -222,8 +222,8 @@ export default function HeroAboutManagerPage() {
     e.preventDefault();
     setSaveError(null);
     try {
-      await saveHeroAboutAction({
-        id: heroId || "a0000000-0000-0000-0000-000000000001",
+      const res = await saveHeroAboutAction({
+        id: heroId || undefined,
         name,
         roles,
         bio_text: bio,
@@ -244,10 +244,14 @@ export default function HeroAboutManagerPage() {
           technologies: techCount,
         },
       });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
+
+      if (res.success) {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
+      } else {
+        setSaveError(res.message);
+      }
     } catch (err) {
-      console.error("Save failed:", err);
       const message = err instanceof Error ? err.message : "Save failed unexpectedly.";
       setSaveError(message);
     }
