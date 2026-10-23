@@ -1,15 +1,42 @@
 import type { MetadataRoute } from "next";
+import { getSupabaseClient } from "@/lib/supabase-db";
 
 const siteUrl = (
   process.env.NEXT_PUBLIC_SITE_URL || "https://www.prasidgautam.com.np"
 ).replace(/\/$/, "");
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  let lastModified = new Date();
+
+  try {
+    const client = getSupabaseClient();
+    if (client) {
+      const { data } = await client
+        .from("site_settings")
+        .select("updated_at")
+        .eq("id", true)
+        .maybeSingle();
+
+      if (data?.updated_at) {
+        const parsed = new Date(data.updated_at);
+        if (!isNaN(parsed.getTime())) {
+          lastModified = parsed;
+        }
+      }
+    }
+  } catch {
+    lastModified = new Date();
+  }
+
   return [
     {
       url: siteUrl,
+      lastModified,
       changeFrequency: "weekly",
-      priority: 1,
+      priority: 1.0,
     },
   ];
 }
