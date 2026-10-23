@@ -9,7 +9,7 @@ import {
   BlogPost,
 } from "./data";
 
-export interface HeroAboutData {
+export interface SiteSettingsData {\n  siteName: string;\n  siteDescription: string;\n  logoUrl?: string;\n}\n\nexport interface HeroAboutData {
   id?: string;
   name: string;
   roles: string[];
@@ -37,6 +37,25 @@ export function getSupabaseClient() {
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key) return null;
   return createBrowserClient(url, key);
+}
+
+export async function getSiteSettingsFromDb(): Promise<SiteSettingsData | null> {
+  const client = getSupabaseClient();
+  if (!client) return null;
+
+  const { data, error } = await client
+    .from("site_settings")
+    .select("site_name,site_description,logo_url")
+    .eq("id", true)
+    .maybeSingle();
+
+  if (error || !data) return null;
+
+  return {
+    siteName: data.site_name ?? "Prasid Gautam",
+    siteDescription: data.site_description ?? "",
+    logoUrl: data.logo_url ?? undefined,
+  };
 }
 
 export async function getHeroAboutFromDb(): Promise<HeroAboutData | null> {
