@@ -99,7 +99,7 @@ export function Footer({
       <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
       <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-24 bg-primary/10 blur-3xl pointer-events-none rounded-full" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 lg:pl-16 xl:pl-20 2xl:pl-8 pt-12 sm:pt-16 pb-8 sm:pb-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 pb-8 sm:pb-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 sm:gap-10 lg:gap-8 pb-8 sm:pb-12 border-b border-border/60">
           {/* Column 1: Brand & Bio & Live Status */}
           <div className="lg:col-span-5 space-y-4">
@@ -242,7 +242,7 @@ export function Footer({
             onClick={scrollToTop}
             aria-label="Back to top"
             suppressHydrationWarning
-            className="fixed bottom-20 lg:bottom-6 right-4 sm:right-6 p-3 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring z-40 transition-all duration-200 hover:-translate-y-1 hover:shadow-primary/25 min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="fixed bottom-6 right-6 p-3 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring z-40 transition-all duration-200 hover:-translate-y-1 hover:shadow-primary/25 min-w-[44px] min-h-[44px] flex items-center justify-center"
           >
             <ArrowUp className="w-5 h-5" />
           </motion.button>
