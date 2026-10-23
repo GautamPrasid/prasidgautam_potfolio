@@ -25,38 +25,44 @@ const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
 });
 
+const seoDescription =
+  "Explore the portfolio of Prasid Gautam, a BCA student and software developer in Nepal, showcasing web development projects, technical skills, education, and experience.";
+
 export async function generateMetadata(): Promise<Metadata> {
   const heroData = await getHeroAboutFromDb();
   const profileImage = heroData?.profileImageUrl?.trim() || "";
-  const name = heroData?.name?.trim() || "";
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://prasidgautam.com.np";
-  const bio = heroData?.bioText?.trim() || "";
-
-  const titleString = name ? `${name} | Portfolio` : "Portfolio";
+  const name = heroData?.name?.trim() || "Prasid Gautam";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.prasidgautam.com.np";
+  const titleString = `${name} | Portfolio`;
 
   return {
     metadataBase: new URL(siteUrl),
     title: {
       default: titleString,
-      template: name ? `%s | ${name}` : "%s | Portfolio",
+      template: `%s | ${name}`,
     },
-    description: bio,
-    authors: name ? [{ name, url: siteUrl }] : [],
-    creator: name || undefined,
+    description: seoDescription,
+    icons: {
+      icon: "/icon.svg",
+      shortcut: "/icon.svg",
+      apple: "/icon.svg",
+    },
+    authors: [{ name, url: siteUrl }],
+    creator: name,
     openGraph: {
       type: "website",
       locale: "en_US",
       url: siteUrl,
       title: titleString,
-      description: bio,
-      siteName: name ? `${name} Portfolio` : "Portfolio",
+      description: seoDescription,
+      siteName: `${name} Portfolio`,
       images: profileImage
         ? [
             {
               url: profileImage,
               width: 1200,
               height: 630,
-              alt: name ? `${name} profile photo` : "Profile photo",
+              alt: `${name} profile photo`,
             },
           ]
         : [],
@@ -64,7 +70,7 @@ export async function generateMetadata(): Promise<Metadata> {
     twitter: {
       card: "summary_large_image",
       title: titleString,
-      description: bio,
+      description: seoDescription,
       images: profileImage ? [profileImage] : [],
     },
     robots: {
