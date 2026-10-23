@@ -65,7 +65,6 @@ export function DynamicIcon({ name, ...props }: LucideProps & { name: string }) 
   
   // Check if it's a brand icon first
   if (BRAND_ICONS[resolved]) {
-    const iconSlug = resolved.toLowerCase();
     const iconData = SimpleIcons[`si${resolved}` as keyof typeof SimpleIcons];
     
     if (iconData && typeof iconData === 'object' && 'path' in iconData) {
