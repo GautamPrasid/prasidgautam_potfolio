@@ -40,8 +40,14 @@ export default function WebsiteSettingsPage() {
     setError("");
     setMessage("");
 
-    if (!["image/png", "image/jpeg", "image/webp", "image/gif", "image/svg+xml"].includes(file.type)) {
+    if (!["image/png", "image/jpeg", "image/webp", "image/gif"].includes(file.type)) {
       setError("Choose a PNG, JPG, WebP, or GIF image. For SVG logos, paste a trusted HTTPS logo URL instead.");
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Image size must be 5MB or less.");
       event.target.value = "";
       return;
     }

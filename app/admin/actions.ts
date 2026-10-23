@@ -566,6 +566,9 @@ export async function saveSiteSettingsAction(payload: SiteSettingsPayload): Prom
   const logoUrl = payload.logo_url.trim();
 
   if (!siteName) return { success: false, message: "Website name is required." };
+  if (siteName.length > 100) {
+    return { success: false, message: "Website name must be 100 characters or fewer." };
+  }
   if (description.length > 320) {
     return { success: false, message: "Website description must be 320 characters or fewer." };
   }
