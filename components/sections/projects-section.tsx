@@ -8,17 +8,19 @@ import {
   ProjectFilter,
   Project,
 } from "@/lib/data";
-import { getProjectsFromDb, getHeroAboutFromDb } from "@/lib/supabase-db";
+import { getProjectsFromDb, getHeroAboutFromDb, SectionHeadingItem } from "@/lib/supabase-db";
 import { ExternalLink, ArrowUpRight, Sparkles, FolderGit2 } from "lucide-react";
 
 export interface ProjectsSectionProps {
   initialProjects?: Project[];
   initialGithubUrl?: string | null;
+  sectionContent?: SectionHeadingItem;
 }
 
 export function ProjectsSection({
   initialProjects = [],
   initialGithubUrl = null,
+  sectionContent,
 }: ProjectsSectionProps = {}) {
   const [projects, setProjects] = useState<Project[]>(initialProjects);
   const [selectedCategory, setSelectedCategory] = useState<ProjectFilter>("All");
@@ -75,17 +77,25 @@ export function ProjectsSection({
         className="space-y-10 sm:space-y-12"
         suppressHydrationWarning
       >
-        <div className="text-center max-w-3xl mx-auto space-y-3 sm:space-y-4">
-          <span className="px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide bg-primary/10 text-primary border border-primary/20 inline-block uppercase">
-            Portfolio Showcase
-          </span>
-          <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground tracking-tight">
-            Featured Projects
-          </h2>
-          <p className="text-muted-foreground text-sm sm:text-base md:text-lg">
-            A curated selection of full-stack web applications, real-time tools, and software projects.
-          </p>
-        </div>
+        {(sectionContent?.badge || sectionContent?.heading || sectionContent?.subtext) && (
+          <div className="text-center max-w-3xl mx-auto space-y-3 sm:space-y-4">
+            {sectionContent.badge && (
+              <span className="px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide bg-primary/10 text-primary border border-primary/20 inline-block uppercase">
+                {sectionContent.badge}
+              </span>
+            )}
+            {sectionContent.heading && (
+              <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground tracking-tight">
+                {sectionContent.heading}
+              </h2>
+            )}
+            {sectionContent.subtext && (
+              <p className="text-muted-foreground text-sm sm:text-base md:text-lg">
+                {sectionContent.subtext}
+              </p>
+            )}
+          </div>
+        )}
 
         <div className="flex items-center justify-center gap-1.5 sm:gap-2 flex-wrap max-w-full">
           {PROJECT_FILTERS.map((category) => {

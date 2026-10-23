@@ -13,6 +13,11 @@ export interface FooterProps {
   siteName?: string;
   bio?: string;
   location?: string;
+  availabilityText?: string;
+  footerText?: string;
+  connectHeading?: string;
+  ctaHeading?: string;
+  ctaSubtext?: string;
 }
 
 const QUICK_LINKS = [
@@ -25,7 +30,17 @@ const QUICK_LINKS = [
   { label: "Contact", href: "#contact" },
 ];
 
-export function Footer({ initialSocialLinks = [], siteName, bio }: FooterProps = {}) {
+export function Footer({
+  initialSocialLinks = [],
+  siteName,
+  bio,
+  location,
+  availabilityText,
+  footerText,
+  connectHeading,
+  ctaHeading,
+  ctaSubtext,
+}: FooterProps = {}) {
   const pathname = usePathname();
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [socialLinks, setSocialLinks] = useState<SocialLinkItem[]>(initialSocialLinks);
@@ -108,13 +123,15 @@ export function Footer({ initialSocialLinks = [], siteName, bio }: FooterProps =
               </p>
             )}
 
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs font-medium text-emerald-600 dark:text-emerald-400">
-              <span className="relative flex h-2 w-2 shrink-0">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-              </span>
-              <span className="truncate">Available for freelance &amp; full-time roles</span>
-            </div>
+            {availabilityText && (
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                <span className="relative flex h-2 w-2 shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                </span>
+                <span className="truncate">{availabilityText}</span>
+              </div>
+            )}
           </div>
 
           {/* Column 2: Quick Links */}
@@ -141,9 +158,11 @@ export function Footer({ initialSocialLinks = [], siteName, bio }: FooterProps =
 
           {/* Column 3: Connect & CTA Card */}
           <div className="lg:col-span-4 space-y-4">
-            <p className="text-xs font-semibold uppercase tracking-wider text-foreground">
-              Let&apos;s Connect
-            </p>
+            {connectHeading && (
+              <p className="text-xs font-semibold uppercase tracking-wider text-foreground">
+                {connectHeading}
+              </p>
+            )}
 
             {socialLinks.length > 0 ? (
               <div className="flex flex-wrap gap-2">
@@ -162,45 +181,46 @@ export function Footer({ initialSocialLinks = [], siteName, bio }: FooterProps =
                   </a>
                 ))}
               </div>
-            ) : (
-              <p className="text-xs text-muted-foreground">
-                Follow and connect on social platforms.
-              </p>
-            )}
+            ) : null}
 
-            <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/5 via-card to-primary/10 border border-primary/20 flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-xs font-semibold text-foreground flex items-center gap-1.5 truncate">
-                  <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
-                  Have a project in mind?
-                </p>
-                <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
-                  Let&apos;s discuss how I can help.
-                </p>
+            {(ctaHeading || ctaSubtext) && (
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/5 via-card to-primary/10 border border-primary/20 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  {ctaHeading && (
+                    <p className="text-xs font-semibold text-foreground flex items-center gap-1.5 truncate">
+                      <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
+                      {ctaHeading}
+                    </p>
+                  )}
+                  {ctaSubtext && (
+                    <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
+                      {ctaSubtext}
+                    </p>
+                  )}
+                </div>
+                <a
+                  href="#contact"
+                  onClick={(e) => scrollToSection(e, "#contact")}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-all duration-200 shrink-0 min-h-[44px]"
+                >
+                  <span>Chat</span>
+                  <Send className="w-3 h-3" />
+                </a>
               </div>
-              <a
-                href="#contact"
-                onClick={(e) => scrollToSection(e, "#contact")}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-all duration-200 shrink-0 min-h-[44px]"
-              >
-                <span>Chat</span>
-                <Send className="w-3 h-3" />
-              </a>
-            </div>
+            )}
           </div>
         </div>
 
         {/* Bottom Sub-Footer Bar */}
         <div className="pt-6 sm:pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
           <p className="flex items-center gap-1 text-center sm:text-left flex-wrap justify-center sm:justify-start">
-            &copy; {currentYear} {siteName || "Prasid Gautam"}. Made with{" "}
-            <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500 inline mx-0.5 shrink-0" /> in Nepal.
+            &copy; {currentYear} {siteName || ""}. Made with{" "}
+            <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500 inline mx-0.5 shrink-0" />
+            {location ? ` in ${location}.` : "."}
           </p>
 
           <div className="flex items-center gap-4 flex-wrap justify-center">
-            <span>
-              Built with Next.js &amp; Tailwind CSS
-            </span>
+            {footerText ? <span>{footerText}</span> : null}
             <button
               onClick={scrollToTop}
               className="inline-flex items-center gap-1 text-xs font-medium text-foreground hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded-md px-2 py-1 min-h-[44px]"

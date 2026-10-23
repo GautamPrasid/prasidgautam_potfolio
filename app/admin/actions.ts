@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
 import { createAdminClient } from "@/utils/supabase/admin";
+import type { SectionContentData } from "@/lib/supabase-db";
 
 export type ActionResult<T = unknown> = {
   success: boolean;
@@ -146,6 +147,7 @@ export async function saveHeroAboutAction(payload: {
   highlights?: string[];
   philosophy_quote?: string | null;
   response_time_text?: string | null;
+  availability_text?: string | null;
   stats?: {
     projects: number;
     certifications: number;
@@ -170,6 +172,7 @@ export async function saveHeroAboutAction(payload: {
     highlights: payload.highlights || [],
     philosophy_quote: payload.philosophy_quote || null,
     response_time_text: payload.response_time_text || null,
+    availability_text: payload.availability_text?.trim() || null,
     stats: payload.stats ?? null,
   };
 
@@ -555,6 +558,8 @@ export type SiteSettingsPayload = {
   site_name: string;
   site_description: string;
   logo_url: string;
+  footer_text?: string;
+  section_content?: SectionContentData;
 };
 
 export async function saveSiteSettingsAction(payload: SiteSettingsPayload): Promise<ActionResult> {
@@ -590,12 +595,15 @@ export async function saveSiteSettingsAction(payload: SiteSettingsPayload): Prom
       site_name: siteName,
       site_description: description,
       logo_url: logoUrl || null,
+      footer_text: payload.footer_text?.trim() || null,
+      section_content: payload.section_content ?? {},
       updated_at: new Date().toISOString(),
     }, { onConflict: "id" });
 
   if (error) return { success: false, message: error.message };
 
   revalidateAllPaths();
+  revalidatePath("/");
   revalidatePath("/admin/website-settings");
   return { success: true, message: "Website settings saved. The live site now uses the updated settings." };
 }

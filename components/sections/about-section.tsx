@@ -12,6 +12,7 @@ import {
   getEducationFromDb,
   getHeroAboutFromDb,
   HeroAboutData,
+  SectionHeadingItem,
 } from "@/lib/supabase-db";
 
 export interface AboutSectionProps {
@@ -20,6 +21,7 @@ export interface AboutSectionProps {
   initialProjectCount?: number;
   initialCertCount?: number;
   initialTechCount?: number;
+  sectionContent?: SectionHeadingItem;
 }
 
 export function AboutSection({
@@ -28,6 +30,7 @@ export function AboutSection({
   initialProjectCount = 0,
   initialCertCount = 0,
   initialTechCount = 0,
+  sectionContent,
 }: AboutSectionProps = {}) {
   const findCurrentEdu = (edus?: EducationItem[]) => {
     if (!edus || edus.length === 0) return null;
@@ -119,17 +122,25 @@ export function AboutSection({
         suppressHydrationWarning
       >
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto space-y-3 sm:space-y-4">
-          <span className="px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide bg-primary/10 text-primary border border-primary/20 inline-block uppercase">
-            About Me
-          </span>
-          <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground tracking-tight">
-            Driven by Passion, Focused on Excellence
-          </h2>
-          <p className="text-muted-foreground text-sm sm:text-base md:text-lg leading-relaxed">
-            Here is a look into my background, academic journey, and what drives me as a software developer.
-          </p>
-        </div>
+        {(sectionContent?.badge || sectionContent?.heading || sectionContent?.subtext) && (
+          <div className="text-center max-w-3xl mx-auto space-y-3 sm:space-y-4">
+            {sectionContent.badge && (
+              <span className="px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide bg-primary/10 text-primary border border-primary/20 inline-block uppercase">
+                {sectionContent.badge}
+              </span>
+            )}
+            {sectionContent.heading && (
+              <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground tracking-tight">
+                {sectionContent.heading}
+              </h2>
+            )}
+            {sectionContent.subtext && (
+              <p className="text-muted-foreground text-sm sm:text-base md:text-lg leading-relaxed">
+                {sectionContent.subtext}
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Two-Column Grid Desktop Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">

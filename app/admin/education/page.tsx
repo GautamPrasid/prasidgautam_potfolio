@@ -314,7 +314,7 @@ export default function EducationManagerPage() {
                     required
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
-                    placeholder="Pokhara, Nepal"
+                    placeholder="e.g. City, Country"
                     className="w-full px-3.5 py-2 rounded-xl bg-background border border-border text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>

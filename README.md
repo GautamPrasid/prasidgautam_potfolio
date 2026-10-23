@@ -1,4 +1,4 @@
-# Prasid Gautam — Portfolio
+# Developer Portfolio
 
 A full-stack personal portfolio with a built-in CMS admin dashboard. Every piece of content — hero text, bio, skills, education, experience, certifications, projects, social links, and contact messages — is stored in Supabase and editable through a protected `/admin` panel. No content is hardcoded.
 

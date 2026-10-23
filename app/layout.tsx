@@ -30,17 +30,17 @@ const spaceGrotesk = Space_Grotesk({
 export async function generateMetadata(): Promise<Metadata> {
   const [heroData, siteSettings] = await Promise.all([getHeroAboutFromDb(), getSiteSettingsFromDb()]);
   const profileImage = heroData?.profileImageUrl?.trim() || "";
-  const name = siteSettings?.siteName?.trim() || heroData?.name?.trim() || "Prasid Gautam";
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.prasidgautam.com.np";
-  const description = siteSettings?.siteDescription?.trim() || "Explore the portfolio of Prasid Gautam, a BCA student and software developer in Nepal, showcasing web development projects, technical skills, education, and experience.";
+  const name = siteSettings?.siteName?.trim() || heroData?.name?.trim() || "";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const description = siteSettings?.siteDescription?.trim() || "";
   const logoUrl = siteSettings?.logoUrl?.trim() || "/icon.svg";
-  const titleString = `${name} | Portfolio`;
+  const titleString = name ? `${name} | Portfolio` : "Portfolio";
 
   return {
     metadataBase: new URL(siteUrl),
     title: {
       default: titleString,
-      template: `%s | ${name}`,
+      template: name ? `%s | ${name}` : "%s",
     },
     description,
     icons: {
@@ -51,22 +51,22 @@ export async function generateMetadata(): Promise<Metadata> {
       shortcut: "/favicon.ico",
       apple: "/favicon.ico",
     },
-    authors: [{ name, url: siteUrl }],
-    creator: name,
+    authors: name ? [{ name, url: siteUrl }] : [],
+    creator: name || undefined,
     openGraph: {
       type: "website",
       locale: "en_US",
       url: siteUrl,
       title: titleString,
       description,
-      siteName: `${name} Portfolio`,
+      siteName: name ? `${name} Portfolio` : "Portfolio",
       images: profileImage
         ? [
             {
               url: profileImage,
               width: 1200,
               height: 630,
-              alt: `${name} profile photo`,
+              alt: name ? `${name} profile photo` : "Profile photo",
             },
           ]
         : [],
@@ -89,9 +89,10 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [socialLinks, heroData] = await Promise.all([
+  const [socialLinks, heroData, siteSettings] = await Promise.all([
     getSocialLinksFromDb(),
     getHeroAboutFromDb(),
+    getSiteSettingsFromDb(),
   ]);
 
   return (
@@ -123,9 +124,14 @@ export default async function RootLayout({
         <main className="flex-1">{children}</main>
         <Footer
           initialSocialLinks={socialLinks}
-          siteName={heroData?.name}
+          siteName={siteSettings?.siteName || heroData?.name}
           bio={heroData?.bioText}
           location={heroData?.location}
+          availabilityText={heroData?.availabilityText}
+          footerText={siteSettings?.footerText}
+          connectHeading={heroData?.connectHeading || siteSettings?.sectionContent?.contact?.connectHeading}
+          ctaHeading={siteSettings?.sectionContent?.contact?.ctaHeading}
+          ctaSubtext={siteSettings?.sectionContent?.contact?.ctaSubtext}
         />
       </body>
     </html>

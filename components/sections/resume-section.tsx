@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { EducationItem, ExperienceItem, CertificationItem } from "@/lib/data";
+import { SectionHeadingItem } from "@/lib/supabase-db";
 import {
   GraduationCap,
   Briefcase,
@@ -21,6 +22,7 @@ export interface ResumeSectionProps {
   initialCertifications?: CertificationItem[];
   resumeUrl?: string;
   name?: string;
+  sectionContent?: SectionHeadingItem;
 }
 
 type TabType = "all" | "experience" | "education" | "certifications";
@@ -31,6 +33,7 @@ export function ResumeSection({
   initialCertifications = [],
   resumeUrl,
   name,
+  sectionContent,
 }: ResumeSectionProps) {
   const [activeTab, setActiveTab] = useState<TabType>("all");
 
@@ -56,33 +59,41 @@ export function ResumeSection({
         suppressHydrationWarning
       >
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto space-y-3 sm:space-y-4">
-          <span className="px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide bg-primary/10 text-primary border border-primary/20 inline-block uppercase">
-            Qualifications &amp; Career
-          </span>
-          <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground tracking-tight">
-            Resume &amp; Credentials
-          </h2>
-          <p className="text-muted-foreground text-sm sm:text-base md:text-lg">
-            My professional journey, academic background, industry certifications, and key accomplishments.
-          </p>
+        {(sectionContent?.badge || sectionContent?.heading || sectionContent?.subtext || resumeUrl) && (
+          <div className="text-center max-w-3xl mx-auto space-y-3 sm:space-y-4">
+            {sectionContent?.badge && (
+              <span className="px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide bg-primary/10 text-primary border border-primary/20 inline-block uppercase">
+                {sectionContent.badge}
+              </span>
+            )}
+            {sectionContent?.heading && (
+              <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground tracking-tight">
+                {sectionContent.heading}
+              </h2>
+            )}
+            {sectionContent?.subtext && (
+              <p className="text-muted-foreground text-sm sm:text-base md:text-lg">
+                {sectionContent.subtext}
+              </p>
+            )}
 
-          {/* Download CV / Resume Button */}
-          {resumeUrl && (
-            <div className="pt-2 flex justify-center">
-              <a
-                href={resumeUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                download={name ? `${name.replace(/\s+/g, "_")}_Resume.pdf` : "Resume.pdf"}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-2xl bg-primary text-primary-foreground font-semibold shadow-lg shadow-primary/25 hover:bg-primary/90 hover:shadow-xl hover:shadow-primary/30 transition-all duration-200 group min-h-[44px] text-sm"
-              >
-                <Download className="w-5 h-5 group-hover:-translate-y-0.5 transition-transform" />
-                <span>Download Official CV</span>
-              </a>
-            </div>
-          )}
-        </div>
+            {/* Download CV / Resume Button */}
+            {resumeUrl && (
+              <div className="pt-2 flex justify-center">
+                <a
+                  href={resumeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  download={name ? `${name.replace(/\s+/g, "_")}_Resume.pdf` : "Resume.pdf"}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-2xl bg-primary text-primary-foreground font-semibold shadow-lg shadow-primary/25 hover:bg-primary/90 hover:shadow-xl hover:shadow-primary/30 transition-all duration-200 group min-h-[44px] text-sm"
+                >
+                  <Download className="w-5 h-5 group-hover:-translate-y-0.5 transition-transform" />
+                  <span>Download Official CV</span>
+                </a>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Tab Filter Nav */}
         <div className="flex justify-center overflow-x-auto max-w-full py-2 scrollbar-none">

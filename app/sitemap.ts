@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { getSupabaseClient } from "@/lib/supabase-db";
 
 const siteUrl = (
-  process.env.NEXT_PUBLIC_SITE_URL || "https://www.prasidgautam.com.np"
+  process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
 ).replace(/\/$/, "");
 
 export const dynamic = "force-dynamic";

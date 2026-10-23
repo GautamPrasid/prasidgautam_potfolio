@@ -34,7 +34,8 @@ export default function HeroAboutManagerPage() {
   const [contactEmail, setContactEmail] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [location, setLocation] = useState("");
-  const [connectHeading, setConnectHeading] = useState("Connect With Me");
+  const [connectHeading, setConnectHeading] = useState("");
+  const [availabilityText, setAvailabilityText] = useState("");
   const [highlights, setHighlights] = useState<string[]>([]);
   const [newHighlight, setNewHighlight] = useState("");
   const [philosophyQuote, setPhilosophyQuote] = useState("");
@@ -69,7 +70,8 @@ export default function HeroAboutManagerPage() {
         setContactEmail(data.contactEmail ?? "");
         setContactPhone(data.contactPhone ?? "");
         setLocation(data.location ?? "");
-        setConnectHeading(data.connectHeading ?? "Connect With Me");
+        setConnectHeading(data.connectHeading ?? "");
+        setAvailabilityText(data.availabilityText ?? "");
         setHighlights(data.highlights ?? []);
         setPhilosophyQuote(data.philosophyQuote ?? "");
         setResponseTimeText(data.responseTimeText ?? "");
@@ -218,7 +220,8 @@ export default function HeroAboutManagerPage() {
         contact_email: contactEmail.trim() || null,
         contact_phone: contactPhone.trim() || null,
         location: location.trim() || null,
-        connect_heading: connectHeading.trim() || "Connect With Me",
+        connect_heading: connectHeading.trim() || null,
+        availability_text: availabilityText.trim() || null,
         highlights,
         philosophy_quote: philosophyQuote.trim() || null,
         response_time_text: responseTimeText.trim() || null,
@@ -339,6 +342,23 @@ export default function HeroAboutManagerPage() {
                   <Plus className="w-3.5 h-3.5" /> Add
                 </button>
               </div>
+            </div>
+
+            {/* Availability Status Text */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold uppercase text-muted-foreground">
+                Availability Status Pill Text
+              </label>
+              <input
+                type="text"
+                value={availabilityText}
+                onChange={(e) => setAvailabilityText(e.target.value)}
+                placeholder="e.g. Available for new opportunities (leave empty to hide)"
+                className="w-full px-3.5 py-2 rounded-xl bg-background border border-border text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                If filled, an animated status pill is shown in the Hero and Footer sections. If empty, the pill is hidden.
+              </p>
             </div>
 
             {/* Hero Bio */}
@@ -629,7 +649,7 @@ export default function HeroAboutManagerPage() {
                 type="text"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                placeholder="e.g. Pokhara, Nepal"
+                placeholder="e.g. City, Country"
                 className="w-full px-3.5 py-2 rounded-xl bg-background border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
@@ -643,7 +663,7 @@ export default function HeroAboutManagerPage() {
                 type="text"
                 value={connectHeading}
                 onChange={(e) => setConnectHeading(e.target.value)}
-                placeholder="e.g. Connect With Me"
+                placeholder="e.g. Let's Connect"
                 className="w-full px-3.5 py-2 rounded-xl bg-background border border-border text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>

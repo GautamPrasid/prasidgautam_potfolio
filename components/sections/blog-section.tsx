@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { BlogPost, BLOG_CATEGORIES } from "@/lib/data";
+import { SectionHeadingItem } from "@/lib/supabase-db";
 import {
   BookOpen,
   Clock,
@@ -16,9 +17,10 @@ import {
 
 export interface BlogSectionProps {
   initialBlogs?: BlogPost[];
+  sectionContent?: SectionHeadingItem;
 }
 
-export function BlogSection({ initialBlogs = [] }: BlogSectionProps) {
+export function BlogSection({ initialBlogs = [], sectionContent }: BlogSectionProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [selectedBlog, setSelectedBlog] = useState<BlogPost | null>(null);
 
@@ -73,17 +75,25 @@ export function BlogSection({ initialBlogs = [] }: BlogSectionProps) {
         suppressHydrationWarning
       >
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto space-y-3 sm:space-y-4">
-          <span className="px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide bg-primary/10 text-primary border border-primary/20 inline-block uppercase">
-            Articles &amp; Tutorials
-          </span>
-          <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground tracking-tight">
-            Latest Writings &amp; Insights
-          </h2>
-          <p className="text-muted-foreground text-sm sm:text-base md:text-lg">
-            Thoughts, deep-dives, and guides on modern software engineering, web development, and AI.
-          </p>
-        </div>
+        {(sectionContent?.badge || sectionContent?.heading || sectionContent?.subtext) && (
+          <div className="text-center max-w-3xl mx-auto space-y-3 sm:space-y-4">
+            {sectionContent.badge && (
+              <span className="px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide bg-primary/10 text-primary border border-primary/20 inline-block uppercase">
+                {sectionContent.badge}
+              </span>
+            )}
+            {sectionContent.heading && (
+              <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground tracking-tight">
+                {sectionContent.heading}
+              </h2>
+            )}
+            {sectionContent.subtext && (
+              <p className="text-muted-foreground text-sm sm:text-base md:text-lg">
+                {sectionContent.subtext}
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Category Filter Tabs */}
         {publishedBlogs.length > 0 && (

@@ -1,8 +1,8 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Prasid Gautam Portfolio",
-  "description": "Setup, content management, and deployment guide for the Prasid Gautam portfolio.",
+  "name": "Developer Portfolio",
+  "description": "Setup, content management, and deployment guide for the Developer Portfolio.",
   "navigation": {
     "groups": [
       {

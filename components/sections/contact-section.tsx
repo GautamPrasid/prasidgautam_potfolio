@@ -12,7 +12,7 @@ import {
   MapPin,
   Clock,
 } from "lucide-react";
-import { getHeroAboutFromDb, HeroAboutData } from "@/lib/supabase-db";
+import { getHeroAboutFromDb, HeroAboutData, SectionHeadingItem } from "@/lib/supabase-db";
 
 interface FormState {
   name: string;
@@ -31,9 +31,10 @@ interface FormErrors {
 
 export interface ContactSectionProps {
   initialHeroData?: HeroAboutData | null;
+  sectionContent?: SectionHeadingItem;
 }
 
-export function ContactSection({ initialHeroData = null }: ContactSectionProps = {}) {
+export function ContactSection({ initialHeroData = null, sectionContent }: ContactSectionProps = {}) {
   const [heroData, setHeroData] = useState<HeroAboutData | null>(initialHeroData);
   const [formData, setFormData] = useState<FormState>({
     name: "",
@@ -158,17 +159,25 @@ export function ContactSection({ initialHeroData = null }: ContactSectionProps =
         className="space-y-10 sm:space-y-16"
         suppressHydrationWarning
       >
-        <div className="text-center max-w-3xl mx-auto space-y-3 sm:space-y-4">
-          <span className="px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide bg-primary/10 text-primary border border-primary/20 inline-block uppercase">
-            Contact
-          </span>
-          <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground tracking-tight">
-            Get in Touch
-          </h2>
-          <p className="text-muted-foreground text-sm sm:text-base md:text-lg">
-            Have a project in mind, a question, or want to collaborate? Send me a message.
-          </p>
-        </div>
+        {(sectionContent?.badge || sectionContent?.heading || sectionContent?.subtext) && (
+          <div className="text-center max-w-3xl mx-auto space-y-3 sm:space-y-4">
+            {sectionContent.badge && (
+              <span className="px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide bg-primary/10 text-primary border border-primary/20 inline-block uppercase">
+                {sectionContent.badge}
+              </span>
+            )}
+            {sectionContent.heading && (
+              <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground tracking-tight">
+                {sectionContent.heading}
+              </h2>
+            )}
+            {sectionContent.subtext && (
+              <p className="text-muted-foreground text-sm sm:text-base md:text-lg">
+                {sectionContent.subtext}
+              </p>
+            )}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           <div className="lg:col-span-5 space-y-6">

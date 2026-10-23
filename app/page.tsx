@@ -16,6 +16,7 @@ import {
   getProjectsFromDb,
   getCertificationsFromDb,
   getBlogsFromDb,
+  getSiteSettingsFromDb,
 } from "@/lib/supabase-db";
 
 export const revalidate = 0;
@@ -31,6 +32,7 @@ export default async function Home() {
     projects,
     certifications,
     blogs,
+    siteSettings,
   ] = await Promise.all([
     getHeroAboutFromDb(),
     getSocialLinksFromDb(),
@@ -40,7 +42,10 @@ export default async function Home() {
     getProjectsFromDb(),
     getCertificationsFromDb(),
     getBlogsFromDb(),
+    getSiteSettingsFromDb(),
   ]);
+
+  const sc = siteSettings?.sectionContent;
 
   return (
     <PageWrapper>
@@ -54,15 +59,20 @@ export default async function Home() {
         initialProjectCount={projects.length}
         initialCertCount={certifications.length}
         initialTechCount={skills.length}
+        sectionContent={sc?.about}
       />
 
       {/* 3. Skills — Technical abilities and tools */}
-      <SkillsSection initialSkills={skills} />
+      <SkillsSection
+        initialSkills={skills}
+        sectionContent={sc?.skills}
+      />
 
       {/* 4. Projects — Strongest work with GitHub & live demo links */}
       <ProjectsSection
         initialProjects={projects}
         initialGithubUrl={heroAbout?.githubUrl}
+        sectionContent={sc?.projects}
       />
 
       {/* 5. Resume — Education, experience, certifications & downloadable CV */}
@@ -72,13 +82,20 @@ export default async function Home() {
         initialCertifications={certifications}
         resumeUrl={heroAbout?.resumeUrl}
         name={heroAbout?.name}
+        sectionContent={sc?.resume}
       />
 
       {/* 6. Blog — Technical articles & tutorials */}
-      <BlogSection initialBlogs={blogs} />
+      <BlogSection
+        initialBlogs={blogs}
+        sectionContent={sc?.blog}
+      />
 
       {/* 7. Contact — Email, social profiles & contact form */}
-      <ContactSection initialHeroData={heroAbout} />
+      <ContactSection
+        initialHeroData={heroAbout}
+        sectionContent={sc?.contact}
+      />
 
       {/* Section Navigation - Mobile Bottom Bar & Desktop Sidebar */}
       <SectionNavigation />

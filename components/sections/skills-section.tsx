@@ -7,7 +7,7 @@ import {
   SkillFilter,
   Skill,
 } from "@/lib/data";
-import { getSkillsFromDb } from "@/lib/supabase-db";
+import { getSkillsFromDb, SectionHeadingItem } from "@/lib/supabase-db";
 
 import {
   Code,
@@ -63,9 +63,10 @@ const ICON_MAP: Record<string, LucideIcon> = {
 
 export interface SkillsSectionProps {
   initialSkills?: Skill[];
+  sectionContent?: SectionHeadingItem;
 }
 
-export function SkillsSection({ initialSkills = [] }: SkillsSectionProps = {}) {
+export function SkillsSection({ initialSkills = [], sectionContent }: SkillsSectionProps = {}) {
   const [skills, setSkills] = useState<Skill[]>(initialSkills);
   const [selectedCategory, setSelectedCategory] = useState<SkillFilter>("All");
 
@@ -110,17 +111,25 @@ export function SkillsSection({ initialSkills = [] }: SkillsSectionProps = {}) {
         className="space-y-10 sm:space-y-12"
         suppressHydrationWarning
       >
-        <div className="text-center max-w-3xl mx-auto space-y-3 sm:space-y-4">
-          <span className="px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide bg-primary/10 text-primary border border-primary/20 inline-block uppercase">
-            Technical Expertise
-          </span>
-          <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground tracking-tight">
-            Skills &amp; Technologies
-          </h2>
-          <p className="text-muted-foreground text-sm sm:text-base md:text-lg">
-            A comprehensive overview of languages, frameworks, databases, tools, and professional capabilities.
-          </p>
-        </div>
+        {(sectionContent?.badge || sectionContent?.heading || sectionContent?.subtext) && (
+          <div className="text-center max-w-3xl mx-auto space-y-3 sm:space-y-4">
+            {sectionContent.badge && (
+              <span className="px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide bg-primary/10 text-primary border border-primary/20 inline-block uppercase">
+                {sectionContent.badge}
+              </span>
+            )}
+            {sectionContent.heading && (
+              <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground tracking-tight">
+                {sectionContent.heading}
+              </h2>
+            )}
+            {sectionContent.subtext && (
+              <p className="text-muted-foreground text-sm sm:text-base md:text-lg">
+                {sectionContent.subtext}
+              </p>
+            )}
+          </div>
+        )}
 
         <div className="flex items-center justify-center gap-1.5 sm:gap-2 flex-wrap max-w-full">
           {SKILL_FILTERS.map((category) => {

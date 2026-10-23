@@ -9,10 +9,31 @@ import {
   BlogPost,
 } from "./data";
 
+export interface SectionHeadingItem {
+  badge?: string;
+  heading?: string;
+  subtext?: string;
+}
+
+export interface SectionContentData {
+  about?: SectionHeadingItem;
+  skills?: SectionHeadingItem;
+  projects?: SectionHeadingItem;
+  resume?: SectionHeadingItem;
+  blog?: SectionHeadingItem;
+  contact?: SectionHeadingItem & {
+    connectHeading?: string;
+    ctaHeading?: string;
+    ctaSubtext?: string;
+  };
+}
+
 export interface SiteSettingsData {
   siteName: string;
   siteDescription: string;
   logoUrl?: string;
+  footerText?: string;
+  sectionContent?: SectionContentData;
 }
 
 export interface HeroAboutData {
@@ -31,6 +52,7 @@ export interface HeroAboutData {
   highlights?: string[];
   philosophyQuote?: string;
   responseTimeText?: string;
+  availabilityText?: string;
   stats?: {
     projects: number;
     certifications: number;
@@ -51,16 +73,18 @@ export async function getSiteSettingsFromDb(): Promise<SiteSettingsData | null> 
 
   const { data, error } = await client
     .from("site_settings")
-    .select("site_name,site_description,logo_url")
+    .select("site_name,site_description,logo_url,footer_text,section_content")
     .eq("id", true)
     .maybeSingle();
 
   if (error || !data) return null;
 
   return {
-    siteName: data.site_name ?? "Prasid Gautam",
+    siteName: data.site_name ?? "",
     siteDescription: data.site_description ?? "",
     logoUrl: data.logo_url ?? undefined,
+    footerText: data.footer_text ?? undefined,
+    sectionContent: (data.section_content as SectionContentData) ?? undefined,
   };
 }
 
@@ -87,6 +111,7 @@ export async function getHeroAboutFromDb(): Promise<HeroAboutData | null> {
     highlights: Array.isArray(data.highlights) ? data.highlights : [],
     philosophyQuote: data.philosophy_quote ?? undefined,
     responseTimeText: data.response_time_text ?? undefined,
+    availabilityText: data.availability_text ?? undefined,
     stats: data.stats ?? undefined,
   };
 }

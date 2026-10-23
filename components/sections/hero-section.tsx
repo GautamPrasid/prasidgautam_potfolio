@@ -82,13 +82,15 @@ export function HeroSection({
           suppressHydrationWarning
         >
           {/* Availability Pill */}
-          <div className="inline-flex items-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-full bg-card border border-border shadow-sm text-xs sm:text-sm font-medium text-foreground">
-            <span className="relative flex h-2.5 w-2.5 shrink-0">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
-            </span>
-            <span className="truncate">Available for new opportunities</span>
-          </div>
+          {heroData?.availabilityText && (
+            <div className="inline-flex items-center gap-2 px-3 sm:px-3.5 py-1.5 rounded-full bg-card border border-border shadow-sm text-xs sm:text-sm font-medium text-foreground">
+              <span className="relative flex h-2.5 w-2.5 shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+              </span>
+              <span className="truncate">{heroData.availabilityText}</span>
+            </div>
+          )}
 
           {/* Main Title & Typewriter Roles */}
           <div className="space-y-2.5 sm:space-y-3 w-full">
