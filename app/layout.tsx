@@ -4,6 +4,7 @@ import "./globals.css";
 import { ScrollProgress } from "@/components/scroll-progress";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { SectionNavigation } from "@/components/section-navigation";
 import { getHeroAboutFromDb, getSocialLinksFromDb, getSiteSettingsFromDb } from "@/lib/supabase-db";
 
 export const dynamic = "force-dynamic";
@@ -121,6 +122,7 @@ export default async function RootLayout({
       >
         <ScrollProgress />
         <Navbar siteName={heroData?.name} />
+        <SectionNavigation />
         <main className="flex-1">{children}</main>
         <Footer
           initialSocialLinks={socialLinks}
