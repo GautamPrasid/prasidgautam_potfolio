@@ -4,10 +4,10 @@
 -- ============================================================
 -- 
 -- This schema includes:
--- 1. All database tables (hero_about, skills, projects, etc.)
+-- 1. All database tables (hero_about, site_settings, skills, projects, etc.)
 -- 2. Row Level Security (RLS) policies
--- 3. Storage bucket configuration
--- 4. Storage RLS policies (fixed for profile photo upload)
+-- 3. Storage bucket configuration & PageSpeed cache headers
+-- 4. Storage RLS policies (fixed for profile photo and asset upload)
 -- 5. Admin verification functions
 -- 6. Verification queries
 -- 7. Data fixes (icon names to PascalCase)
@@ -153,6 +153,18 @@ CREATE TABLE IF NOT EXISTS public.admins (
     created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS public.site_settings (
+    id BOOLEAN PRIMARY KEY DEFAULT true CHECK (id = true),
+    site_name TEXT NOT NULL DEFAULT 'Prasid Gautam',
+    site_description TEXT NOT NULL DEFAULT 'Explore the portfolio of Prasid Gautam, a BCA student and software developer in Nepal, showcasing web development projects, technical skills, education, and experience.',
+    logo_url TEXT,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+INSERT INTO public.site_settings (id)
+VALUES (true)
+ON CONFLICT (id) DO NOTHING;
+
 -- ============================================================
 -- SECTION 2: INDEXES
 -- ============================================================
@@ -288,6 +300,11 @@ CREATE TRIGGER trg_social_links_updated_at
     BEFORE UPDATE ON public.social_links
     FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
+DROP TRIGGER IF EXISTS trg_site_settings_updated_at ON public.site_settings;
+CREATE TRIGGER trg_site_settings_updated_at
+    BEFORE UPDATE ON public.site_settings
+    FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+
 -- ============================================================
 -- SECTION 5: is_admin() SECURITY FUNCTION
 -- ============================================================
@@ -320,6 +337,7 @@ ALTER TABLE public.blogs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.social_links ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.admins ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.site_settings ENABLE ROW LEVEL SECURITY;
 
 -- Public read policies
 DROP POLICY IF EXISTS "Public Read HeroAbout" ON public.hero_about;
@@ -345,6 +363,12 @@ CREATE POLICY "Public Read Blogs" ON public.blogs FOR SELECT TO anon, authentica
 
 DROP POLICY IF EXISTS "Public Read SocialLinks" ON public.social_links;
 CREATE POLICY "Public Read SocialLinks" ON public.social_links FOR SELECT TO anon, authenticated USING (true);
+
+DROP POLICY IF EXISTS "Public can read website settings" ON public.site_settings;
+CREATE POLICY "Public can read website settings" ON public.site_settings FOR SELECT TO anon, authenticated USING (true);
+
+DROP POLICY IF EXISTS "Admin Full SiteSettings" ON public.site_settings;
+CREATE POLICY "Admin Full SiteSettings" ON public.site_settings FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 -- Admin write policies
 DROP POLICY IF EXISTS "Admin Full HeroAbout" ON public.hero_about;
@@ -464,6 +488,11 @@ CREATE POLICY "Admin Storage Delete" ON storage.objects
 -- ============================================================
 -- SECTION 8: ALTER TABLE STATEMENTS FOR EXISTING DATABASES
 -- ============================================================
+
+-- Optimize storage cache headers on existing assets for PageSpeed & Core Web Vitals
+UPDATE storage.objects
+SET metadata = jsonb_set(COALESCE(metadata, '{}'::jsonb), '{cacheControl}', '"max-age=31536000, immutable"')
+WHERE bucket_id = 'portfolio-assets';
 
 -- Make stats and connect_heading nullable in hero_about
 DO $$ BEGIN

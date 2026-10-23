@@ -44,9 +44,12 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     description,
     icons: {
-      icon: logoUrl,
-      shortcut: logoUrl,
-      apple: logoUrl,
+      icon: [
+        { url: "/favicon.ico", sizes: "any" },
+        ...(siteSettings?.logoUrl ? [{ url: logoUrl }] : []),
+      ],
+      shortcut: "/favicon.ico",
+      apple: "/favicon.ico",
     },
     authors: [{ name, url: siteUrl }],
     creator: name,
