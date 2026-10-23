@@ -9,7 +9,13 @@ import {
   BlogPost,
 } from "./data";
 
-export interface SiteSettingsData {\n  siteName: string;\n  siteDescription: string;\n  logoUrl?: string;\n}\n\nexport interface HeroAboutData {
+export interface SiteSettingsData {
+  siteName: string;
+  siteDescription: string;
+  logoUrl?: string;
+}
+
+export interface HeroAboutData {
   id?: string;
   name: string;
   roles: string[];
