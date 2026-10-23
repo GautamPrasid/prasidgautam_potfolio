@@ -4,7 +4,7 @@ import "./globals.css";
 import { ScrollProgress } from "@/components/scroll-progress";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
-import { getHeroAboutFromDb, getSocialLinksFromDb } from "@/lib/supabase-db";
+import { getHeroAboutFromDb, getSocialLinksFromDb, getSiteSettingsFromDb } from "@/lib/supabase-db";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -25,14 +25,13 @@ const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
 });
 
-const seoDescription =
-  "Explore the portfolio of Prasid Gautam, a BCA student and software developer in Nepal, showcasing web development projects, technical skills, education, and experience.";
-
 export async function generateMetadata(): Promise<Metadata> {
-  const heroData = await getHeroAboutFromDb();
+  const [heroData, siteSettings] = await Promise.all([getHeroAboutFromDb(), getSiteSettingsFromDb()]);
   const profileImage = heroData?.profileImageUrl?.trim() || "";
-  const name = heroData?.name?.trim() || "Prasid Gautam";
+  const name = siteSettings?.siteName?.trim() || heroData?.name?.trim() || "Prasid Gautam";
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.prasidgautam.com.np";
+  const description = siteSettings?.siteDescription?.trim() || "Explore the portfolio of Prasid Gautam, a BCA student and software developer in Nepal, showcasing web development projects, technical skills, education, and experience.";
+  const logoUrl = siteSettings?.logoUrl?.trim() || "/icon.svg";
   const titleString = `${name} | Portfolio`;
 
   return {
@@ -41,11 +40,11 @@ export async function generateMetadata(): Promise<Metadata> {
       default: titleString,
       template: `%s | ${name}`,
     },
-    description: seoDescription,
+    description,
     icons: {
-      icon: "/icon.svg",
-      shortcut: "/icon.svg",
-      apple: "/icon.svg",
+      icon: logoUrl,
+      shortcut: logoUrl,
+      apple: logoUrl,
     },
     authors: [{ name, url: siteUrl }],
     creator: name,
