@@ -25,7 +25,6 @@ CREATE TABLE IF NOT EXISTS public.hero_about (
     highlights         JSONB DEFAULT '[]'::jsonb,
     philosophy_quote   TEXT,
     response_time_text TEXT,
-    availability_text  TEXT,
     created_at         TIMESTAMPTZ NOT NULL DEFAULT timezone('utc', now()),
     updated_at         TIMESTAMPTZ NOT NULL DEFAULT timezone('utc', now())
 );
@@ -149,15 +148,19 @@ CREATE TABLE IF NOT EXISTS public.site_settings (
     site_name        TEXT NOT NULL DEFAULT 'My Portfolio',
     site_description TEXT NOT NULL DEFAULT 'Personal portfolio website.',
     logo_url         TEXT,
-    footer_text      TEXT,
-    section_content  JSONB DEFAULT '{}'::jsonb,
     updated_at       TIMESTAMPTZ NOT NULL DEFAULT timezone('utc', now())
 );
 
-ALTER TABLE public.hero_about ADD COLUMN IF NOT EXISTS availability_text TEXT;
+-- Admin-editable text that used to be hardcoded in the app.
+-- Empty / null values mean "don't render it".
 ALTER TABLE public.site_settings
-    ADD COLUMN IF NOT EXISTS footer_text TEXT,
-    ADD COLUMN IF NOT EXISTS section_content JSONB NOT NULL DEFAULT '{}'::jsonb;
+    ADD COLUMN IF NOT EXISTS footer_text      TEXT,
+    ADD COLUMN IF NOT EXISTS section_content  JSONB NOT NULL DEFAULT '{}'::jsonb;
+    -- section_content shape: { "<section>": { "badge": "", "heading": "", "subtext": "" } }
+    -- sections: about, skills, projects, resume, blog, contact
+
+ALTER TABLE public.hero_about
+    ADD COLUMN IF NOT EXISTS availability_text TEXT;
 
 INSERT INTO public.site_settings (id) VALUES (true) ON CONFLICT (id) DO NOTHING;
 
@@ -410,6 +413,11 @@ LEFT JOIN pg_class c
        ON c.relname = t.name
       AND c.relnamespace = 'public'::regnamespace
 ORDER BY t.name;
+
+UPDATE public.projects
+SET image = 'YOUR_REAL_PUBLIC_IMAGE_URL'
+WHERE title = 'Voting System';
+
 
 -- ============================================================
 -- AFTER RUNNING: make yourself an admin (needed to add/edit data)
