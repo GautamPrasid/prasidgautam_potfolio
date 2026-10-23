@@ -20,11 +20,13 @@ import {
   X,
   ShieldAlert,
   Share2,
+  Globe,
 } from "lucide-react";
 
 const ADMIN_NAV = [
   { label: "Overview", href: "/admin", icon: LayoutDashboard },
-  { label: "Hero & About", href: "/admin/hero", icon: User },\n  { label: "Website Settings", href: "/admin/website-settings", icon: Globe },
+  { label: "Hero & About", href: "/admin/hero", icon: User },
+  { label: "Website Settings", href: "/admin/website-settings", icon: Globe },
   { label: "Skills", href: "/admin/skills", icon: Wrench },
   { label: "Projects", href: "/admin/projects", icon: FolderGit2 },
   { label: "Education", href: "/admin/education", icon: GraduationCap },
