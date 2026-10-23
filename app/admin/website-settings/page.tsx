@@ -51,7 +51,6 @@ export default function WebsiteSettingsPage() {
       const formData = new FormData();
       formData.set("file", file);
       formData.set("folder", "site");
-      formData.set("previousUrl", logoUrl);
       const result = await uploadAssetAction(formData);
       if (!result.success || !result.data?.publicUrl) throw new Error(result.message || "Logo upload failed.");
       setLogoUrl(result.data.publicUrl);
