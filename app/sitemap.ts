@@ -28,9 +28,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }
     }
   } catch {
-    lastModified = new Date();
+    // Keep the current timestamp if site settings are unavailable.
   }
 
+  // This portfolio is currently a single-page site. About, Skills, Projects,
+  // Resume, Blog, and Contact are sections on "/", not separate page routes.
+  // Do not add /admin, /admin/login, or API routes to the public sitemap.
   return [
     {
       url: siteUrl,
