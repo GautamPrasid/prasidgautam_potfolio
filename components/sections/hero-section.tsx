@@ -227,8 +227,8 @@ export function HeroSection({
                   src={heroData.profileImageUrl}
                   alt={heroData?.name ? `${heroData.name} profile photo` : "Profile photo"}
                   fill
-                  unoptimized
                   priority
+                  sizes="(max-width: 768px) 80vw, 40vw"
                   className="rounded-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
                 />
               ) : (
