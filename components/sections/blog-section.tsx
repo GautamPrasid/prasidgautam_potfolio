@@ -147,7 +147,7 @@ export function BlogSection({ initialBlogs = [] }: BlogSectionProps) {
                         src={blog.coverImage}
                         alt={blog.title}
                         fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 380px"
                         className="object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                     ) : (
@@ -277,7 +277,7 @@ export function BlogSection({ initialBlogs = [] }: BlogSectionProps) {
                       src={selectedBlog.coverImage}
                       alt={selectedBlog.title}
                       fill
-                      sizes="90vw"
+                      sizes="(max-width: 768px) 100vw, 768px"
                       className="object-cover"
                     />
                   </div>

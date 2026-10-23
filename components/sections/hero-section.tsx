@@ -75,9 +75,8 @@ export function HeroSection({
       <div className="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-8 items-center">
         {/* Left Column: Text Intro & CTAs */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          initial={false}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: "easeOut" }}
           className="lg:col-span-7 flex flex-col items-center lg:items-start text-center lg:text-left space-y-5 sm:space-y-6"
           suppressHydrationWarning
@@ -211,10 +210,9 @@ export function HeroSection({
 
         {/* Right Column: Profile Photo with Animated Blur Ring */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7, delay: 0.2, ease: "easeOut" }}
+          initial={false}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.7, delay: 0.1, ease: "easeOut" }}
           className="lg:col-span-5 flex justify-center items-center pt-4 lg:pt-0"
           suppressHydrationWarning
         >
@@ -228,7 +226,7 @@ export function HeroSection({
                   alt={heroData?.name ? `${heroData.name} profile photo` : "Profile photo"}
                   fill
                   priority
-                  sizes="(max-width: 768px) 80vw, 40vw"
+                  sizes="(max-width: 640px) 224px, (max-width: 1024px) 288px, 384px"
                   className="rounded-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
                 />
               ) : (

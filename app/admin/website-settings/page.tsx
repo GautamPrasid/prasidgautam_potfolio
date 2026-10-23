@@ -124,6 +124,7 @@ export default function WebsiteSettingsPage() {
           <p className="mt-1 text-sm text-muted-foreground">Upload an image or paste a public HTTPS image URL. The saved logo is used as the website favicon metadata.</p>
           <div className="mt-5 flex flex-col gap-5 sm:flex-row sm:items-center">
             <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-border bg-muted/40">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               {logoUrl ? <img src={logoUrl} alt="Website logo preview" className="h-full w-full object-contain p-2" /> : <Globe className="h-9 w-9 text-muted-foreground" />}
             </div>
             <div className="flex-1 space-y-3">

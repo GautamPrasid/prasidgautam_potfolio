@@ -62,7 +62,7 @@ export function Navbar({ siteName }: { siteName?: string }) {
     );
 
     sectionElements.forEach((el) => observer.observe(el));
-    return () => sectionElements.forEach((el) => observer.unobserve(el));
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
