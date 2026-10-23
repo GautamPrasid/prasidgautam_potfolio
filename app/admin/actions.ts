@@ -83,7 +83,7 @@ export async function uploadAssetAction(formData: FormData): Promise<ActionResul
   const file = formData.get("file");
   const folder = String(formData.get("folder") || "uploads");
   const previousUrl = String(formData.get("previousUrl") || "");
-  const allowedFolders = new Set(["profile", "resume", "projects", "blogs"]);
+  const allowedFolders = new Set(["profile", "resume", "projects", "blogs", "site"]);
 
   if (!(file instanceof File)) {
     return { success: false, message: "No file provided." };
@@ -548,4 +548,51 @@ export async function deleteBlogAction(id: string): Promise<ActionResult> {
 
 export async function reorderBlogsAction(updates: { id: string; order_index: number }[]) {
   return reorderRows("blogs", updates);
+}
+
+
+export type SiteSettingsPayload = {
+  site_name: string;
+  site_description: string;
+  logo_url: string;
+};
+
+export async function saveSiteSettingsAction(payload: SiteSettingsPayload): Promise<ActionResult> {
+  const auth = await requireAdmin();
+  if (!auth.ok) return { success: false, message: auth.message };
+
+  const siteName = payload.site_name.trim();
+  const description = payload.site_description.trim();
+  const logoUrl = payload.logo_url.trim();
+
+  if (!siteName) return { success: false, message: "Website name is required." };
+  if (description.length > 320) {
+    return { success: false, message: "Website description must be 320 characters or fewer." };
+  }
+  if (logoUrl) {
+    try {
+      const parsed = new URL(logoUrl);
+      if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+        return { success: false, message: "Logo URL must use HTTP or HTTPS." };
+      }
+    } catch {
+      return { success: false, message: "Enter a valid logo URL or upload a logo." };
+    }
+  }
+
+  const { error } = await auth.supabase
+    .from("site_settings")
+    .upsert({
+      id: true,
+      site_name: siteName,
+      site_description: description,
+      logo_url: logoUrl || null,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "id" });
+
+  if (error) return { success: false, message: error.message };
+
+  revalidateAllPaths();
+  revalidatePath("/admin/website-settings");
+  return { success: true, message: "Website settings saved. The live site now uses the updated settings." };
 }
