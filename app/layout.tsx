@@ -53,7 +53,7 @@ export async function generateMetadata(): Promise<Metadata> {
       locale: "en_US",
       url: siteUrl,
       title: titleString,
-      description: seoDescription,
+      description,
       siteName: `${name} Portfolio`,
       images: profileImage
         ? [
@@ -69,7 +69,7 @@ export async function generateMetadata(): Promise<Metadata> {
     twitter: {
       card: "summary_large_image",
       title: titleString,
-      description: seoDescription,
+      description,
       images: profileImage ? [profileImage] : [],
     },
     robots: {
