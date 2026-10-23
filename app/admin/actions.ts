@@ -113,7 +113,7 @@ export async function uploadAssetAction(formData: FormData): Promise<ActionResul
 
   const { error: uploadError } = await auth.supabase.storage
     .from(ASSETS_BUCKET)
-    .upload(filePath, file, { cacheControl: "3600", upsert: false });
+    .upload(filePath, file, { cacheControl: "31536000", upsert: false });
 
   if (uploadError) {
     return { success: false, message: uploadError.message };
