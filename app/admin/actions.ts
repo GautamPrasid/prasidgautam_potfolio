@@ -27,34 +27,41 @@ function revalidateAllPaths() {
   revalidatePath("/", "layout");
   revalidatePath("/");
   revalidatePath("/blog");
+  revalidatePath("/blog/[slug]", "page");
+  revalidatePath("/sitemap.xml");
   revalidatePath("/admin");
 }
 
 async function requireAdmin() {
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
+  try {
+    const cookieStore = await cookies();
+    const supabase = createClient(cookieStore);
 
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
 
-  if (error || !user) {
-    return { ok: false as const, message: "Authentication required.", supabase };
+    if (error || !user) {
+      return { ok: false as const, message: "Authentication required." };
+    }
+
+    const { data: admin, error: adminError } = await supabase
+      .from("admins")
+      .select("user_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (adminError || !admin) {
+      return { ok: false as const, message: "Unauthorized access." };
+    }
+
+    const adminClient = createAdminClient();
+    return { ok: true as const, user, supabase: adminClient };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Authentication service unavailable.";
+    return { ok: false as const, message: msg };
   }
-
-  const { data: admin, error: adminError } = await supabase
-    .from("admins")
-    .select("user_id")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (adminError || !admin) {
-    return { ok: false as const, message: "Unauthorized access.", supabase };
-  }
-
-  const adminClient = createAdminClient();
-  return { ok: true as const, user, supabase: adminClient };
 }
 
 function getStoragePathFromUrl(url: string | null | undefined): string | null {

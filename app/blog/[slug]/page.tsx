@@ -3,8 +3,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
+import type { BlogPost } from "@/lib/data";
 import { createClient } from "@/utils/supabase/server";
-import { getBlogBySlug, getBlogsFromDb } from "@/lib/supabase-db";
+import { getBlogBySlug, getPublishedBlogsFromDb, getSiteSettingsFromDb } from "@/lib/supabase-db";
+import { getSiteUrl } from "@/lib/site-url";
+import { BlogPostContent } from "@/components/blog/blog-post-content";
+import { BlogShareBar } from "@/components/blog/blog-share-bar";
 import {
   ArrowLeft,
   Calendar,
@@ -16,8 +20,17 @@ import {
   ShieldAlert,
 } from "lucide-react";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+// Pre-render published blog articles with ISR; revalidated on-demand when admin saves
+export const revalidate = 3600;
+
+export async function generateStaticParams() {
+  try {
+    const blogs = await getPublishedBlogsFromDb();
+    return blogs.map((b) => ({ slug: b.slug }));
+  } catch {
+    return [];
+  }
+}
 
 interface BlogPostPageProps {
   params: {
@@ -68,39 +81,83 @@ function formatBlogDate(dateStr?: string, full = true): string {
 }
 
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
-  const blog = await getBlogBySlug(params.slug);
   const isAdmin = await isUserAdmin();
+  let blog: BlogPost | null = null;
+  if (isAdmin) {
+    const cookieStore = await cookies();
+    const adminSupabase = createClient(cookieStore);
+    blog = await getBlogBySlug(params.slug, { publishedOnly: false, client: adminSupabase });
+  } else {
+    blog = await getBlogBySlug(params.slug, { publishedOnly: true });
+  }
+
   if (!blog || (blog.published === false && !isAdmin)) {
     return {
-      title: "Article Not Found | Blog",
+      title: "Article Not Found",
+      robots: {
+        index: false,
+        follow: false,
+      },
     };
   }
 
+  const siteSettings = await getSiteSettingsFromDb();
+  const siteUrl = getSiteUrl();
+  const articleUrl = `${siteUrl}/blog/${blog.slug}`;
+  const title = `${blog.published ? "" : "[Draft Preview] "}${blog.title}`;
+  const description = blog.excerpt?.trim() || blog.title;
+
+  // Social Preview: strictly database-dependent (article cover_image or site_settings.og_image_url)
+  const dbOgImage = blog.coverImage?.trim() || siteSettings?.ogImageUrl?.trim();
+  const openGraphImages = dbOgImage
+    ? [{ url: dbOgImage, width: 1200, height: 630, alt: title }]
+    : undefined;
+  const twitterImages = dbOgImage ? [dbOgImage] : undefined;
+
   return {
-    title: `${blog.published ? "" : "[Draft Preview] "}${blog.title}`,
-    description: blog.excerpt,
+    title,
+    description,
+    alternates: {
+      canonical: `/blog/${blog.slug}`,
+    },
+    robots: blog.published === false ? { index: false, follow: false } : undefined,
     openGraph: {
-      title: blog.title,
-      description: blog.excerpt,
       type: "article",
+      locale: "en_US",
+      url: articleUrl,
+      title,
+      description,
       publishedTime: blog.publishedAt,
       tags: blog.tags,
-      images: blog.coverImage ? [{ url: blog.coverImage }] : [],
+      ...(openGraphImages ? { images: openGraphImages } : {}),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      ...(twitterImages ? { images: twitterImages } : {}),
     },
   };
 }
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
-  const blog = await getBlogBySlug(params.slug);
   const isAdmin = await isUserAdmin();
+  let blog: BlogPost | null = null;
+  if (isAdmin) {
+    const cookieStore = await cookies();
+    const adminSupabase = createClient(cookieStore);
+    blog = await getBlogBySlug(params.slug, { publishedOnly: false, client: adminSupabase });
+  } else {
+    blog = await getBlogBySlug(params.slug, { publishedOnly: true });
+  }
 
   if (!blog || (blog.published === false && !isAdmin)) {
     notFound();
   }
 
-  const allBlogs = await getBlogsFromDb();
-  const otherBlogs = allBlogs
-    .filter((b) => b.published !== false && b.id !== blog.id && b.slug !== blog.slug)
+  const publishedBlogs = await getPublishedBlogsFromDb();
+  const otherBlogs = publishedBlogs
+    .filter((b) => b.id !== blog.id && b.slug !== blog.slug)
     .slice(0, 2);
 
   return (
@@ -200,9 +257,14 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           </div>
         )}
 
-        {/* ── Main Article Body ──────────────────────────────────── */}
-        <div className="prose prose-neutral dark:prose-invert max-w-none text-foreground text-base sm:text-lg leading-relaxed space-y-6 whitespace-pre-wrap">
-          {blog.content}
+        {/* ── Main Article Body with Technical Formatting & Code Blocks ─ */}
+        <div className="pt-2">
+          <BlogPostContent content={blog.content} />
+        </div>
+
+        {/* ── Social Share Links Bar ─────────────────────────────── */}
+        <div className="pt-6 border-t border-border/80">
+          <BlogShareBar title={blog.title} slug={blog.slug} />
         </div>
 
         {/* ── Tags Section ───────────────────────────────────────── */}
@@ -212,7 +274,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground mr-1">
               Tags:
             </span>
-            {blog.tags.map((t, idx) => (
+            {blog.tags.map((t: string, idx: number) => (
               <span
                 key={idx}
                 className="px-3 py-1 rounded-xl bg-card text-foreground text-xs font-medium border border-border/80 shadow-sm"

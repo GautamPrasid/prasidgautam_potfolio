@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import { BlogPost } from "@/lib/data";
-import { getBlogsFromDb } from "@/lib/supabase-db";
+import { getAllBlogsForAdmin } from "@/lib/supabase-db";
 import {
   saveBlogAction,
   deleteBlogAction,
@@ -59,7 +59,7 @@ export default function BlogsManagerPage() {
   useEffect(() => {
     let active = true;
     async function load() {
-      const data = await getBlogsFromDb();
+      const data = await getAllBlogsForAdmin();
       if (active) {
         setBlogs(data ?? []);
       }

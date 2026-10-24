@@ -68,11 +68,17 @@ npm install
 Create `.env.local` in the project root:
 
 ```env
+# Required for public data fetching and Supabase client
 NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+
+# Required for Admin CMS mutations and asset uploads (server-only)
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# Site domain (defaults to production domain if omitted in production)
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 
-# Optional — contact form email fallback
+# Optional — contact form notification fallback
 CONTACT_EMAIL=your@email.com
 ```
 
@@ -90,20 +96,41 @@ Open [http://localhost:3000/admin](http://localhost:3000/admin) and log in with 
 | Page | What it controls |
 |------|-----------------|
 | `/admin/hero` | Name, bio, roles, profile photo, resume PDF, GitHub/email |
-| `/admin/social-links` | Social link entries with icons |
-| `/admin/skills` | Skill cards with icons and proficiency levels |
+| `/admin/social-links` | Social link entries with icons and ordering |
+| `/admin/skills` | Skill cards with icons, categories, and proficiency levels |
 | `/admin/education` | Education history timeline |
 | `/admin/experience` | Work experience timeline |
 | `/admin/certifications` | Certificates with issuer, date, credential URL |
-| `/admin/projects` | Project showcase with images, links, tags |
-| `/admin/messages` | Contact form inbox |
+| `/admin/projects` | Project showcase with uploads, links, tags, and category filters |
+| `/admin/blogs` | Blog articles, Markdown editor, cover uploads, and draft/published toggle |
+| `/admin/website-settings` | Site title, description, logo, social preview image, and section visibility |
+| `/admin/messages` | Contact form inbox with read status management |
+
+## Validation & Quality Checks
+
+Run the following commands to verify code quality before deploying:
+
+```bash
+# Type check TypeScript definitions
+npx tsc --noEmit
+
+# Run ESLint validation
+npm run lint
+
+# Build production bundle with SSG / ISR verification
+npm run build
+```
 
 ## Deployment (Vercel)
 
 1. Push to GitHub
 2. Import the repo into [Vercel](https://vercel.com)
-3. Add the same environment variables from `.env.local` in **Project Settings → Environment Variables**
-4. Deploy — Next.js is auto-detected, no extra config needed
+3. In **Project Settings → Environment Variables**, add:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+   - `NEXT_PUBLIC_SITE_URL` = `https://www.prasidgautam.com.np`
+4. Deploy — Next.js App Router with ISR (1-hour revalidation) and on-demand cache revalidation is supported out of the box.
 
 ## Documentation (Mintlify)
 

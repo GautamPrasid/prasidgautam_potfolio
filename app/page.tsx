@@ -14,12 +14,20 @@ import {
   getExperienceFromDb,
   getProjectsFromDb,
   getCertificationsFromDb,
-  getBlogsFromDb,
+  getPublishedBlogsFromDb,
   getSiteSettingsFromDb,
 } from "@/lib/supabase-db";
 
-export const revalidate = 0;
-export const dynamic = "force-dynamic";
+import type { Metadata } from "next";
+
+// Cache home page with ISR fallback, revalidated on-demand via revalidatePath when admin updates content
+export const revalidate = 3600;
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: "/",
+  },
+};
 
 export default async function Home() {
   const [
@@ -40,7 +48,7 @@ export default async function Home() {
     getExperienceFromDb(),
     getProjectsFromDb(),
     getCertificationsFromDb(),
-    getBlogsFromDb(),
+    getPublishedBlogsFromDb(),
     getSiteSettingsFromDb(),
   ]);
 

@@ -13,11 +13,11 @@ import {
   getExperienceFromDb,
   getProjectsFromDb,
   getCertificationsFromDb,
-  getBlogsFromDb,
+  getPublishedBlogsFromDb,
 } from "@/lib/supabase-db";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+// Cache public layout with 1-hour ISR fallback, revalidated instantly on-demand when admin saves
+export const revalidate = 3600;
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -37,13 +37,19 @@ const spaceGrotesk = Space_Grotesk({
   display: "swap",
 });
 
+import { getSiteUrl } from "@/lib/site-url";
+
 export async function generateMetadata(): Promise<Metadata> {
   const [heroData, siteSettings] = await Promise.all([getHeroAboutFromDb(), getSiteSettingsFromDb()]);
   const rawName = siteSettings?.siteName?.trim() || heroData?.name?.trim() || "";
-  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.prasidgautam.com.np").replace(/\/$/, "");
-  const description =
-    siteSettings?.siteDescription?.trim() ||
-    "Explore the portfolio of Prasid Gautam, a BCA student and software developer from Pokhara, Nepal, showcasing projects, skills, and experience in web development.";
+  const siteUrl = getSiteUrl();
+
+  const rawDescription = siteSettings?.siteDescription?.trim();
+  const isGenericDescription =
+    !rawDescription || rawDescription.toLowerCase() === "personal portfolio website.";
+  const description = isGenericDescription
+    ? "Explore the portfolio of Prasid Gautam, a BCA student and software developer from Pokhara, Nepal, showcasing projects, skills, and experience in web development."
+    : rawDescription;
 
   // Prevent duplicate "| Portfolio" if the name already contains Portfolio
   const baseName = rawName.replace(/\s*\|\s*portfolio\s*$/i, "").trim() || rawName;
@@ -54,7 +60,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const logoUrl = siteSettings?.logoUrl?.trim();
   const ogImageUrl = siteSettings?.ogImageUrl?.trim();
 
-  // Social Preview: used for openGraph and twitter images in metadata. Omit tags if empty.
+  // Social Preview: strictly database-dependent (reads site_settings.og_image_url from Supabase)
   const openGraphImages = ogImageUrl
     ? [
         {
@@ -88,9 +94,6 @@ export async function generateMetadata(): Promise<Metadata> {
       template: baseName ? `%s | ${baseName}` : "%s",
     },
     description,
-    alternates: {
-      canonical: "/",
-    },
     icons: iconsConfig,
     authors: baseName ? [{ name: baseName, url: siteUrl }] : [{ name: "Prasid Gautam", url: siteUrl }],
     creator: baseName || "Prasid Gautam",
@@ -99,9 +102,7 @@ export async function generateMetadata(): Promise<Metadata> {
       locale: "en_US",
       url: `${siteUrl}/`,
       title: titleString,
-      description:
-        siteSettings?.siteDescription?.trim() ||
-        "Explore my projects, skills, and experience in software and web development.",
+      description,
       siteName: rawName
         ? (rawName.toLowerCase().includes("portfolio") ? rawName : `${rawName} Portfolio`)
         : "Prasid Gautam Portfolio",
@@ -144,7 +145,7 @@ export default async function RootLayout({
     getExperienceFromDb(),
     getProjectsFromDb(),
     getCertificationsFromDb(),
-    getBlogsFromDb(),
+    getPublishedBlogsFromDb(),
   ]);
 
   const visibility = siteSettings?.sectionVisibility ?? {};

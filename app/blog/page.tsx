@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { getBlogsFromDb, getHeroAboutFromDb, getSiteSettingsFromDb } from "@/lib/supabase-db";
+import { getPublishedBlogsFromDb, getHeroAboutFromDb, getSiteSettingsFromDb } from "@/lib/supabase-db";
 import {
   ArrowLeft,
   Calendar,
@@ -10,15 +10,53 @@ import {
   ArrowRight,
 } from "lucide-react";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+// Cache blog archive with 1-hour ISR fallback, revalidated on-demand when admin creates/edits articles
+export const revalidate = 3600;
+
+import { getSiteUrl } from "@/lib/site-url";
 
 export async function generateMetadata(): Promise<Metadata> {
   const [siteSettings, hero] = await Promise.all([getSiteSettingsFromDb(), getHeroAboutFromDb()]);
-  const author = hero?.name?.trim() || siteSettings?.siteName?.trim() || "Portfolio";
+  const author = hero?.name?.trim() || siteSettings?.siteName?.trim() || "Prasid Gautam";
+  const siteUrl = getSiteUrl();
+  const pageTitle = "Blog & Articles";
+  const fullTitle = `${pageTitle} | ${author}`;
+  const description = `Explore engineering tutorials, software architecture guides, and technical insights by ${author}.`;
+
+  const ogImageUrl = siteSettings?.ogImageUrl?.trim();
+  const openGraphImages = ogImageUrl
+    ? [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: fullTitle,
+        },
+      ]
+    : undefined;
+  const twitterImages = ogImageUrl ? [ogImageUrl] : undefined;
+
   return {
-    title: `Blog & Articles | ${author}`,
-    description: `Explore engineering tutorials, software architecture guides, and technical insights by ${author}.`,
+    title: pageTitle,
+    description,
+    alternates: {
+      canonical: "/blog",
+    },
+    openGraph: {
+      type: "website",
+      locale: "en_US",
+      url: `${siteUrl}/blog`,
+      title: fullTitle,
+      description,
+      siteName: author.toLowerCase().includes("portfolio") ? author : `${author} Portfolio`,
+      ...(openGraphImages ? { images: openGraphImages } : {}),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: fullTitle,
+      description,
+      ...(twitterImages ? { images: twitterImages } : {}),
+    },
   };
 }
 
@@ -42,8 +80,7 @@ function formatBlogDate(dateStr?: string): string {
 }
 
 export default async function BlogArchivePage() {
-  const blogs = await getBlogsFromDb();
-  const publishedBlogs = blogs.filter((b) => b.published !== false);
+  const publishedBlogs = await getPublishedBlogsFromDb();
 
   return (
     <div className="min-h-screen bg-background text-foreground pt-24 pb-20 px-4 sm:px-6 lg:px-8">

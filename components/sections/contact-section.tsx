@@ -43,6 +43,7 @@ export function ContactSection({ initialHeroData = null, sectionContent }: Conta
     message: "",
     website: "",
   });
+  const [mountedAt] = useState<number>(() => Date.now());
 
   useEffect(() => {
     if (initialHeroData) {
@@ -117,7 +118,7 @@ export function ContactSection({ initialHeroData = null, sectionContent }: Conta
       const response = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, _t: mountedAt }),
       });
 
       const result = await response.json();
@@ -276,6 +277,8 @@ export function ContactSection({ initialHeroData = null, sectionContent }: Conta
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
+                    role={statusMessage.type === "error" ? "alert" : "status"}
+                    aria-live="polite"
                     suppressHydrationWarning
                     className={`p-4 rounded-2xl flex items-start gap-3 border ${statusMessage.type === "success"
                         ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
@@ -319,13 +322,15 @@ export function ContactSection({ initialHeroData = null, sectionContent }: Conta
                       value={formData.name}
                       onChange={handleChange}
                       disabled={isSubmitting}
+                      aria-invalid={Boolean(errors.name)}
+                      aria-describedby={errors.name ? "name-error" : undefined}
                       className={`w-full px-4 py-3 rounded-xl bg-background border text-sm text-foreground focus:outline-none focus:ring-2 transition-all min-h-[44px] ${errors.name
                           ? "border-rose-500 focus:ring-rose-500/40"
                           : "border-border focus:border-primary focus:ring-primary/40"
                         }`}
                     />
                     {errors.name && (
-                      <p className="text-xs text-rose-500 font-medium">{errors.name}</p>
+                      <p id="name-error" role="alert" className="text-xs text-rose-500 font-medium">{errors.name}</p>
                     )}
                   </div>
 
@@ -343,13 +348,15 @@ export function ContactSection({ initialHeroData = null, sectionContent }: Conta
                       value={formData.email}
                       onChange={handleChange}
                       disabled={isSubmitting}
+                      aria-invalid={Boolean(errors.email)}
+                      aria-describedby={errors.email ? "email-error" : undefined}
                       className={`w-full px-4 py-3 rounded-xl bg-background border text-sm text-foreground focus:outline-none focus:ring-2 transition-all min-h-[44px] ${errors.email
                           ? "border-rose-500 focus:ring-rose-500/40"
                           : "border-border focus:border-primary focus:ring-primary/40"
                         }`}
                     />
                     {errors.email && (
-                      <p className="text-xs text-rose-500 font-medium">{errors.email}</p>
+                      <p id="email-error" role="alert" className="text-xs text-rose-500 font-medium">{errors.email}</p>
                     )}
                   </div>
                 </div>
@@ -368,13 +375,15 @@ export function ContactSection({ initialHeroData = null, sectionContent }: Conta
                     value={formData.subject}
                     onChange={handleChange}
                     disabled={isSubmitting}
+                    aria-invalid={Boolean(errors.subject)}
+                    aria-describedby={errors.subject ? "subject-error" : undefined}
                     className={`w-full px-4 py-3 rounded-xl bg-background border text-sm text-foreground focus:outline-none focus:ring-2 transition-all min-h-[44px] ${errors.subject
                         ? "border-rose-500 focus:ring-rose-500/40"
                         : "border-border focus:border-primary focus:ring-primary/40"
                       }`}
                   />
                   {errors.subject && (
-                    <p className="text-xs text-rose-500 font-medium">{errors.subject}</p>
+                    <p id="subject-error" role="alert" className="text-xs text-rose-500 font-medium">{errors.subject}</p>
                   )}
                 </div>
 
@@ -392,13 +401,15 @@ export function ContactSection({ initialHeroData = null, sectionContent }: Conta
                     value={formData.message}
                     onChange={handleChange}
                     disabled={isSubmitting}
+                    aria-invalid={Boolean(errors.message)}
+                    aria-describedby={errors.message ? "message-error" : undefined}
                     className={`w-full px-4 py-3 rounded-xl bg-background border text-sm text-foreground focus:outline-none focus:ring-2 transition-all resize-none ${errors.message
                         ? "border-rose-500 focus:ring-rose-500/40"
                         : "border-border focus:border-primary focus:ring-primary/40"
                       }`}
                   />
                   {errors.message && (
-                    <p className="text-xs text-rose-500 font-medium">{errors.message}</p>
+                    <p id="message-error" role="alert" className="text-xs text-rose-500 font-medium">{errors.message}</p>
                   )}
                 </div>
 

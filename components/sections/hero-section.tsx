@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Send, User } from "lucide-react";
+import { Mail, Send, User, Download, Sparkles, ArrowRight } from "lucide-react";
 import { getHeroAboutFromDb, getSocialLinksFromDb, HeroAboutData } from "@/lib/supabase-db";
 import { SocialLinkItem } from "@/lib/data";
 import { DynamicIcon } from "@/components/ui/dynamic-icon";
@@ -128,7 +128,7 @@ export function HeroSection({
             </p>
           )}
 
-          {/* Primary CTA Buttons */}
+          {/* Two Prominent Action Buttons: View Projects and Download CV */}
           <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full sm:w-auto pt-2">
             <a
               href="#projects"
@@ -143,20 +143,24 @@ export function HeroSection({
             </a>
 
             <a
-              href="#contact"
+              href={heroData?.resumeUrl || "#resume"}
+              target={heroData?.resumeUrl ? "_blank" : undefined}
+              rel={heroData?.resumeUrl ? "noopener noreferrer" : undefined}
               onClick={(e) => {
-                e.preventDefault();
-                document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" });
+                if (!heroData?.resumeUrl) {
+                  e.preventDefault();
+                  document.getElementById("resume")?.scrollIntoView({ behavior: "smooth" });
+                }
               }}
-              className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-card border border-border text-foreground font-semibold hover:bg-muted transition-all duration-200 flex items-center justify-center gap-2 shadow-sm group min-h-[44px]"
+              className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-card border border-border text-foreground font-semibold hover:bg-muted hover:border-primary/50 transition-all duration-200 flex items-center justify-center gap-2 shadow-sm group min-h-[44px]"
             >
-              <Mail className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
-              <span>Contact Me</span>
+              <Download className="w-4 h-4 text-primary group-hover:-translate-y-0.5 transition-transform" />
+              <span>Download CV</span>
             </a>
           </div>
 
           {/* Social Icon Row */}
-          <div className="pt-3 flex flex-wrap items-center justify-center lg:justify-start gap-3 sm:gap-4">
+          <div className="pt-2 flex flex-wrap items-center justify-center lg:justify-start gap-3 sm:gap-4">
             {heroData?.connectHeading && (
               <span className="text-xs uppercase tracking-wider font-semibold text-muted-foreground hidden sm:inline">
                 {heroData.connectHeading}:
@@ -206,6 +210,40 @@ export function HeroSection({
                   )}
                 </>
               )}
+            </div>
+          </div>
+
+          {/* Featured Strongest Project Spotlight (Visible above the fold without scrolling) */}
+          <div className="w-full max-w-xl p-3.5 sm:p-4 rounded-2xl bg-card/90 border border-primary/25 shadow-md backdrop-blur-sm space-y-2 mt-2 text-left">
+            <div className="flex items-center justify-between gap-2">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold uppercase tracking-wider">
+                <Sparkles className="w-3 h-3 shrink-0" />
+                Featured Flagship Work
+              </span>
+              <span className="text-[11px] font-medium text-muted-foreground hidden sm:inline">
+                Full-Stack Desktop Architecture
+              </span>
+            </div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+              <div>
+                <h3 className="font-heading font-bold text-sm sm:text-base text-foreground leading-snug">
+                  StudyBuddy – Student Companion
+                </h3>
+                <p className="text-xs text-muted-foreground line-clamp-1">
+                  JavaFX, FXML, SQL Server &amp; MVC Architecture
+                </p>
+              </div>
+              <a
+                href="#projects"
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" });
+                }}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors shrink-0 group py-1"
+              >
+                <span>Explore Project</span>
+                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+              </a>
             </div>
           </div>
         </motion.div>
