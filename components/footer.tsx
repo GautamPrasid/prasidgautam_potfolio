@@ -2,7 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { ArrowUp, Code2, ArrowUpRight, Heart, Sparkles, Send } from "lucide-react";
+import {
+  ArrowRight,
+  ArrowUp,
+  ArrowUpRight,
+  Code2,
+  Heart,
+  Sparkles,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getSocialLinksFromDb } from "@/lib/supabase-db";
 import { SocialLinkItem } from "@/lib/data";
@@ -46,16 +53,16 @@ export function Footer({
   const [socialLinks, setSocialLinks] = useState<SocialLinkItem[]>(initialSocialLinks);
 
   useEffect(() => {
-    if (initialSocialLinks && initialSocialLinks.length > 0) {
-      setSocialLinks(initialSocialLinks);
-    }
+    if (initialSocialLinks?.length) setSocialLinks(initialSocialLinks);
   }, [initialSocialLinks]);
 
   useEffect(() => {
-    if (initialSocialLinks && initialSocialLinks.length > 0) return;
+    if (initialSocialLinks?.length) return;
     let active = true;
     getSocialLinksFromDb().then((links) => {
       if (active) setSocialLinks(links ?? []);
+    }).catch(() => {
+      if (active) setSocialLinks([]);
     });
     return () => {
       active = false;
@@ -63,171 +70,166 @@ export function Footer({
   }, [initialSocialLinks]);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setShowBackToTop(window.scrollY > 400);
-    };
-    window.addEventListener("scroll", handleScroll);
+    const handleScroll = () => setShowBackToTop(window.scrollY > 400);
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    e.preventDefault();
     const targetId = href.replace("#", "");
     const targetElement = document.getElementById(targetId);
     if (targetElement) {
-      targetElement.scrollIntoView({ behavior: "smooth" });
-    } else {
+      e.preventDefault();
+      targetElement.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else if (pathname === "/" || pathname === undefined) {
+      e.preventDefault();
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  };
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
-  if (pathname?.startsWith("/admin")) {
-    return null;
-  }
+  if (pathname?.startsWith("/admin")) return null;
 
   const currentYear = new Date().getFullYear();
+  const brandName = siteName || "Prasid Gautam | Portfolio";
 
   return (
-    <footer className="relative bg-card/60 backdrop-blur-xl border-t border-border/70 mt-20 sm:mt-28 overflow-hidden transition-colors duration-300">
-      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
-      <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-24 bg-primary/10 blur-3xl pointer-events-none rounded-full" />
+    <footer className="relative isolate mt-20 overflow-hidden border-t border-border/70 bg-background">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/70 to-transparent" />
+      <div aria-hidden="true" className="pointer-events-none absolute -top-40 left-1/2 -z-10 h-72 w-[min(720px,90vw)] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
+      <div className="mx-auto max-w-7xl px-4 pb-6 pt-10 sm:px-6 sm:pt-14 lg:px-8">
+        {/* Contact callout */}
+        <div className="relative mb-10 overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/[0.12] via-card/90 to-card p-6 shadow-sm sm:mb-14 sm:p-8 lg:p-10">
+          <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-16 h-48 w-48 rounded-full bg-primary/10 blur-3xl" />
+          <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+            <div className="max-w-2xl">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-background/70 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
+                <Sparkles className="h-3.5 w-3.5" />
+                Open to opportunities
+              </div>
+              <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl lg:text-3xl">
+                {ctaHeading || "Have an idea? Let’s build something useful."}
+              </h2>
+              <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
+                {ctaSubtext || "I’m always happy to connect, discuss a project, or explore a new opportunity."}
+              </p>
+            </div>
+            <a
+              href="#contact"
+              onClick={(e) => scrollToSection(e, "#contact")}
+              className="group inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+              Let’s connect
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </a>
+          </div>
+        </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 pb-8 sm:pb-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 sm:gap-10 lg:gap-8 pb-8 sm:pb-12 border-b border-border/60">
-          {/* Column 1: Brand & Bio & Live Status */}
-          <div className="lg:col-span-5 space-y-4">
+        {/* Main footer content */}
+        <div className="grid grid-cols-1 gap-10 border-b border-border/70 pb-10 sm:gap-12 md:grid-cols-2 lg:grid-cols-12 lg:gap-8 lg:pb-12">
+          <div className="space-y-5 md:col-span-2 lg:col-span-5">
             <a
               href="#home"
               onClick={(e) => scrollToSection(e, "#home")}
-              className="inline-flex items-center gap-2.5 group focus:outline-none focus:ring-2 focus:ring-primary rounded-xl p-1 -ml-1"
-              aria-label="Home page"
+              aria-label="Go to homepage"
+              className="group inline-flex items-center gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-4 focus-visible:ring-offset-background"
             >
-              <div className="p-2.5 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground group-hover:shadow-md group-hover:shadow-primary/20 transition-all duration-300">
-                <Code2 className="w-5 h-5" />
-              </div>
-              <span className="font-heading font-bold text-xl tracking-tight text-foreground">
-                {siteName || "Portfolio"}<span className="text-primary">.</span>
+              <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary transition-all duration-300 group-hover:border-primary/40 group-hover:bg-primary group-hover:text-primary-foreground">
+                <Code2 className="h-5 w-5" />
+              </span>
+              <span className="text-lg font-bold tracking-tight text-foreground sm:text-xl">
+                {brandName}<span className="text-primary">.</span>
               </span>
             </a>
-
             {bio && (
-              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-sm">
+              <p className="max-w-md text-sm leading-7 text-muted-foreground">
                 {bio}
               </p>
             )}
-
             {availabilityText && (
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+              <div className="inline-flex max-w-full items-center gap-2.5 rounded-full border border-emerald-500/20 bg-emerald-500/[0.07] px-3.5 py-2 text-xs font-medium text-emerald-600 dark:text-emerald-400">
                 <span className="relative flex h-2 w-2 shrink-0">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+                  <span className="relative h-2 w-2 rounded-full bg-emerald-500" />
                 </span>
-                <span className="truncate">{availabilityText}</span>
+                <span>{availabilityText}</span>
               </div>
             )}
           </div>
 
-          {/* Column 2: Quick Links */}
-          <div className="lg:col-span-3 space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-wider text-foreground">
-              Navigation
-            </p>
-            <ul className="grid grid-cols-2 gap-2 text-xs sm:text-sm">
+          <nav aria-label="Footer navigation" className="lg:col-span-3">
+            <h3 className="mb-4 text-xs font-bold uppercase tracking-[0.16em] text-foreground">
+              Explore
+            </h3>
+            <ul className="grid grid-cols-2 gap-x-5 gap-y-1.5">
               {QUICK_LINKS.map((link) => (
                 <li key={link.href}>
                   <a
                     href={link.href}
                     onClick={(e) => scrollToSection(e, link.href)}
-                    className="group inline-flex items-center text-muted-foreground hover:text-primary transition-colors py-1 focus:outline-none focus:ring-2 focus:ring-primary rounded-md"
+                    className="group inline-flex min-h-10 items-center gap-1.5 rounded-md py-2 pr-2 text-sm text-muted-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   >
-                    <span className="group-hover:translate-x-1 transition-transform duration-200">
-                      {link.label}
-                    </span>
+                    <span className="transition-transform duration-200 group-hover:translate-x-0.5">{link.label}</span>
+                    <ArrowUpRight className="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-70" />
                   </a>
                 </li>
               ))}
             </ul>
-          </div>
+          </nav>
 
-          {/* Column 3: Connect & CTA Card */}
-          <div className="lg:col-span-4 space-y-4">
-            {connectHeading && (
-              <p className="text-xs font-semibold uppercase tracking-wider text-foreground">
-                {connectHeading}
-              </p>
-            )}
-
+          <div className="lg:col-span-4">
+            <h3 className="mb-4 text-xs font-bold uppercase tracking-[0.16em] text-foreground">
+              {connectHeading || "Find me online"}
+            </h3>
             {socialLinks.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
+              <ul className="flex flex-wrap gap-2.5">
                 {socialLinks.map((social) => (
-                  <a
-                    key={social.id}
-                    href={social.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`Visit ${social.platform}`}
-                    className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-2 rounded-xl bg-muted/60 hover:bg-primary hover:text-primary-foreground border border-border/60 hover:border-primary text-muted-foreground transition-all duration-200 hover:-translate-y-0.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary min-h-[44px]"
-                  >
-                    <DynamicIcon name={social.iconName} className="w-4 h-4 shrink-0" />
-                    <span>{social.platform}</span>
-                    <ArrowUpRight className="w-3 h-3 opacity-60 shrink-0" />
-                  </a>
+                  <li key={social.id}>
+                    <a
+                      href={social.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`Visit ${social.platform} (opens in a new tab)`}
+                      className="group inline-flex min-h-11 items-center gap-2 rounded-xl border border-border/80 bg-card/70 px-3.5 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/[0.08] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    >
+                      <DynamicIcon name={social.iconName} className="h-4 w-4 shrink-0" />
+                      <span>{social.platform}</span>
+                      <ArrowUpRight className="h-3.5 w-3.5 opacity-50 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                    </a>
+                  </li>
                 ))}
-              </div>
-            ) : null}
-
-            {(ctaHeading || ctaSubtext) && (
-              <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/5 via-card to-primary/10 border border-primary/20 flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  {ctaHeading && (
-                    <p className="text-xs font-semibold text-foreground flex items-center gap-1.5 truncate">
-                      <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
-                      {ctaHeading}
-                    </p>
-                  )}
-                  {ctaSubtext && (
-                    <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
-                      {ctaSubtext}
-                    </p>
-                  )}
-                </div>
-                <a
-                  href="#contact"
-                  onClick={(e) => scrollToSection(e, "#contact")}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-all duration-200 shrink-0 min-h-[44px]"
-                >
-                  <span>Chat</span>
-                  <Send className="w-3 h-3" />
-                </a>
-              </div>
+              </ul>
+            ) : (
+              <p className="text-sm text-muted-foreground">Social links will appear here soon.</p>
             )}
+            <p className="mt-4 text-xs leading-5 text-muted-foreground">
+              Prefer email?{" "}
+              <a href="mailto:gprasid10@gmail.com" className="font-medium text-foreground underline decoration-primary/50 underline-offset-4 transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                Get in touch
+              </a>
+            </p>
           </div>
         </div>
 
-        {/* Bottom Sub-Footer Bar */}
-        <div className="pt-6 sm:pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
-          <p className="flex items-center gap-1 text-center sm:text-left flex-wrap justify-center sm:justify-start">
-            &copy; {currentYear} {siteName || ""}. Made with{" "}
-            <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500 inline mx-0.5 shrink-0" />
-            {location ? ` in ${location}.` : "."}
+        {/* Copyright and utility links */}
+        <div className="flex flex-col gap-4 pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:pt-7">
+          <p className="flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 text-center sm:justify-start">
+            <span>© {currentYear} {brandName}</span>
+            <span aria-hidden="true" className="text-border">/</span>
+            <span>Made with</span>
+            <Heart className="h-3.5 w-3.5 fill-rose-500 text-rose-500" aria-label="love" />
+            {location && <span>in {location}</span>}
           </p>
-
-          <div className="flex items-center gap-4 flex-wrap justify-center">
-            {footerText ? <span>{footerText}</span> : null}
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 sm:justify-end">
+            {footerText && <span>{footerText}</span>}
             <button
               onClick={scrollToTop}
-              className="inline-flex items-center gap-1 text-xs font-medium text-foreground hover:text-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded-md px-2 py-1 min-h-[44px]"
+              className="inline-flex min-h-10 items-center gap-1.5 rounded-lg px-2 font-semibold text-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               aria-label="Scroll back to top"
             >
-              <span>Back to Top</span>
-              <ArrowUp className="w-3.5 h-3.5" />
+              Back to top <ArrowUp className="h-3.5 w-3.5" />
             </button>
           </div>
         </div>
@@ -236,15 +238,15 @@ export function Footer({
       <AnimatePresence>
         {showBackToTop && (
           <motion.button
-            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            initial={{ opacity: 0, scale: 0.85, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.8, y: 20 }}
+            exit={{ opacity: 0, scale: 0.85, y: 12 }}
+            transition={{ duration: 0.2 }}
             onClick={scrollToTop}
             aria-label="Back to top"
-            suppressHydrationWarning
-            className="fixed bottom-6 right-6 p-3 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring z-40 transition-all duration-200 hover:-translate-y-1 hover:shadow-primary/25 min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="fixed bottom-5 right-4 z-40 flex min-h-11 min-w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary text-primary-foreground shadow-lg shadow-primary/25 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:bottom-6 sm:right-6"
           >
-            <ArrowUp className="w-5 h-5" />
+            <ArrowUp className="h-5 w-5" />
           </motion.button>
         )}
       </AnimatePresence>
