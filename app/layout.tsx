@@ -40,8 +40,10 @@ const spaceGrotesk = Space_Grotesk({
 export async function generateMetadata(): Promise<Metadata> {
   const [heroData, siteSettings] = await Promise.all([getHeroAboutFromDb(), getSiteSettingsFromDb()]);
   const rawName = siteSettings?.siteName?.trim() || heroData?.name?.trim() || "";
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-  const description = siteSettings?.siteDescription?.trim() || "";
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.prasidgautam.com.np").replace(/\/$/, "");
+  const description =
+    siteSettings?.siteDescription?.trim() ||
+    "Explore the portfolio of Prasid Gautam, a BCA student and software developer from Pokhara, Nepal, showcasing projects, skills, and experience in web development.";
 
   // Prevent duplicate "| Portfolio" if the name already contains Portfolio
   const baseName = rawName.replace(/\s*\|\s*portfolio\s*$/i, "").trim() || rawName;
@@ -88,6 +90,7 @@ export async function generateMetadata(): Promise<Metadata> {
       template: baseName ? `%s | ${baseName}` : "%s",
     },
     description,
+    alternates: { canonical: "/" },
     icons: iconsConfig,
     authors: baseName ? [{ name: baseName, url: siteUrl }] : [],
     creator: baseName || undefined,
