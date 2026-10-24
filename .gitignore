@@ -95,5 +95,7 @@ skills-lock.json
 project-memory.md
 decisions.md
 
-.vercel
-.env*
+
+# Override: never ignore the example files — they document required vars
+!.env.example
+!.env.local.example
