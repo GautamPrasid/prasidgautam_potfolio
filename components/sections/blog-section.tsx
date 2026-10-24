@@ -92,7 +92,7 @@ export function BlogSection({ initialBlogs = [], sectionContent }: BlogSectionPr
     <section
       id="blog"
       aria-label="Blog Section"
-      className="mx-auto max-w-7xl scroll-mt-20 px-4 py-16 sm:px-6 sm:py-20 md:px-8 md:py-28"
+      className="mx-auto w-full min-w-0 max-w-7xl scroll-mt-20 overflow-x-clip px-4 py-14 sm:px-6 sm:py-20 md:px-8 md:py-28"
     >
       <motion.div
         initial={false}
@@ -102,14 +102,14 @@ export function BlogSection({ initialBlogs = [], sectionContent }: BlogSectionPr
         className="space-y-10 sm:space-y-12"
       >
         {/* Section Heading */}
-        <div className="mx-auto max-w-3xl space-y-3 text-center sm:space-y-4">
+        <div className="mx-auto w-full min-w-0 max-w-3xl space-y-3 text-center sm:space-y-4">
           <span className="inline-block rounded-full border border-primary/20 bg-primary/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-primary">
             {sectionContent?.badge || "Articles & Insights"}
           </span>
-          <h2 className="font-heading text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl md:text-5xl">
+          <h2 className="break-words font-heading text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl md:text-5xl">
             {sectionContent?.heading || "Latest from the Blog"}
           </h2>
-          <p className="text-sm text-muted-foreground sm:text-base md:text-lg">
+          <p className="break-words text-sm leading-relaxed text-muted-foreground sm:text-base md:text-lg">
             {sectionContent?.subtext ||
               "Thoughts, engineering deep-dives, and tutorials on modern web development, architecture, and technology."}
           </p>
@@ -117,8 +117,8 @@ export function BlogSection({ initialBlogs = [], sectionContent }: BlogSectionPr
 
         {/* Category Filters */}
         {publishedBlogs.length > 0 && (
-          <div className="scrollbar-none flex max-w-full justify-center overflow-x-auto py-2">
-            <div className="inline-flex max-w-full gap-1 rounded-2xl border border-border/80 bg-card p-1.5 shadow-sm">
+          <div className="scrollbar-none flex w-full min-w-0 justify-start overflow-x-auto overscroll-x-contain py-2 sm:justify-center">
+            <div className="inline-flex w-max min-w-max gap-1 rounded-2xl border border-border/80 bg-card p-1.5 shadow-sm">
               {categories.map((cat) => {
                 const isActive = selectedCategory === cat;
                 return (
@@ -178,11 +178,11 @@ export function BlogSection({ initialBlogs = [], sectionContent }: BlogSectionPr
                             ? (idx % BLOGS_PER_PAGE) * 0.1
                             : 0,
                       }}
-                      className="group flex min-w-0 flex-col justify-between rounded-3xl border border-border/80 bg-card p-5 shadow-sm transition-all duration-300 hover:border-primary/50 hover:shadow-xl sm:p-6"
+                      className="group flex min-w-0 w-full flex-col justify-between rounded-3xl border border-border/80 bg-card p-4 shadow-sm transition-all duration-300 hover:border-primary/50 hover:shadow-xl sm:p-6"
                     >
                       <Link
                         href={articleHref}
-                        className="block w-full space-y-4 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary min-w-0"
+                        className="block min-w-0 w-full space-y-4 rounded-xl text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card"
                       >
                         {/* Cover Image */}
                         <div className="relative h-48 w-full overflow-hidden rounded-2xl bg-muted sm:h-52">
@@ -205,7 +205,7 @@ export function BlogSection({ initialBlogs = [], sectionContent }: BlogSectionPr
                         </div>
 
                         {/* Date & Reading Time */}
-                        <div className="flex items-center justify-between gap-3 pt-1 text-xs text-muted-foreground">
+                        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 pt-1 text-xs text-muted-foreground">
                           <span className="flex min-w-0 items-center gap-1.5 truncate">
                             <Calendar className="h-3.5 w-3.5 shrink-0 text-primary" />
                             <span className="truncate">{formatBlogDate(blog.publishedAt)}</span>
@@ -228,7 +228,7 @@ export function BlogSection({ initialBlogs = [], sectionContent }: BlogSectionPr
                       </Link>
 
                       {/* Card Footer: Tags & Read Article Redirect Link */}
-                      <div className="mt-5 flex items-center justify-between gap-2 border-t border-border/60 pt-4">
+                      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-border/60 pt-4">
                         <div className="flex flex-wrap gap-1">
                           {blog.tags.slice(0, 2).map((tag) => (
                             <span
@@ -246,7 +246,7 @@ export function BlogSection({ initialBlogs = [], sectionContent }: BlogSectionPr
                         </div>
                         <Link
                           href={articleHref}
-                          className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-primary/10 px-3.5 py-2 text-xs font-semibold text-primary shadow-sm transition-all duration-300 hover:bg-primary hover:text-primary-foreground group-hover:bg-primary group-hover:text-primary-foreground"
+                          className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-primary/10 px-3 py-2 text-xs font-semibold text-primary shadow-sm transition-all duration-300 hover:bg-primary hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 group-hover:bg-primary group-hover:text-primary-foreground"
                         >
                           <span>Read Article</span>
                           <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
@@ -286,7 +286,7 @@ export function BlogSection({ initialBlogs = [], sectionContent }: BlogSectionPr
                       type="button"
                       onClick={handleLoadMore}
                       disabled={isLoadingMore}
-                      className="group relative flex min-h-11 items-center justify-center gap-2.5 overflow-hidden rounded-2xl border-2 border-primary/20 bg-card px-5 py-3 text-sm font-semibold text-foreground shadow-sm transition-all duration-300 hover:border-primary/60 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
+                      className="group relative flex min-h-11 w-full items-center justify-center gap-2.5 overflow-hidden rounded-2xl border-2 border-primary/20 bg-card px-4 py-3 text-sm font-semibold text-foreground shadow-sm transition-all duration-300 hover:border-primary/60 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
                       whileHover={{ scale: 1.02, y: -2 }}
                       whileTap={{ scale: 0.98 }}
                     >
@@ -308,7 +308,7 @@ export function BlogSection({ initialBlogs = [], sectionContent }: BlogSectionPr
 
                     <Link
                       href="/blog"
-                      className="flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-md transition-all hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                      className="flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-md transition-all hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:w-auto"
                     >
                       <span>View All Blogs</span>
                       <ArrowRight className="h-4 w-4" />
