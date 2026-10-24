@@ -159,25 +159,19 @@ export function ContactSection({ initialHeroData = null, sectionContent }: Conta
         className="space-y-10 sm:space-y-16"
         suppressHydrationWarning
       >
-        {(sectionContent?.badge || sectionContent?.heading || sectionContent?.subtext) && (
-          <div className="text-center max-w-3xl mx-auto space-y-3 sm:space-y-4">
-            {sectionContent.badge && (
-              <span className="px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide bg-primary/10 text-primary border border-primary/20 inline-block uppercase">
-                {sectionContent.badge}
-              </span>
-            )}
-            {sectionContent.heading && (
-              <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground tracking-tight">
-                {sectionContent.heading}
-              </h2>
-            )}
-            {sectionContent.subtext && (
-              <p className="text-muted-foreground text-sm sm:text-base md:text-lg">
-                {sectionContent.subtext}
-              </p>
-            )}
-          </div>
-        )}
+        {/* Section Header */}
+        <div className="mx-auto w-full min-w-0 max-w-3xl space-y-3 text-center sm:space-y-4">
+          <span className="inline-block rounded-full border border-primary/20 bg-primary/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-primary">
+            {sectionContent?.badge || "Get In Touch"}
+          </span>
+          <h2 className="break-words font-heading text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl md:text-5xl">
+            {sectionContent?.heading || "Let's Connect"}
+          </h2>
+          <p className="break-words text-sm leading-relaxed text-muted-foreground sm:text-base md:text-lg">
+            {sectionContent?.subtext ||
+              "Have a project in mind, a question, or an opportunity? Reach out anytime."}
+          </p>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           <div className="lg:col-span-5 space-y-6">
