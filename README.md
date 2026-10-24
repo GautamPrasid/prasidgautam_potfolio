@@ -24,6 +24,9 @@ A full-stack personal portfolio with a built-in CMS admin dashboard. Every piece
 - **Dark / Light mode** — persisted in `localStorage`, no flash on load
 - **Contact form** — messages stored in Supabase `messages` table with email fallback
 - **Scroll-triggered animations** — Framer Motion `whileInView` with SSR hydration handled correctly
+- **Projects repository pagination** — starts with 4 projects and reveals up to 4 more per click using the **Load More Repos** button, with a live counter, progress bar, and animated cards
+- **Skills pagination** — starts with 8 skills per category; **See More** reveals the remaining skills with a progress indicator, and **Show less** collapses the list
+- **Category-aware pagination** — changing project or skill categories resets the visible list to its initial limit
 
 ## Project Structure
 
