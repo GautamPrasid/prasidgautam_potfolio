@@ -28,6 +28,7 @@ export interface FooterProps {
   contactEmail?: string;
   contactPhone?: string;
   logoUrl?: string;
+  quickLinks?: { label: string; href: string }[];
 }
 
 const QUICK_LINKS = [
@@ -51,6 +52,7 @@ export function Footer({
   contactEmail,
   contactPhone,
   logoUrl,
+  quickLinks,
 }: FooterProps = {}) {
   const pathname = usePathname();
   const [showBackToTop, setShowBackToTop] = useState(false);
@@ -210,7 +212,7 @@ export function Footer({
                   Navigation
                 </h3>
                 <ul className="grid grid-cols-2 gap-x-6 gap-y-2.5">
-                  {QUICK_LINKS.map((link) => (
+                  {(quickLinks ?? QUICK_LINKS).map((link) => (
                     <li key={link.href}>
                       <a
                         href={link.href}

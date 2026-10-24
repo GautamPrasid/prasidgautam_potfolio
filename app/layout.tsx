@@ -4,7 +4,17 @@ import "./globals.css";
 import { ScrollProgress } from "@/components/scroll-progress";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
-import { getHeroAboutFromDb, getSocialLinksFromDb, getSiteSettingsFromDb } from "@/lib/supabase-db";
+import {
+  getHeroAboutFromDb,
+  getSocialLinksFromDb,
+  getSiteSettingsFromDb,
+  getSkillsFromDb,
+  getEducationFromDb,
+  getExperienceFromDb,
+  getProjectsFromDb,
+  getCertificationsFromDb,
+  getBlogsFromDb,
+} from "@/lib/supabase-db";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -29,12 +39,39 @@ const spaceGrotesk = Space_Grotesk({
 
 export async function generateMetadata(): Promise<Metadata> {
   const [heroData, siteSettings] = await Promise.all([getHeroAboutFromDb(), getSiteSettingsFromDb()]);
-  const profileImage = heroData?.profileImageUrl?.trim() || "";
   const name = siteSettings?.siteName?.trim() || heroData?.name?.trim() || "";
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
   const description = siteSettings?.siteDescription?.trim() || "";
-  const logoUrl = siteSettings?.logoUrl?.trim() || "/icon.svg";
   const titleString = name ? `${name} | Portfolio` : "Portfolio";
+  const logoUrl = siteSettings?.logoUrl?.trim();
+  const ogImageUrl = siteSettings?.ogImageUrl?.trim();
+
+  // Social Preview: used for openGraph and twitter images in metadata. Omit tags if empty.
+  const openGraphImages = ogImageUrl
+    ? [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: titleString,
+        },
+      ]
+    : undefined;
+
+  const twitterImages = ogImageUrl ? [ogImageUrl] : undefined;
+
+  // Use logo_url as the favicon if no separate favicon exists
+  const iconsConfig = logoUrl
+    ? {
+        icon: [{ url: logoUrl }],
+        shortcut: logoUrl,
+        apple: logoUrl,
+      }
+    : {
+        icon: [{ url: "/favicon.ico", sizes: "any" }],
+        shortcut: "/favicon.ico",
+        apple: "/favicon.ico",
+      };
 
   return {
     metadataBase: new URL(siteUrl),
@@ -43,14 +80,7 @@ export async function generateMetadata(): Promise<Metadata> {
       template: name ? `%s | ${name}` : "%s",
     },
     description,
-    icons: {
-      icon: [
-        { url: "/favicon.ico", sizes: "any" },
-        ...(siteSettings?.logoUrl ? [{ url: logoUrl }] : []),
-      ],
-      shortcut: "/favicon.ico",
-      apple: "/favicon.ico",
-    },
+    icons: iconsConfig,
     authors: name ? [{ name, url: siteUrl }] : [],
     creator: name || undefined,
     openGraph: {
@@ -60,22 +90,13 @@ export async function generateMetadata(): Promise<Metadata> {
       title: titleString,
       description,
       siteName: name ? `${name} Portfolio` : "Portfolio",
-      images: profileImage
-        ? [
-            {
-              url: profileImage,
-              width: 1200,
-              height: 630,
-              alt: name ? `${name} profile photo` : "Profile photo",
-            },
-          ]
-        : [],
+      ...(openGraphImages ? { images: openGraphImages } : {}),
     },
     twitter: {
       card: "summary_large_image",
       title: titleString,
       description,
-      images: profileImage ? [profileImage] : [],
+      ...(twitterImages ? { images: twitterImages } : {}),
     },
     robots: {
       index: true,
@@ -89,11 +110,68 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [socialLinks, heroData, siteSettings] = await Promise.all([
+  const [
+    socialLinks,
+    heroData,
+    siteSettings,
+    skills,
+    education,
+    experience,
+    projects,
+    certifications,
+    blogs,
+  ] = await Promise.all([
     getSocialLinksFromDb(),
     getHeroAboutFromDb(),
     getSiteSettingsFromDb(),
+    getSkillsFromDb(),
+    getEducationFromDb(),
+    getExperienceFromDb(),
+    getProjectsFromDb(),
+    getCertificationsFromDb(),
+    getBlogsFromDb(),
   ]);
+
+  const visibility = siteSettings?.sectionVisibility ?? {};
+
+  const hasAbout = Boolean(heroData?.aboutText?.trim() || heroData?.bioText?.trim());
+  const showAbout = visibility.about !== false && hasAbout;
+
+  const hasSkills = (skills?.length ?? 0) > 0;
+  const showSkills = visibility.skills !== false && hasSkills;
+
+  const hasProjects = (projects?.length ?? 0) > 0;
+  const showProjects = visibility.projects !== false && hasProjects;
+
+  const hasResume = Boolean(
+    (education?.length ?? 0) > 0 ||
+    (experience?.length ?? 0) > 0 ||
+    (certifications?.length ?? 0) > 0 ||
+    heroData?.resumeUrl
+  );
+  const showResume = visibility.resume !== false && hasResume;
+
+  const hasBlog = (blogs?.length ?? 0) > 0;
+  const showBlog = visibility.blog !== false && hasBlog;
+
+  const hasContact = Boolean(
+    heroData?.contactEmail ||
+    heroData?.contactPhone ||
+    (socialLinks?.length ?? 0) > 0
+  );
+  const showContact = visibility.contact !== false && hasContact;
+
+  const navItems = [
+    { label: "Home", href: "#home", id: "home" },
+    ...(showAbout ? [{ label: "About", href: "#about", id: "about" }] : []),
+    ...(showSkills ? [{ label: "Skills", href: "#skills", id: "skills" }] : []),
+    ...(showProjects ? [{ label: "Projects", href: "#projects", id: "projects" }] : []),
+    ...(showResume ? [{ label: "Resume", href: "#resume", id: "resume" }] : []),
+    ...(showBlog ? [{ label: "Blog", href: "#blog", id: "blog" }] : []),
+    ...(showContact ? [{ label: "Contact", href: "#contact", id: "contact" }] : []),
+  ];
+
+  const quickLinks = navItems.map((item) => ({ label: item.label, href: item.href }));
 
   return (
     <html lang="en" suppressHydrationWarning className="scroll-smooth">
@@ -120,7 +198,7 @@ export default async function RootLayout({
         className={`${inter.variable} ${spaceGrotesk.variable} font-sans antialiased bg-background text-foreground min-h-screen flex flex-col selection:bg-primary/20 selection:text-primary`}
       >
         <ScrollProgress />
-        <Navbar siteName={heroData?.name} />
+        <Navbar siteName={heroData?.name} items={navItems} />
         <main className="flex-1">{children}</main>
         <Footer
           initialSocialLinks={socialLinks}
@@ -135,6 +213,7 @@ export default async function RootLayout({
           contactEmail={heroData?.contactEmail}
           contactPhone={heroData?.contactPhone}
           logoUrl={siteSettings?.logoUrl}
+          quickLinks={quickLinks}
         />
       </body>
     </html>

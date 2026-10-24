@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { getBlogsFromDb } from "@/lib/supabase-db";
+import { getBlogsFromDb, getHeroAboutFromDb, getSiteSettingsFromDb } from "@/lib/supabase-db";
 import {
   ArrowLeft,
   Calendar,
@@ -13,11 +13,14 @@ import {
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export const metadata: Metadata = {
-  title: "Blog & Articles | Prasid Gautam",
-  description:
-    "Explore engineering tutorials, software architecture guides, and technical insights by Prasid Gautam.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const [siteSettings, hero] = await Promise.all([getSiteSettingsFromDb(), getHeroAboutFromDb()]);
+  const author = hero?.name?.trim() || siteSettings?.siteName?.trim() || "Portfolio";
+  return {
+    title: `Blog & Articles | ${author}`,
+    description: `Explore engineering tutorials, software architecture guides, and technical insights by ${author}.`,
+  };
+}
 
 const SHORT_MONTHS = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",

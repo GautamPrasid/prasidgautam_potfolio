@@ -28,7 +28,13 @@ const HEADER_HEIGHT = 64;
 /** Tailwind lg = 1024px — desktop nav breakpoint */
 const DESKTOP_BREAKPOINT = 1024;
 
-export function Navbar({ siteName }: { siteName?: string }) {
+export function Navbar({
+  siteName,
+  items = NAV_ITEMS,
+}: {
+  siteName?: string;
+  items?: NavItem[];
+}) {
   const pathname = usePathname();
   const [activeSection, setActiveSection] = useState<string>("home");
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -46,9 +52,9 @@ export function Navbar({ siteName }: { siteName?: string }) {
   }, []);
 
   useEffect(() => {
-    const sectionElements = NAV_ITEMS.map((item) =>
-      document.getElementById(item.id)
-    ).filter((el): el is HTMLElement => el !== null);
+    const sectionElements = items
+      .map((item) => document.getElementById(item.id))
+      .filter((el): el is HTMLElement => el !== null);
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -63,7 +69,7 @@ export function Navbar({ siteName }: { siteName?: string }) {
 
     sectionElements.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
-  }, []);
+  }, [items]);
 
   useEffect(() => {
     closeMenu();
@@ -170,7 +176,7 @@ export function Navbar({ siteName }: { siteName?: string }) {
 
           {/* Desktop links — visible at lg (≥1024px) */}
           <div className="hidden lg:flex items-center gap-1">
-            {NAV_ITEMS.map((item) => {
+            {items.map((item) => {
               const isActive = activeSection === item.id;
               return (
                 <a
@@ -265,7 +271,7 @@ export function Navbar({ siteName }: { siteName?: string }) {
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-3 mb-1">
                   Navigation
                 </p>
-                {NAV_ITEMS.map((item) => {
+                {items.map((item) => {
                   const isActive = activeSection === item.id;
                   return (
                     <a
@@ -287,15 +293,17 @@ export function Navbar({ siteName }: { siteName?: string }) {
                 })}
               </div>
 
-              <div className="p-5 sm:p-6 pt-0 border-t border-border flex flex-col gap-3">
-                <a
-                  href="#contact"
-                  onClick={(e) => handleNavClick(e, "contact")}
-                  className="min-h-11 w-full py-3 text-center text-sm font-semibold rounded-xl bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-all duration-200 flex items-center justify-center"
-                >
-                  Contact Me
-                </a>
-              </div>
+              {items.some((i) => i.id === "contact") && (
+                <div className="p-5 sm:p-6 pt-0 border-t border-border flex flex-col gap-3">
+                  <a
+                    href="#contact"
+                    onClick={(e) => handleNavClick(e, "contact")}
+                    className="min-h-11 w-full py-3 text-center text-sm font-semibold rounded-xl bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-all duration-200 flex items-center justify-center"
+                  >
+                    Contact Me
+                  </a>
+                </div>
+              )}
             </motion.div>
           </>
         )}
@@ -303,3 +311,4 @@ export function Navbar({ siteName }: { siteName?: string }) {
     </>
   );
 }
+

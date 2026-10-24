@@ -26,6 +26,7 @@ function isValidUuid(id?: string): boolean {
 function revalidateAllPaths() {
   revalidatePath("/", "layout");
   revalidatePath("/");
+  revalidatePath("/blog");
   revalidatePath("/admin");
 }
 
@@ -84,7 +85,7 @@ export async function uploadAssetAction(formData: FormData): Promise<ActionResul
   const file = formData.get("file");
   const folder = String(formData.get("folder") || "uploads");
   const previousUrl = String(formData.get("previousUrl") || "");
-  const allowedFolders = new Set(["profile", "resume", "projects", "blogs", "site"]);
+  const allowedFolders = new Set(["profile", "resume", "projects", "blogs", "site", "certifications"]);
 
   if (!(file instanceof File)) {
     return { success: false, message: "No file provided." };
@@ -558,8 +559,10 @@ export type SiteSettingsPayload = {
   site_name: string;
   site_description: string;
   logo_url: string;
+  og_image_url?: string;
   footer_text?: string;
   section_content?: SectionContentData;
+  section_visibility?: Record<string, boolean>;
 };
 
 export async function saveSiteSettingsAction(payload: SiteSettingsPayload): Promise<ActionResult> {
@@ -569,6 +572,7 @@ export async function saveSiteSettingsAction(payload: SiteSettingsPayload): Prom
   const siteName = payload.site_name.trim();
   const description = payload.site_description.trim();
   const logoUrl = payload.logo_url.trim();
+  const ogImageUrl = payload.og_image_url?.trim() || "";
 
   if (!siteName) return { success: false, message: "Website name is required." };
   if (siteName.length > 100) {
@@ -578,6 +582,9 @@ export async function saveSiteSettingsAction(payload: SiteSettingsPayload): Prom
     return { success: false, message: "Website description must be 320 characters or fewer." };
   }
   if (logoUrl) {
+    if (logoUrl.length > 2048) {
+      return { success: false, message: "Logo URL must be 2048 characters or fewer." };
+    }
     try {
       const parsed = new URL(logoUrl);
       if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
@@ -588,6 +595,30 @@ export async function saveSiteSettingsAction(payload: SiteSettingsPayload): Prom
     }
   }
 
+  if (ogImageUrl) {
+    if (ogImageUrl.length > 2048) {
+      return { success: false, message: "Social preview image URL must be 2048 characters or fewer." };
+    }
+    try {
+      const parsed = new URL(ogImageUrl);
+      if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+        return { success: false, message: "Social preview image URL must use HTTP or HTTPS." };
+      }
+    } catch {
+      return { success: false, message: "Enter a valid social preview image URL or upload an image." };
+    }
+  }
+
+  const allowedVisibilityKeys = new Set(["about", "skills", "projects", "resume", "blog", "contact"]);
+  const cleanedVisibility: Record<string, boolean> = {};
+  if (payload.section_visibility && typeof payload.section_visibility === "object") {
+    for (const [key, val] of Object.entries(payload.section_visibility)) {
+      if (allowedVisibilityKeys.has(key) && typeof val === "boolean") {
+        cleanedVisibility[key] = val;
+      }
+    }
+  }
+
   const { error } = await auth.supabase
     .from("site_settings")
     .upsert({
@@ -595,8 +626,10 @@ export async function saveSiteSettingsAction(payload: SiteSettingsPayload): Prom
       site_name: siteName,
       site_description: description,
       logo_url: logoUrl || null,
+      og_image_url: ogImageUrl || null,
       footer_text: payload.footer_text?.trim() || null,
       section_content: payload.section_content ?? {},
+      section_visibility: cleanedVisibility,
       updated_at: new Date().toISOString(),
     }, { onConflict: "id" });
 
@@ -604,6 +637,7 @@ export async function saveSiteSettingsAction(payload: SiteSettingsPayload): Prom
 
   revalidateAllPaths();
   revalidatePath("/");
+  revalidatePath("/blog");
   revalidatePath("/admin/website-settings");
   return { success: true, message: "Website settings saved. The live site now uses the updated settings." };
 }

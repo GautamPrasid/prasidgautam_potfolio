@@ -45,6 +45,34 @@ export default async function Home() {
   ]);
 
   const sc = siteSettings?.sectionContent;
+  const visibility = siteSettings?.sectionVisibility ?? {};
+
+  const hasAbout = Boolean(heroAbout?.aboutText?.trim() || heroAbout?.bioText?.trim());
+  const showAbout = visibility.about !== false && hasAbout;
+
+  const hasSkills = (skills?.length ?? 0) > 0;
+  const showSkills = visibility.skills !== false && hasSkills;
+
+  const hasProjects = (projects?.length ?? 0) > 0;
+  const showProjects = visibility.projects !== false && hasProjects;
+
+  const hasResume = Boolean(
+    (education?.length ?? 0) > 0 ||
+    (experience?.length ?? 0) > 0 ||
+    (certifications?.length ?? 0) > 0 ||
+    heroAbout?.resumeUrl
+  );
+  const showResume = visibility.resume !== false && hasResume;
+
+  const hasBlog = (blogs?.length ?? 0) > 0;
+  const showBlog = visibility.blog !== false && hasBlog;
+
+  const hasContact = Boolean(
+    heroAbout?.contactEmail ||
+    heroAbout?.contactPhone ||
+    (socialLinks?.length ?? 0) > 0
+  );
+  const showContact = visibility.contact !== false && hasContact;
 
   return (
     <PageWrapper>
@@ -52,49 +80,61 @@ export default async function Home() {
       <HeroSection initialHeroData={heroAbout} initialSocialLinks={socialLinks} />
 
       {/* 2. About — Background, interests, and career goals */}
-      <AboutSection
-        initialHeroData={heroAbout}
-        initialEducation={education}
-        initialProjectCount={projects.length}
-        initialCertCount={certifications.length}
-        initialTechCount={skills.length}
-        sectionContent={sc?.about}
-      />
+      {showAbout && (
+        <AboutSection
+          initialHeroData={heroAbout}
+          initialEducation={education}
+          initialProjectCount={projects.length}
+          initialCertCount={certifications.length}
+          initialTechCount={skills.length}
+          sectionContent={sc?.about}
+        />
+      )}
 
       {/* 3. Skills — Technical abilities and tools */}
-      <SkillsSection
-        initialSkills={skills}
-        sectionContent={sc?.skills}
-      />
+      {showSkills && (
+        <SkillsSection
+          initialSkills={skills}
+          sectionContent={sc?.skills}
+        />
+      )}
 
       {/* 4. Projects — Strongest work with GitHub & live demo links */}
-      <ProjectsSection
-        initialProjects={projects}
-        initialGithubUrl={heroAbout?.githubUrl}
-        sectionContent={sc?.projects}
-      />
+      {showProjects && (
+        <ProjectsSection
+          initialProjects={projects}
+          initialGithubUrl={heroAbout?.githubUrl}
+          sectionContent={sc?.projects}
+        />
+      )}
 
       {/* 5. Resume — Education, experience, certifications & downloadable CV */}
-      <ResumeSection
-        initialEducation={education}
-        initialExperience={experience}
-        initialCertifications={certifications}
-        resumeUrl={heroAbout?.resumeUrl}
-        name={heroAbout?.name}
-        sectionContent={sc?.resume}
-      />
+      {showResume && (
+        <ResumeSection
+          initialEducation={education}
+          initialExperience={experience}
+          initialCertifications={certifications}
+          resumeUrl={heroAbout?.resumeUrl}
+          name={heroAbout?.name}
+          sectionContent={sc?.resume}
+        />
+      )}
 
       {/* 6. Blog — Technical articles & tutorials */}
-      <BlogSection
-        initialBlogs={blogs}
-        sectionContent={sc?.blog}
-      />
+      {showBlog && (
+        <BlogSection
+          initialBlogs={blogs}
+          sectionContent={sc?.blog}
+        />
+      )}
 
       {/* 7. Contact — Email, social profiles & contact form */}
-      <ContactSection
-        initialHeroData={heroAbout}
-        sectionContent={sc?.contact}
-      />
+      {showContact && (
+        <ContactSection
+          initialHeroData={heroAbout}
+          sectionContent={sc?.contact}
+        />
+      )}
     </PageWrapper>
   );
 }

@@ -154,9 +154,12 @@ CREATE TABLE IF NOT EXISTS public.site_settings (
 -- Admin-editable text that used to be hardcoded in the app.
 -- Empty / null values mean "don't render it".
 ALTER TABLE public.site_settings
-    ADD COLUMN IF NOT EXISTS footer_text      TEXT,
-    ADD COLUMN IF NOT EXISTS section_content  JSONB NOT NULL DEFAULT '{}'::jsonb;
+    ADD COLUMN IF NOT EXISTS footer_text         TEXT,
+    ADD COLUMN IF NOT EXISTS section_content     JSONB NOT NULL DEFAULT '{}'::jsonb,
+    ADD COLUMN IF NOT EXISTS section_visibility  JSONB NOT NULL DEFAULT '{}'::jsonb,
+    ADD COLUMN IF NOT EXISTS og_image_url        TEXT;
     -- section_content shape: { "<section>": { "badge": "", "heading": "", "subtext": "" } }
+    -- section_visibility shape: { "about": true, "skills": true, "projects": true, "resume": true, "blog": true, "contact": true }
     -- sections: about, skills, projects, resume, blog, contact
 
 ALTER TABLE public.hero_about
@@ -413,10 +416,6 @@ LEFT JOIN pg_class c
        ON c.relname = t.name
       AND c.relnamespace = 'public'::regnamespace
 ORDER BY t.name;
-
-UPDATE public.projects
-SET image = 'YOUR_REAL_PUBLIC_IMAGE_URL'
-WHERE title = 'Voting System';
 
 
 -- ============================================================

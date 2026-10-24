@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { BlogPost, BLOG_CATEGORIES, BLOG_FILTERS, BlogCategory } from "@/lib/data";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { BlogPost } from "@/lib/data";
 import { getBlogsFromDb } from "@/lib/supabase-db";
 import {
   saveBlogAction,
@@ -25,6 +25,7 @@ import {
   EyeOff,
   Clock,
   Tag,
+  ExternalLink,
 } from "lucide-react";
 
 function slugify(text: string): string {
@@ -40,10 +41,25 @@ export default function BlogsManagerPage() {
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>("All");
 
+  const categories = useMemo(() => {
+    return Array.from(
+      new Set(
+        blogs
+          .map((b) => b.category?.trim())
+          .filter((cat): cat is string => Boolean(cat))
+      )
+    );
+  }, [blogs]);
+
+  const categoryFilters = useMemo(
+    () => ["All", ...categories],
+    [categories]
+  );
+
   useEffect(() => {
     let active = true;
     async function load() {
-      const data = await getBlogsFromDb(false);
+      const data = await getBlogsFromDb();
       if (active) {
         setBlogs(data ?? []);
       }
@@ -66,7 +82,7 @@ export default function BlogsManagerPage() {
   const [slug, setSlug] = useState("");
   const [excerpt, setExcerpt] = useState("");
   const [content, setContent] = useState("");
-  const [category, setCategory] = useState<BlogCategory>("Web Development");
+  const [category, setCategory] = useState<string>("General");
   const [tagsText, setTagsText] = useState("");
   const [coverImage, setCoverImage] = useState("");
   const [readTime, setReadTime] = useState("");
@@ -92,7 +108,7 @@ export default function BlogsManagerPage() {
     setSlug("");
     setExcerpt("");
     setContent("");
-    setCategory("Web Development");
+    setCategory(categories[0] || "General");
     setTagsText("");
     setCoverImage("");
     setReadTime("");
@@ -328,7 +344,7 @@ export default function BlogsManagerPage() {
 
       {/* Filter Tabs */}
       <div className="flex items-center gap-2 flex-wrap">
-        {BLOG_FILTERS.map((cat) => (
+        {categoryFilters.map((cat) => (
           <button
             key={cat}
             onClick={() => setActiveCategory(cat)}
@@ -442,6 +458,15 @@ export default function BlogsManagerPage() {
 
                 {/* Right Action Buttons */}
                 <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                  <a
+                    href={`/blog/${blog.slug || blog.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+                    title="Preview Article in New Tab"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
                   <button
                     onClick={() => handleTogglePublish(blog)}
                     className={`p-2 rounded-lg transition-colors ${
@@ -540,17 +565,24 @@ export default function BlogsManagerPage() {
                   <label className="block text-xs font-semibold uppercase text-muted-foreground">
                     Category
                   </label>
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value as BlogCategory)}
-                    className="w-full px-3.5 py-2 rounded-xl bg-background border border-border text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    {BLOG_CATEGORIES.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      required
+                      list="existing-blog-categories"
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      placeholder="e.g. Web Development"
+                      className="w-full px-3.5 py-2 rounded-xl bg-background border border-border text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                    <datalist id="existing-blog-categories">
+                      {categories.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                    </datalist>
+                  </div>
                 </div>
 
                 <div className="space-y-1 flex flex-col justify-end">

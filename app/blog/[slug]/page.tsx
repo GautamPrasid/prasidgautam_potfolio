@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
+import { createClient } from "@/utils/supabase/server";
 import { getBlogBySlug, getBlogsFromDb } from "@/lib/supabase-db";
 import {
   ArrowLeft,
@@ -11,6 +13,7 @@ import {
   BookOpen,
   ArrowRight,
   Home,
+  ShieldAlert,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +23,25 @@ interface BlogPostPageProps {
   params: {
     slug: string;
   };
+}
+
+async function isUserAdmin(): Promise<boolean> {
+  try {
+    const cookieStore = await cookies();
+    const supabase = createClient(cookieStore);
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return false;
+    const { data: admin } = await supabase
+      .from("admins")
+      .select("user_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    return Boolean(admin);
+  } catch {
+    return false;
+  }
 }
 
 const SHORT_MONTHS = [
@@ -47,14 +69,15 @@ function formatBlogDate(dateStr?: string, full = true): string {
 
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
   const blog = await getBlogBySlug(params.slug);
-  if (!blog) {
+  const isAdmin = await isUserAdmin();
+  if (!blog || (blog.published === false && !isAdmin)) {
     return {
       title: "Article Not Found | Blog",
     };
   }
 
   return {
-    title: blog.title,
+    title: `${blog.published ? "" : "[Draft Preview] "}${blog.title}`,
     description: blog.excerpt,
     openGraph: {
       title: blog.title,
@@ -69,16 +92,38 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const blog = await getBlogBySlug(params.slug);
-  if (!blog) {
+  const isAdmin = await isUserAdmin();
+
+  if (!blog || (blog.published === false && !isAdmin)) {
     notFound();
   }
 
   const allBlogs = await getBlogsFromDb();
-  const otherBlogs = allBlogs.filter((b) => b.id !== blog.id && b.slug !== blog.slug).slice(0, 2);
+  const otherBlogs = allBlogs
+    .filter((b) => b.published !== false && b.id !== blog.id && b.slug !== blog.slug)
+    .slice(0, 2);
 
   return (
     <article className="min-h-screen bg-background text-foreground pt-24 pb-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto space-y-8 sm:space-y-12">
+        {/* Admin Draft Banner */}
+        {blog.published === false && isAdmin && (
+          <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-amber-600 dark:text-amber-400 text-xs sm:text-sm font-medium flex flex-wrap items-center justify-between gap-3 shadow-sm">
+            <div className="flex items-center gap-2">
+              <ShieldAlert className="w-4 h-4 shrink-0 text-amber-500" />
+              <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-[10px] font-bold uppercase tracking-wider">
+                Admin Preview Mode
+              </span>
+              <span>This article is unpublished (Draft) and only visible to administrators. Public visitors will see a 404.</span>
+            </div>
+            <Link
+              href="/admin/blogs"
+              className="underline text-xs hover:text-amber-500 font-semibold shrink-0"
+            >
+              Back to CMS
+            </Link>
+          </div>
+        )}
         {/* ── Navigation / Back Bar ──────────────────────────────── */}
         <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-border/60">
           <Link
@@ -193,7 +238,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               href="/"
               className="text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
-              Return to Prasid Gautam&apos;s Portfolio Home →
+              Return to Portfolio Home →
             </Link>
           </div>
 

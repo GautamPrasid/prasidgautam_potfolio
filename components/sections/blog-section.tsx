@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import type { BlogPost } from "@/lib/data";
-import { BLOG_CATEGORIES, DEFAULT_BLOGS } from "@/lib/data";
 import type { SectionHeadingItem } from "@/lib/supabase-db";
 import {
   ArrowDown,
@@ -47,13 +46,9 @@ export function BlogSection({ initialBlogs = [], sectionContent }: BlogSectionPr
   const [visibleCount, setVisibleCount] = useState(BLOGS_PER_PAGE);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  const sourceBlogs = useMemo(
-    () => (initialBlogs.length > 0 ? initialBlogs : DEFAULT_BLOGS),
-    [initialBlogs],
-  );
   const publishedBlogs = useMemo(
-    () => sourceBlogs.filter((blog) => blog.published !== false),
-    [sourceBlogs],
+    () => initialBlogs.filter((blog) => blog.published !== false),
+    [initialBlogs],
   );
   const filteredBlogs = useMemo(
     () =>
@@ -66,7 +61,16 @@ export function BlogSection({ initialBlogs = [], sectionContent }: BlogSectionPr
     () => filteredBlogs.slice(0, visibleCount),
     [filteredBlogs, visibleCount],
   );
-  const categories = useMemo(() => ["All", ...BLOG_CATEGORIES], []);
+  const categories = useMemo(() => {
+    const distinct = Array.from(
+      new Set(
+        publishedBlogs
+          .map((blog) => blog.category?.trim())
+          .filter((cat): cat is string => Boolean(cat)),
+      ),
+    );
+    return ["All", ...distinct];
+  }, [publishedBlogs]);
   const hasMore = visibleCount < filteredBlogs.length;
   const remainingCount = filteredBlogs.length - visibleCount;
 
@@ -147,7 +151,17 @@ export function BlogSection({ initialBlogs = [], sectionContent }: BlogSectionPr
         )}
 
         {/* Blog Cards Grid */}
-        {filteredBlogs.length === 0 ? (
+        {publishedBlogs.length === 0 ? (
+          <div className="mx-auto max-w-md space-y-3 rounded-3xl border border-dashed border-border bg-card p-6 text-center sm:p-8 sm:py-16">
+            <Newspaper className="mx-auto h-10 w-10 text-muted-foreground/40" />
+            <h3 className="font-heading text-base font-bold text-foreground sm:text-lg">
+              No articles published yet
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Technical articles, tutorials, and guides will appear here once published.
+            </p>
+          </div>
+        ) : filteredBlogs.length === 0 ? (
           <div className="mx-auto max-w-md space-y-3 rounded-3xl border border-dashed border-border bg-card p-6 text-center sm:p-8 sm:py-16">
             <Newspaper className="mx-auto h-10 w-10 text-muted-foreground/40" />
             <h3 className="font-heading text-base font-bold text-foreground sm:text-lg">
