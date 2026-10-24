@@ -128,12 +128,11 @@ export function BlogSection({ initialBlogs = [], sectionContent }: BlogSectionPr
       aria-label="Blog Section"
     >
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
+        initial={false}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
         className="space-y-10 sm:space-y-12"
-        suppressHydrationWarning
       >
         {/* Section Header */}
         {(sectionContent?.badge || sectionContent?.heading || sectionContent?.subtext) && (
@@ -201,7 +200,7 @@ export function BlogSection({ initialBlogs = [], sectionContent }: BlogSectionPr
         ) : (
           <div className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-              <AnimatePresence mode="popLayout">
+              <AnimatePresence mode="popLayout" initial={false}>
                 {visibleBlogs.map((blog, idx) => (
                   <motion.article
                     key={blog.id}
