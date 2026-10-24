@@ -47,11 +47,9 @@ export async function generateMetadata(): Promise<Metadata> {
 
   // Prevent duplicate "| Portfolio" if the name already contains Portfolio
   const baseName = rawName.replace(/\s*\|\s*portfolio\s*$/i, "").trim() || rawName;
-  const titleString = !rawName
-    ? "Portfolio"
-    : /portfolio/i.test(rawName)
-      ? rawName
-      : `${rawName} | Portfolio`;
+  const titleString = rawName
+    ? (/portfolio/i.test(rawName) ? rawName : `${rawName} | Software Developer Portfolio`)
+    : "Prasid Gautam | Software Developer Portfolio";
 
   const logoUrl = siteSettings?.logoUrl?.trim();
   const ogImageUrl = siteSettings?.ogImageUrl?.trim();
@@ -90,17 +88,23 @@ export async function generateMetadata(): Promise<Metadata> {
       template: baseName ? `%s | ${baseName}` : "%s",
     },
     description,
-    alternates: { canonical: "/" },
+    alternates: {
+      canonical: "/",
+    },
     icons: iconsConfig,
-    authors: baseName ? [{ name: baseName, url: siteUrl }] : [],
-    creator: baseName || undefined,
+    authors: baseName ? [{ name: baseName, url: siteUrl }] : [{ name: "Prasid Gautam", url: siteUrl }],
+    creator: baseName || "Prasid Gautam",
     openGraph: {
       type: "website",
       locale: "en_US",
-      url: siteUrl,
+      url: `${siteUrl}/`,
       title: titleString,
-      description,
-      siteName: titleString,
+      description:
+        siteSettings?.siteDescription?.trim() ||
+        "Explore my projects, skills, and experience in software and web development.",
+      siteName: rawName
+        ? (rawName.toLowerCase().includes("portfolio") ? rawName : `${rawName} Portfolio`)
+        : "Prasid Gautam Portfolio",
       ...(openGraphImages ? { images: openGraphImages } : {}),
     },
     twitter: {

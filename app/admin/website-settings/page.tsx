@@ -100,7 +100,7 @@ export default function WebsiteSettingsPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  const previewSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const previewSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.prasidgautam.com.np/"
 
   useEffect(() => {
     let active = true;
@@ -400,8 +400,8 @@ export default function WebsiteSettingsPage() {
                 <div
                   key={sec.key}
                   className={`flex items-center justify-between gap-4 p-4 rounded-xl border transition-colors ${isVisible
-                      ? "border-border bg-background/60"
-                      : "border-border/60 bg-muted/30 opacity-75"
+                    ? "border-border bg-background/60"
+                    : "border-border/60 bg-muted/30 opacity-75"
                     }`}
                 >
                   <div className="space-y-1 pr-2">
@@ -409,8 +409,8 @@ export default function WebsiteSettingsPage() {
                       <span className="font-semibold text-sm text-foreground">{sec.label}</span>
                       <span
                         className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${isVisible
-                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
-                            : "bg-muted text-muted-foreground border border-border"
+                          ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                          : "bg-muted text-muted-foreground border border-border"
                           }`}
                       >
                         {isVisible ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
