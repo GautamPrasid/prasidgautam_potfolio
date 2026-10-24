@@ -10,7 +10,6 @@ import {
   Tag,
   BookOpen,
   ArrowRight,
-  Share2,
   Home,
 } from "lucide-react";
 
