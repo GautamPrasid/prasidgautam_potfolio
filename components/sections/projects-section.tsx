@@ -132,14 +132,14 @@ export function ProjectsSection({
           </div>
         )}
 
-        <div className="flex items-center justify-center gap-1.5 sm:gap-2 flex-wrap max-w-full">
+        <div className="flex items-center justify-center gap-2 sm:gap-2.5 flex-wrap max-w-full">
           {PROJECT_FILTERS.map((category) => {
             const isActive = selectedCategory === category;
             return (
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
-                className={`relative px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary ${
+                className={`relative px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-medium rounded-xl transition-all duration-200 min-h-11 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                   isActive
                     ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
                     : "bg-card hover:bg-muted text-muted-foreground hover:text-foreground border border-border shadow-sm"
@@ -251,7 +251,7 @@ export function ProjectsSection({
                                 href={project.github!}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 text-xs font-semibold px-3.5 sm:px-4 py-2.5 rounded-xl bg-muted hover:bg-foreground hover:text-background text-foreground transition-all duration-200 min-h-[44px]"
+                                className="inline-flex items-center justify-center gap-2 text-sm font-semibold px-3.5 sm:px-4 py-2.5 rounded-xl bg-muted hover:bg-foreground hover:text-background text-foreground transition-all duration-200 min-h-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                               >
                                 <svg className="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24">
                                   <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
@@ -265,7 +265,7 @@ export function ProjectsSection({
                                 href={project.demo!}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 sm:px-4 py-2.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 shadow-md transition-all duration-200 min-h-[44px]"
+                                className="inline-flex items-center justify-center gap-1.5 text-sm font-semibold px-3.5 sm:px-4 py-2.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 shadow-md transition-all duration-200 min-h-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                               >
                                 <span>Live Demo</span>
                                 <ExternalLink className="w-3.5 h-3.5" />
@@ -310,7 +310,7 @@ export function ProjectsSection({
                 <motion.button
                   onClick={handleLoadMore}
                   disabled={isLoadingMore}
-                  className="group relative mt-1 px-8 py-3.5 rounded-2xl bg-card border-2 border-primary/20 hover:border-primary/60 text-foreground font-semibold text-sm shadow-sm hover:shadow-xl transition-all duration-300 flex items-center gap-2.5 overflow-hidden disabled:opacity-70 disabled:cursor-not-allowed"
+                  className="group relative mt-1 min-h-11 max-w-full px-5 sm:px-8 py-3.5 rounded-2xl bg-card border-2 border-primary/20 hover:border-primary/60 text-foreground font-semibold text-sm shadow-sm hover:shadow-xl transition-all duration-300 flex flex-wrap justify-center items-center gap-2.5 overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:opacity-70 disabled:cursor-not-allowed"
                   whileHover={{ scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.98 }}
                 >
@@ -340,7 +340,7 @@ export function ProjectsSection({
                   </div>
                   <button
                     onClick={handleShowLess}
-                    className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors underline-offset-4 hover:underline"
+                    className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg px-2 text-sm text-muted-foreground hover:text-primary transition-colors underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   >
                     <ArrowUp className="w-3.5 h-3.5" />
                     <span>Show less (4 repos)</span>
