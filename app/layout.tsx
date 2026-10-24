@@ -132,6 +132,9 @@ export default async function RootLayout({
           connectHeading={heroData?.connectHeading || siteSettings?.sectionContent?.contact?.connectHeading}
           ctaHeading={siteSettings?.sectionContent?.contact?.ctaHeading}
           ctaSubtext={siteSettings?.sectionContent?.contact?.ctaSubtext}
+          contactEmail={heroData?.contactEmail}
+          contactPhone={heroData?.contactPhone}
+          logoUrl={siteSettings?.logoUrl}
         />
       </body>
     </html>
