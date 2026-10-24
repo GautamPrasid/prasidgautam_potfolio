@@ -242,7 +242,7 @@ export function BlogSection({ initialBlogs = [], sectionContent }: BlogSectionPr
                           <Calendar className="w-3.5 h-3.5 text-primary shrink-0" />
                           <span className="truncate">
                             {blog.publishedAt
-                              ? new Date(blog.publishedAt).toLocaleDateString(undefined, {
+                              ? new Date(blog.publishedAt).toLocaleDateString("en-US", { timeZone: "UTC",
                                   month: "short",
                                   day: "numeric",
                                   year: "numeric",
@@ -446,7 +446,7 @@ export function BlogSection({ initialBlogs = [], sectionContent }: BlogSectionPr
                     <span className="flex items-center gap-1.5">
                       <Calendar className="w-3.5 h-3.5 text-primary" />
                       {featuredBlog.publishedAt
-                        ? new Date(featuredBlog.publishedAt).toLocaleDateString(undefined, {
+                        ? new Date(featuredBlog.publishedAt).toLocaleDateString("en-US", { timeZone: "UTC",
                             month: "long",
                             day: "numeric",
                             year: "numeric",
@@ -556,7 +556,7 @@ export function BlogSection({ initialBlogs = [], sectionContent }: BlogSectionPr
                             <span className="flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
                               {blog.publishedAt
-                                ? new Date(blog.publishedAt).toLocaleDateString(undefined, {
+                                ? new Date(blog.publishedAt).toLocaleDateString("en-US", { timeZone: "UTC",
                                     month: "short",
                                     day: "numeric",
                                   })
@@ -626,7 +626,7 @@ export function BlogSection({ initialBlogs = [], sectionContent }: BlogSectionPr
                     {selectedBlog.publishedAt && (
                       <span className="text-xs text-muted-foreground flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
-                        {new Date(selectedBlog.publishedAt).toLocaleDateString(undefined, {
+                        {new Date(selectedBlog.publishedAt).toLocaleDateString("en-US", { timeZone: "UTC",
                           month: "long",
                           day: "numeric",
                           year: "numeric",
