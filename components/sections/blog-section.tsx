@@ -125,7 +125,7 @@ export function BlogSection({ initialBlogs = [], sectionContent }: BlogSectionPr
                   <button
                     key={cat}
                     onClick={() => setSelectedCategory(cat)}
-                    className={`relative min-h-[44px] whitespace-nowrap rounded-xl px-3.5 py-2 text-xs font-medium transition-all duration-200 focus:outline-none sm:px-4 sm:text-sm ${
+                    className={`relative min-h-[44px] whitespace-nowrap rounded-xl px-3.5 py-2 text-xs font-medium transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:px-4 sm:text-sm ${
                       isActive
                         ? "font-semibold text-primary-foreground"
                         : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
@@ -259,7 +259,7 @@ export function BlogSection({ initialBlogs = [], sectionContent }: BlogSectionPr
             </div>
 
             {/* Pagination Controls */}
-            <div className="flex flex-col items-center justify-center gap-4 pt-4 sm:flex-row">
+            <div className="flex flex-col items-stretch justify-center gap-3 pt-4 sm:flex-row sm:items-center sm:gap-4">
               {hasMore ? (
                 <div className="flex flex-col items-center gap-3">
                   <div className="flex items-center gap-3 text-xs text-muted-foreground">
@@ -286,7 +286,7 @@ export function BlogSection({ initialBlogs = [], sectionContent }: BlogSectionPr
                       type="button"
                       onClick={handleLoadMore}
                       disabled={isLoadingMore}
-                      className="group relative flex items-center gap-2.5 overflow-hidden rounded-2xl border-2 border-primary/20 bg-card px-6 py-3 text-sm font-semibold text-foreground shadow-sm transition-all duration-300 hover:border-primary/60 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-70"
+                      className="group relative flex min-h-11 items-center justify-center gap-2.5 overflow-hidden rounded-2xl border-2 border-primary/20 bg-card px-5 py-3 text-sm font-semibold text-foreground shadow-sm transition-all duration-300 hover:border-primary/60 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
                       whileHover={{ scale: 1.02, y: -2 }}
                       whileTap={{ scale: 0.98 }}
                     >
@@ -308,7 +308,7 @@ export function BlogSection({ initialBlogs = [], sectionContent }: BlogSectionPr
 
                     <Link
                       href="/blog"
-                      className="flex items-center gap-2 rounded-2xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-md transition-all hover:bg-primary/90"
+                      className="flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-md transition-all hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                     >
                       <span>View All Blogs</span>
                       <ArrowRight className="h-4 w-4" />
@@ -324,7 +324,7 @@ export function BlogSection({ initialBlogs = [], sectionContent }: BlogSectionPr
 
                   <Link
                     href="/blog"
-                    className="flex items-center gap-1.5 rounded-xl border border-border/80 bg-card px-5 py-2.5 font-medium text-foreground transition-all hover:border-primary/50 hover:text-primary"
+                    className="flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-border/80 bg-card px-5 py-2.5 font-medium text-foreground transition-all hover:border-primary/50 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                   >
                     <span>View All in Blog Archive</span>
                     <ArrowRight className="h-3.5 w-3.5" />
@@ -334,7 +334,7 @@ export function BlogSection({ initialBlogs = [], sectionContent }: BlogSectionPr
                     <button
                       type="button"
                       onClick={handleShowLess}
-                      className="inline-flex items-center gap-1.5 text-xs text-muted-foreground underline-offset-4 transition-colors hover:text-primary hover:underline"
+                      className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg px-2 text-sm text-muted-foreground underline-offset-4 transition-colors hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     >
                       <ArrowUp className="h-3.5 w-3.5" />
                       <span>Show less (3 cards)</span>
