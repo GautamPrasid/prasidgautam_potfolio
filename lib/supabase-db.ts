@@ -7,6 +7,7 @@ import {
   Project,
   SocialLinkItem,
   BlogPost,
+  DEFAULT_BLOGS,
 } from "./data";
 
 export interface SectionHeadingItem {
@@ -251,26 +252,37 @@ export async function getProjectsFromDb(): Promise<Project[]> {
 
 export async function getBlogsFromDb(): Promise<BlogPost[]> {
   const client = getSupabaseClient();
-  if (!client) return [];
+  if (!client) return DEFAULT_BLOGS;
 
-  const { data, error } = await client
-    .from("blogs")
-    .select("*")
-    .order("order_index", { ascending: true });
+  try {
+    const { data, error } = await client
+      .from("blogs")
+      .select("*")
+      .order("order_index", { ascending: true });
 
-  if (error || !data) return [];
+    if (error || !data || data.length === 0) return DEFAULT_BLOGS;
 
-  return data.map((d) => ({
-    id: d.id,
-    title: d.title,
-    slug: d.slug,
-    excerpt: d.excerpt,
-    content: d.content,
-    coverImage: d.cover_image ?? undefined,
-    category: d.category,
-    tags: d.tags ?? [],
-    readTime: d.read_time ?? "5 min read",
-    published: d.published ?? true,
-    publishedAt: d.published_at ?? undefined,
-  }));
+    return data.map((d) => ({
+      id: d.id,
+      title: d.title,
+      slug: d.slug,
+      excerpt: d.excerpt,
+      content: d.content,
+      coverImage: d.cover_image ?? undefined,
+      category: d.category,
+      tags: d.tags ?? [],
+      readTime: d.read_time ?? "5 min read",
+      published: d.published ?? true,
+      publishedAt: d.published_at ?? undefined,
+    }));
+  } catch {
+    return DEFAULT_BLOGS;
+  }
+}
+
+export async function getBlogBySlug(slug: string): Promise<BlogPost | null> {
+  const blogs = await getBlogsFromDb();
+  const decoded = decodeURIComponent(slug);
+  const found = blogs.find((b) => b.slug === decoded || b.id === decoded || b.slug === slug || b.id === slug);
+  return found || null;
 }

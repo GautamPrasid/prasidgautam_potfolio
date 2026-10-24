@@ -2,27 +2,47 @@
 
 import { useState, useMemo, useEffect, useCallback } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { BlogPost, BLOG_CATEGORIES } from "@/lib/data";
+import { BlogPost, BLOG_CATEGORIES, DEFAULT_BLOGS } from "@/lib/data";
 import { SectionHeadingItem } from "@/lib/supabase-db";
 import {
   BookOpen,
   Clock,
   Calendar,
-  X,
-  Tag,
   ArrowRight,
   ArrowDown,
+  ArrowUp,
   Newspaper,
   Sparkles,
-  TrendingUp,
-  Eye,
-  ChevronRight,
   Loader2,
 } from "lucide-react";
 
-/** Number of blog cards to show initially and per "Read More" click */
+/** Number of blog cards to show initially */
 const BLOGS_PER_PAGE = 3;
+
+const SHORT_MONTHS = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+];
+const FULL_MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
+
+function formatBlogDate(dateStr?: string): string {
+  if (!dateStr) return "Published";
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    const year = d.getUTCFullYear();
+    const month = SHORT_MONTHS[d.getUTCMonth()];
+    const day = d.getUTCDate();
+    return `${month} ${day}, ${year}`;
+  } catch {
+    return dateStr;
+  }
+}
 
 export interface BlogSectionProps {
   initialBlogs?: BlogPost[];
@@ -31,48 +51,31 @@ export interface BlogSectionProps {
 
 export function BlogSection({ initialBlogs = [], sectionContent }: BlogSectionProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
-  const [selectedBlog, setSelectedBlog] = useState<BlogPost | null>(null);
   const [visibleCount, setVisibleCount] = useState<number>(BLOGS_PER_PAGE);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  // If initialBlogs is empty, fall back to default blogs
+  const sourceBlogs = useMemo(() => {
+    return initialBlogs && initialBlogs.length > 0 ? initialBlogs : DEFAULT_BLOGS;
+  }, [initialBlogs]);
 
   // Reset visible count when category changes
   useEffect(() => {
     setVisibleCount(BLOGS_PER_PAGE);
   }, [selectedCategory]);
 
-  // Close modal on ESC key
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && selectedBlog) {
-        setSelectedBlog(null);
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedBlog]);
-
-  // Lock body scroll when modal reader is open
-  useEffect(() => {
-    if (selectedBlog) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [selectedBlog]);
-
+  // Filter published blogs
   const publishedBlogs = useMemo(() => {
-    return initialBlogs.filter((b) => b.published !== false);
-  }, [initialBlogs]);
+    return sourceBlogs.filter((b) => b.published !== false);
+  }, [sourceBlogs]);
 
+  // Filter by category
   const filteredBlogs = useMemo(() => {
     if (selectedCategory === "All") return publishedBlogs;
     return publishedBlogs.filter((b) => b.category === selectedCategory);
   }, [publishedBlogs, selectedCategory]);
 
-  // Paginated: only show `visibleCount` blogs
+  // Paginated blogs (latest 3 initially)
   const visibleBlogs = useMemo(() => {
     return filteredBlogs.slice(0, visibleCount);
   }, [filteredBlogs, visibleCount]);
@@ -84,48 +87,30 @@ export function BlogSection({ initialBlogs = [], sectionContent }: BlogSectionPr
     return ["All", ...BLOG_CATEGORIES];
   }, []);
 
-  // Featured blog: pick the most recent published blog
-  const featuredBlog = useMemo(() => {
-    if (publishedBlogs.length === 0) return null;
-    const sorted = [...publishedBlogs].sort((a, b) => {
-      const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
-      const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
-      return dateB - dateA;
-    });
-    return sorted[0];
-  }, [publishedBlogs]);
-
-  // Latest blogs for the sidebar (exclude featured, take up to 4)
-  const latestBlogs = useMemo(() => {
-    if (publishedBlogs.length <= 1) return [];
-    const sorted = [...publishedBlogs].sort((a, b) => {
-      const dateA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
-      const dateB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
-      return dateB - dateA;
-    });
-    return sorted.slice(1, 5);
-  }, [publishedBlogs]);
-
-  // Open the article reader modal
-  const openReader = useCallback((blog: BlogPost) => {
-    setSelectedBlog(blog);
-  }, []);
-
-  // Load more blogs with a small simulated delay for polish
+  // Load more blogs
   const handleLoadMore = useCallback(() => {
     setIsLoadingMore(true);
-    // Brief delay for smooth animation feel
     setTimeout(() => {
       setVisibleCount((prev) => prev + BLOGS_PER_PAGE);
       setIsLoadingMore(false);
-    }, 400);
+    }, 300);
+  }, []);
+
+  // Collapse back to 3 blogs
+  const handleShowLess = useCallback(() => {
+    setVisibleCount(BLOGS_PER_PAGE);
+    const element = document.getElementById("blog");
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
   }, []);
 
   return (
     <section
       id="blog"
-      className="py-16 sm:py-20 md:py-28 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto scroll-mt-20"
+      className="py-16 sm:py-20 md:py-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto scroll-mt-20"
       aria-label="Blog Section"
+      suppressHydrationWarning
     >
       <motion.div
         initial={false}
@@ -134,28 +119,25 @@ export function BlogSection({ initialBlogs = [], sectionContent }: BlogSectionPr
         transition={{ duration: 0.6 }}
         className="space-y-10 sm:space-y-12"
       >
-        {/* Section Header */}
-        {(sectionContent?.badge || sectionContent?.heading || sectionContent?.subtext) && (
-          <div className="text-center max-w-3xl mx-auto space-y-3 sm:space-y-4">
-            {sectionContent.badge && (
-              <span className="px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide bg-primary/10 text-primary border border-primary/20 inline-block uppercase">
-                {sectionContent.badge}
-              </span>
-            )}
-            {sectionContent.heading && (
-              <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground tracking-tight">
-                {sectionContent.heading}
-              </h2>
-            )}
-            {sectionContent.subtext && (
-              <p className="text-muted-foreground text-sm sm:text-base md:text-lg">
-                {sectionContent.subtext}
-              </p>
-            )}
-          </div>
-        )}
+        {/* ═══════════════════════════════════════════════════════════
+            1. BLOG HEADING (Badge, Heading, Subtext)
+            ═══════════════════════════════════════════════════════════ */}
+        <div className="text-center max-w-3xl mx-auto space-y-3 sm:space-y-4">
+          <span className="px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide bg-primary/10 text-primary border border-primary/20 inline-block uppercase">
+            {sectionContent?.badge || "Articles & Insights"}
+          </span>
+          <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground tracking-tight">
+            {sectionContent?.heading || "Latest from the Blog"}
+          </h2>
+          <p className="text-muted-foreground text-sm sm:text-base md:text-lg">
+            {sectionContent?.subtext ||
+              "Thoughts, engineering deep-dives, and tutorials on modern web development, architecture, and technology."}
+          </p>
+        </div>
 
-        {/* Category Filter Tabs */}
+        {/* ═══════════════════════════════════════════════════════════
+            CATEGORY FILTER TABS
+            ═══════════════════════════════════════════════════════════ */}
         {publishedBlogs.length > 0 && (
           <div className="flex justify-center overflow-x-auto max-w-full py-2 scrollbar-none">
             <div className="inline-flex p-1.5 rounded-2xl bg-card border border-border/80 shadow-sm gap-1 max-w-full">
@@ -186,20 +168,24 @@ export function BlogSection({ initialBlogs = [], sectionContent }: BlogSectionPr
           </div>
         )}
 
-        {/* Blog Cards Grid */}
+        {/* ═══════════════════════════════════════════════════════════
+            2. BLOG CARDS (Latest 3 Cards Initially)
+            ═══════════════════════════════════════════════════════════ */}
         {filteredBlogs.length === 0 ? (
           <div className="py-12 sm:py-16 text-center rounded-3xl bg-card border border-dashed border-border p-6 sm:p-8 max-w-md mx-auto space-y-3">
             <Newspaper className="w-10 h-10 text-muted-foreground/40 mx-auto" />
             <h3 className="font-heading text-base sm:text-lg font-bold text-foreground">
-              No articles found
+              No articles found in this category
             </h3>
             <p className="text-xs text-muted-foreground">
-              Check back soon for new articles and guides!
+              Try switching back to &quot;All&quot; to see all published articles.
             </p>
           </div>
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-10">
+            {/* Responsive Grid: 1 col on mobile, 2 on tablet, 3 on desktop */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+<<<<<<< Updated upstream
               <AnimatePresence mode="popLayout" initial={false}>
                 {visibleBlogs.map((blog, idx) => (
                   <motion.article
@@ -226,15 +212,63 @@ export function BlogSection({ initialBlogs = [], sectionContent }: BlogSectionPr
                         ) : (
                           <div className="w-full h-full bg-gradient-to-br from-primary/20 via-accent/20 to-card flex items-center justify-center">
                             <BookOpen className="w-12 h-12 text-primary/40" />
+=======
+              <AnimatePresence mode="popLayout">
+                {visibleBlogs.map((blog, idx) => {
+                  const articleUrl = `/blog/${blog.slug || blog.id}`;
+                  return (
+                    <motion.article
+                      key={blog.id}
+                      layout
+                      initial={{ opacity: 0, y: 30, scale: 0.96 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.96 }}
+                      transition={{
+                        duration: 0.4,
+                        delay: idx >= visibleCount - BLOGS_PER_PAGE ? (idx % BLOGS_PER_PAGE) * 0.1 : 0,
+                      }}
+                      className="p-5 sm:p-6 rounded-3xl bg-card border border-border/80 hover:border-primary/50 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group min-w-0"
+                    >
+                      <Link href={articleUrl} className="space-y-4 min-w-0 block focus:outline-none">
+                        {/* Cover Image */}
+                        <div className="relative w-full h-48 sm:h-52 rounded-2xl overflow-hidden bg-muted">
+                          {blog.coverImage ? (
+                            <Image
+                              src={blog.coverImage}
+                              alt={blog.title}
+                              fill
+                              sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 380px"
+                              className="object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-primary/20 via-accent/20 to-card flex items-center justify-center">
+                              <BookOpen className="w-12 h-12 text-primary/40" />
+                            </div>
+                          )}
+                          {/* Category Badge */}
+                          <div className="absolute top-3 left-3 flex items-center gap-2">
+                            <span className="px-3 py-1 rounded-full text-[11px] font-semibold bg-background/90 backdrop-blur-md text-primary border border-border shadow-sm truncate max-w-[170px]">
+                              {blog.category}
+                            </span>
+>>>>>>> Stashed changes
                           </div>
-                        )}
-                        <div className="absolute top-3 left-3 flex items-center gap-2">
-                          <span className="px-3 py-1 rounded-full text-[11px] font-semibold bg-background/90 backdrop-blur-md text-primary border border-border shadow-sm truncate max-w-[150px]">
-                            {blog.category}
+                        </div>
+
+                        {/* Date & Reading Time */}
+                        <div className="flex items-center justify-between text-xs text-muted-foreground pt-1">
+                          <span className="flex items-center gap-1.5 truncate" suppressHydrationWarning>
+                            <Calendar className="w-3.5 h-3.5 text-primary shrink-0" />
+                            <span className="truncate" suppressHydrationWarning>
+                              {formatBlogDate(blog.publishedAt)}
+                            </span>
+                          </span>
+                          <span className="flex items-center gap-1 shrink-0">
+                            <Clock className="w-3.5 h-3.5 text-accent shrink-0" />
+                            {blog.readTime}
                           </span>
                         </div>
-                      </div>
 
+<<<<<<< Updated upstream
                       {/* Date & Read Time */}
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <span className="flex items-center gap-1.5 truncate">
@@ -254,170 +288,77 @@ export function BlogSection({ initialBlogs = [], sectionContent }: BlogSectionPr
                           {blog.readTime}
                         </span>
                       </div>
+=======
+                        {/* Title & Excerpt */}
+                        <div className="space-y-2 min-w-0">
+                          <h3 className="font-heading font-bold text-lg sm:text-xl text-foreground group-hover:text-primary transition-colors line-clamp-2 break-words leading-snug">
+                            {blog.title}
+                          </h3>
+                          <p className="text-xs sm:text-sm text-muted-foreground line-clamp-3 leading-relaxed break-words">
+                            {blog.excerpt}
+                          </p>
+                        </div>
+                      </Link>
+>>>>>>> Stashed changes
 
-                      {/* Title & Excerpt */}
-                      <div className="space-y-2 min-w-0">
-                        <h3 className="font-heading font-bold text-lg sm:text-xl text-foreground group-hover:text-primary transition-colors line-clamp-2 break-words">
-                          {blog.title}
-                        </h3>
-                        <p className="text-xs sm:text-sm text-muted-foreground line-clamp-3 leading-relaxed break-words">
-                          {blog.excerpt}
-                        </p>
-                      </div>
-                    </div>
+                      {/* Card Footer: Tags & "Read More" button */}
+                      <div className="pt-4 mt-5 border-t border-border/60 flex items-center justify-between gap-2">
+                        <div className="flex flex-wrap gap-1">
+                          {blog.tags.slice(0, 2).map((t, tIdx) => (
+                            <span
+                              key={tIdx}
+                              className="text-[10px] px-2 py-0.5 rounded-md bg-muted text-muted-foreground font-medium"
+                            >
+                              #{t}
+                            </span>
+                          ))}
+                          {blog.tags.length > 2 && (
+                            <span className="text-[10px] px-1 text-muted-foreground">
+                              +{blog.tags.length - 2}
+                            </span>
+                          )}
+                        </div>
 
-                    {/* Footer / Read Action */}
-                    <div className="pt-4 mt-4 border-t border-border/60 flex items-center justify-between gap-2">
-                      <div className="flex flex-wrap gap-1">
-                        {blog.tags.slice(0, 2).map((t, tIdx) => (
-                          <span
-                            key={tIdx}
-                            className="text-[10px] px-2 py-0.5 rounded-md bg-muted text-muted-foreground font-medium"
-                          >
-                            #{t}
-                          </span>
-                        ))}
-                        {blog.tags.length > 2 && (
-                          <span className="text-[10px] px-1 text-muted-foreground">
-                            +{blog.tags.length - 2}
-                          </span>
-                        )}
+                        {/* “Read More” button linking to article page */}
+                        <Link
+                          href={articleUrl}
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-primary/10 group-hover:bg-primary text-primary group-hover:text-primary-foreground text-xs font-semibold transition-all duration-300 shadow-sm shrink-0"
+                          aria-label={`Read article: ${blog.title}`}
+                        >
+                          <span>Read More</span>
+                          <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                        </Link>
                       </div>
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-xs font-semibold text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300 shrink-0">
-                        <Eye className="w-3.5 h-3.5" />
-                        <span>Read</span>
-                        <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                      </span>
-                    </div>
-                  </motion.article>
-                ))}
+                    </motion.article>
+                  );
+                })}
               </AnimatePresence>
             </div>
 
             {/* ═══════════════════════════════════════════════════════════
-                ✦ READ MORE BUTTON — Loads more blog cards
+                3. "READ MORE / VIEW ALL BLOGS" SECTION
                 ═══════════════════════════════════════════════════════════ */}
-            {hasMore && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.3 }}
-                className="flex flex-col items-center gap-3 pt-2"
-              >
-                {/* Progress indicator */}
-                <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                  <div className="h-px w-12 bg-border" />
-                  <span>
-                    Showing {visibleCount} of {filteredBlogs.length} articles
-                  </span>
-                  <div className="h-px w-12 bg-border" />
-                </div>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+              {hasMore ? (
+                <div className="flex flex-col items-center gap-3">
+                  {/* Count Indicator */}
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    <div className="h-px w-12 bg-border" />
+                    <span>
+                      Showing {visibleCount} of {filteredBlogs.length} articles
+                    </span>
+                    <div className="h-px w-12 bg-border" />
+                  </div>
 
-                {/* Progress bar */}
-                <div className="w-48 h-1 rounded-full bg-muted overflow-hidden">
-                  <motion.div
-                    className="h-full rounded-full bg-gradient-to-r from-primary to-accent"
-                    initial={false}
-                    animate={{ width: `${(visibleCount / filteredBlogs.length) * 100}%` }}
-                    transition={{ duration: 0.5, ease: "easeOut" }}
-                  />
-                </div>
-
-                {/* Read More Button */}
-                <motion.button
-                  onClick={handleLoadMore}
-                  disabled={isLoadingMore}
-                  className="group relative mt-2 px-8 py-3.5 rounded-2xl bg-card border-2 border-primary/20 hover:border-primary/50 text-foreground font-semibold text-sm shadow-sm hover:shadow-lg transition-all duration-300 flex items-center gap-3 overflow-hidden disabled:opacity-70 disabled:cursor-not-allowed"
-                  whileHover={{ scale: 1.03, y: -2 }}
-                  whileTap={{ scale: 0.97 }}
-                >
-                  {/* Background gradient on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-                  <span className="relative z-10 flex items-center gap-2.5">
-                    {isLoadingMore ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                        <span>Loading...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="text-primary font-bold">Read More</span>
-                        <span className="px-2 py-0.5 rounded-md bg-primary/10 text-primary text-[11px] font-bold">
-                          +{Math.min(remainingCount, BLOGS_PER_PAGE)}
-                        </span>
-                        <ArrowDown className="w-4 h-4 text-primary group-hover:translate-y-0.5 transition-transform" />
-                      </>
-                    )}
-                  </span>
-
-                  {/* Animated border glow */}
-                  <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-primary/0 group-hover:ring-primary/20 transition-all duration-300" />
-                </motion.button>
-              </motion.div>
-            )}
-
-            {/* All loaded indicator */}
-            {!hasMore && filteredBlogs.length > BLOGS_PER_PAGE && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="flex items-center justify-center gap-2 text-xs text-muted-foreground pt-2"
-              >
-                <div className="h-px w-12 bg-gradient-to-r from-transparent to-border" />
-                <Sparkles className="w-3.5 h-3.5 text-primary" />
-                <span>You&apos;ve seen all {filteredBlogs.length} articles</span>
-                <Sparkles className="w-3.5 h-3.5 text-primary" />
-                <div className="h-px w-12 bg-gradient-to-l from-transparent to-border" />
-              </motion.div>
-            )}
-          </div>
-        )}
-
-        {/* ═══════════════════════════════════════════════════════════════
-            ✦ FEATURED & LATEST — Read Article Section
-            ═══════════════════════════════════════════════════════════════ */}
-        {publishedBlogs.length > 0 && featuredBlog && (
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="mt-16 sm:mt-20 space-y-8"
-          >
-            {/* Section Heading */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 border border-primary/10">
-                  <Sparkles className="w-5 h-5 text-primary" />
-                </div>
-                <h3 className="font-heading text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
-                  Featured & Latest
-                </h3>
-              </div>
-              <div className="flex-1 h-px bg-gradient-to-r from-border via-primary/20 to-transparent" />
-            </div>
-
-            {/* Featured + Latest Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 sm:gap-8">
-              {/* ── Featured Article (Large Hero Card) ────────────── */}
-              <motion.article
-                onClick={() => openReader(featuredBlog)}
-                className="lg:col-span-3 group cursor-pointer relative rounded-3xl overflow-hidden bg-card border border-border/60 hover:border-primary/40 shadow-sm hover:shadow-2xl transition-all duration-500"
-                whileHover={{ y: -4 }}
-                transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              >
-                {/* Featured Cover Image */}
-                <div className="relative w-full h-56 sm:h-72 md:h-80 overflow-hidden">
-                  {featuredBlog.coverImage ? (
-                    <Image
-                      src={featuredBlog.coverImage}
-                      alt={featuredBlog.title}
-                      fill
-                      sizes="(max-width: 1024px) 100vw, 60vw"
-                      className="object-cover group-hover:scale-105 transition-transform duration-700"
+                  {/* Progress bar */}
+                  <div className="w-48 h-1 rounded-full bg-muted overflow-hidden">
+                    <motion.div
+                      className="h-full rounded-full bg-gradient-to-r from-primary to-accent"
+                      initial={false}
+                      animate={{ width: `${(visibleCount / filteredBlogs.length) * 100}%` }}
+                      transition={{ duration: 0.5, ease: "easeOut" }}
                     />
+<<<<<<< Updated upstream
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-primary/30 via-accent/20 to-card flex items-center justify-center">
                       <BookOpen className="w-16 h-16 text-primary/30" />
@@ -456,93 +397,36 @@ export function BlogSection({ initialBlogs = [], sectionContent }: BlogSectionPr
                       <Clock className="w-3.5 h-3.5 text-accent" />
                       {featuredBlog.readTime}
                     </span>
+=======
+>>>>>>> Stashed changes
                   </div>
 
-                  {/* Title */}
-                  <h4 className="font-heading font-extrabold text-2xl sm:text-3xl text-foreground group-hover:text-primary transition-colors duration-300 leading-tight line-clamp-2">
-                    {featuredBlog.title}
-                  </h4>
-
-                  {/* Excerpt */}
-                  <p className="text-sm sm:text-base text-muted-foreground leading-relaxed line-clamp-3">
-                    {featuredBlog.excerpt}
-                  </p>
-
-                  {/* Tags + Read Article CTA */}
-                  <div className="flex items-center justify-between pt-2">
-                    <div className="flex flex-wrap gap-1.5">
-                      {featuredBlog.tags.slice(0, 3).map((t, tIdx) => (
-                        <span
-                          key={tIdx}
-                          className="text-[11px] px-2.5 py-1 rounded-lg bg-muted/80 text-muted-foreground font-medium border border-border/40"
-                        >
-                          #{t}
-                        </span>
-                      ))}
-                    </div>
-                    <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 text-sm font-bold text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300">
-                      <Eye className="w-4 h-4" />
-                      Read Article
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </span>
-                  </div>
-                </div>
-
-                {/* Bottom Gradient Accent Line */}
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-accent to-primary opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              </motion.article>
-
-              {/* ── Latest Articles Sidebar ───────────────────────── */}
-              <div className="lg:col-span-2 flex flex-col gap-4">
-                {/* Sidebar Header */}
-                <div className="flex items-center gap-2 px-1">
-                  <Newspaper className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                    Latest Articles
-                  </span>
-                </div>
-
-                {latestBlogs.length > 0 ? (
-                  latestBlogs.map((blog, idx) => (
-                    <motion.article
-                      key={blog.id}
-                      initial={{ opacity: 0, x: 20 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.4, delay: idx * 0.1 }}
-                      onClick={() => openReader(blog)}
-                      className="group cursor-pointer flex gap-4 p-4 rounded-2xl bg-card border border-border/60 hover:border-primary/30 hover:shadow-lg transition-all duration-300 min-w-0"
-                      whileHover={{ x: 4 }}
+                  <div className="flex flex-wrap items-center justify-center gap-3 mt-1">
+                    {/* Read More button (loads next 3 in grid) */}
+                    <motion.button
+                      onClick={handleLoadMore}
+                      disabled={isLoadingMore}
+                      className="group relative px-6 py-3 rounded-2xl bg-card border-2 border-primary/20 hover:border-primary/60 text-foreground font-semibold text-sm shadow-sm hover:shadow-xl transition-all duration-300 flex items-center gap-2.5 overflow-hidden disabled:opacity-70 disabled:cursor-not-allowed"
+                      whileHover={{ scale: 1.02, y: -2 }}
+                      whileTap={{ scale: 0.98 }}
                     >
-                      {/* Thumbnail */}
-                      <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-muted shrink-0">
-                        {blog.coverImage ? (
-                          <Image
-                            src={blog.coverImage}
-                            alt={blog.title}
-                            fill
-                            sizes="96px"
-                            className="object-cover group-hover:scale-110 transition-transform duration-500"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-primary/15 to-accent/15 flex items-center justify-center">
-                            <BookOpen className="w-6 h-6 text-primary/40" />
-                          </div>
-                        )}
-                        {/* Number Badge */}
-                        <div className="absolute top-1.5 left-1.5 w-5 h-5 rounded-md bg-primary/90 text-primary-foreground text-[10px] font-bold flex items-center justify-center shadow-sm">
-                          {idx + 1}
-                        </div>
-                      </div>
-
-                      {/* Content */}
-                      <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
-                        <div className="space-y-1.5">
-                          {/* Category Badge */}
-                          <span className="text-[10px] font-semibold text-primary/80 uppercase tracking-wider">
-                            {blog.category}
+                      {isLoadingMore ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                          <span>Loading...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-primary font-bold">Read More</span>
+                          <span className="px-2 py-0.5 rounded-md bg-primary/10 text-primary text-[11px] font-bold">
+                            +{Math.min(remainingCount, BLOGS_PER_PAGE)}
                           </span>
+                          <ArrowDown className="w-4 h-4 text-primary group-hover:translate-y-0.5 transition-transform" />
+                        </>
+                      )}
+                    </motion.button>
 
+<<<<<<< Updated upstream
                           {/* Title */}
                           <h5 className="font-heading font-bold text-sm sm:text-[15px] text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-snug">
                             {blog.title}
@@ -579,13 +463,49 @@ export function BlogSection({ initialBlogs = [], sectionContent }: BlogSectionPr
                     <p className="text-xs text-muted-foreground text-center">
                       More articles coming soon!
                     </p>
+=======
+                    {/* View All Blogs link to /blog */}
+                    <Link
+                      href="/blog"
+                      className="px-6 py-3 rounded-2xl bg-primary text-primary-foreground font-semibold text-sm shadow-md hover:bg-primary/90 transition-all flex items-center gap-2"
+                    >
+                      <span>View All Blogs</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+>>>>>>> Stashed changes
                   </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="flex flex-col sm:flex-row items-center gap-4 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-3.5 h-3.5 text-primary" />
+                    <span>All {filteredBlogs.length} articles displayed</span>
+                  </div>
+
+                  <Link
+                    href="/blog"
+                    className="px-5 py-2.5 rounded-xl bg-card border border-border/80 hover:border-primary/50 text-foreground hover:text-primary font-medium transition-all flex items-center gap-1.5"
+                  >
+                    <span>View All in Blog Archive</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+
+                  {filteredBlogs.length > BLOGS_PER_PAGE && (
+                    <button
+                      onClick={handleShowLess}
+                      className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors underline-offset-4 hover:underline"
+                    >
+                      <ArrowUp className="w-3.5 h-3.5" />
+                      <span>Show less (3 cards)</span>
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
-          </motion.div>
+          </div>
         )}
       </motion.div>
+<<<<<<< Updated upstream
 
       {/* ═══════════════════════════════════════════════════════════════
           ✦ ARTICLE READER MODAL — Opens when "Read" or "Read Article" is clicked
@@ -739,6 +659,8 @@ export function BlogSection({ initialBlogs = [], sectionContent }: BlogSectionPr
           </div>
         )}
       </AnimatePresence>
+=======
+>>>>>>> Stashed changes
     </section>
   );
 }
