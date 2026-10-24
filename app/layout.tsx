@@ -39,10 +39,18 @@ const spaceGrotesk = Space_Grotesk({
 
 export async function generateMetadata(): Promise<Metadata> {
   const [heroData, siteSettings] = await Promise.all([getHeroAboutFromDb(), getSiteSettingsFromDb()]);
-  const name = siteSettings?.siteName?.trim() || heroData?.name?.trim() || "";
+  const rawName = siteSettings?.siteName?.trim() || heroData?.name?.trim() || "";
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
   const description = siteSettings?.siteDescription?.trim() || "";
-  const titleString = name ? `${name} | Portfolio` : "Portfolio";
+
+  // Prevent duplicate "| Portfolio" if the name already contains Portfolio
+  const baseName = rawName.replace(/\s*\|\s*portfolio\s*$/i, "").trim() || rawName;
+  const titleString = !rawName
+    ? "Portfolio"
+    : /portfolio/i.test(rawName)
+      ? rawName
+      : `${rawName} | Portfolio`;
+
   const logoUrl = siteSettings?.logoUrl?.trim();
   const ogImageUrl = siteSettings?.ogImageUrl?.trim();
 
@@ -77,19 +85,19 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: new URL(siteUrl),
     title: {
       default: titleString,
-      template: name ? `%s | ${name}` : "%s",
+      template: baseName ? `%s | ${baseName}` : "%s",
     },
     description,
     icons: iconsConfig,
-    authors: name ? [{ name, url: siteUrl }] : [],
-    creator: name || undefined,
+    authors: baseName ? [{ name: baseName, url: siteUrl }] : [],
+    creator: baseName || undefined,
     openGraph: {
       type: "website",
       locale: "en_US",
       url: siteUrl,
       title: titleString,
       description,
-      siteName: name ? `${name} Portfolio` : "Portfolio",
+      siteName: titleString,
       ...(openGraphImages ? { images: openGraphImages } : {}),
     },
     twitter: {

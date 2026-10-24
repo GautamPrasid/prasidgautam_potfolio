@@ -456,7 +456,13 @@ export default function WebsiteSettingsPage() {
           <div className="mt-5 rounded-xl border border-border bg-muted/30 p-4">
             <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Search result preview</p>
             <div className="flex items-center gap-2 text-xs text-muted-foreground"><Globe className="h-4 w-4" /><span>{previewSiteUrl}</span></div>
-            <p className="mt-1 text-lg text-blue-700 dark:text-blue-400">{siteName || "Website name"} | Portfolio</p>
+            <p className="mt-1 text-lg text-blue-700 dark:text-blue-400">
+              {!siteName.trim()
+                ? "Website name | Portfolio"
+                : /portfolio/i.test(siteName)
+                  ? siteName
+                  : `${siteName} | Portfolio`}
+            </p>
             <p className="mt-1 text-sm leading-5 text-muted-foreground">{description || "Your website description will appear here."}</p>
           </div>
         </section>
