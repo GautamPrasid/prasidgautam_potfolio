@@ -113,18 +113,25 @@ export function ProjectsSection({
         suppressHydrationWarning
       >
         {/* Section Heading */}
-        <div className="mx-auto w-full min-w-0 max-w-3xl space-y-3 text-center sm:space-y-4">
-          <span className="inline-block rounded-full border border-primary/20 bg-primary/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-primary">
-            {sectionContent?.badge || "Portfolio Showcase"}
-          </span>
-          <h2 className="break-words font-heading text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl md:text-5xl">
-            {sectionContent?.heading || "Featured Projects"}
-          </h2>
-          <p className="break-words text-sm leading-relaxed text-muted-foreground sm:text-base md:text-lg">
-            {sectionContent?.subtext ||
-              "A curated collection of web applications, full-stack systems, and open-source projects."}
-          </p>
-        </div>
+        {(sectionContent?.badge || sectionContent?.heading || sectionContent?.subtext) && (
+          <div className="mx-auto w-full min-w-0 max-w-3xl space-y-3 text-center sm:space-y-4">
+            {sectionContent.badge && (
+              <span className="inline-block rounded-full border border-primary/20 bg-primary/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-primary">
+                {sectionContent.badge}
+              </span>
+            )}
+            {sectionContent.heading && (
+              <h2 className="break-words font-heading text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl md:text-5xl">
+                {sectionContent.heading}
+              </h2>
+            )}
+            {sectionContent.subtext && (
+              <p className="break-words text-sm leading-relaxed text-muted-foreground sm:text-base md:text-lg">
+                {sectionContent.subtext}
+              </p>
+            )}
+          </div>
+        )}
 
         <div className="flex items-center justify-center gap-2 sm:gap-2.5 flex-wrap max-w-full">
           {PROJECT_FILTERS.map((category) => {

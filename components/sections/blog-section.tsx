@@ -106,18 +106,25 @@ export function BlogSection({ initialBlogs = [], sectionContent }: BlogSectionPr
         className="space-y-10 sm:space-y-12"
       >
         {/* Section Heading */}
-        <div className="mx-auto w-full min-w-0 max-w-3xl space-y-3 text-center sm:space-y-4">
-          <span className="inline-block rounded-full border border-primary/20 bg-primary/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-primary">
-            {sectionContent?.badge || "Articles & Insights"}
-          </span>
-          <h2 className="break-words font-heading text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl md:text-5xl">
-            {sectionContent?.heading || "Latest from the Blog"}
-          </h2>
-          <p className="break-words text-sm leading-relaxed text-muted-foreground sm:text-base md:text-lg">
-            {sectionContent?.subtext ||
-              "Thoughts, engineering deep-dives, and tutorials on modern web development, architecture, and technology."}
-          </p>
-        </div>
+        {(sectionContent?.badge || sectionContent?.heading || sectionContent?.subtext) && (
+          <div className="mx-auto w-full min-w-0 max-w-3xl space-y-3 text-center sm:space-y-4">
+            {sectionContent.badge && (
+              <span className="inline-block rounded-full border border-primary/20 bg-primary/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-primary">
+                {sectionContent.badge}
+              </span>
+            )}
+            {sectionContent.heading && (
+              <h2 className="break-words font-heading text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl md:text-5xl">
+                {sectionContent.heading}
+              </h2>
+            )}
+            {sectionContent.subtext && (
+              <p className="break-words text-sm leading-relaxed text-muted-foreground sm:text-base md:text-lg">
+                {sectionContent.subtext}
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Category Filters */}
         {publishedBlogs.length > 0 && (

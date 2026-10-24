@@ -19,7 +19,6 @@ import {
   getSiteSettingsFromDb,
   getSupabaseClient,
   SectionContentData,
-  DEFAULT_SECTION_CONTENT,
 } from "@/lib/supabase-db";
 import { saveSiteSettingsAction, uploadAssetAction } from "@/app/admin/actions";
 
@@ -28,63 +27,63 @@ const VISIBILITY_SECTIONS: {
   label: string;
   desc: string;
 }[] = [
-  { key: "about", label: "About Me", desc: "Bio, stats, education summary, and personal narrative" },
-  { key: "skills", label: "Skills & Technologies", desc: "Technical skill categories, proficiencies, and tools" },
-  { key: "projects", label: "Projects Showcase", desc: "Featured projects with GitHub links and live demos" },
-  { key: "resume", label: "Work & Education", desc: "Career timeline, academic degrees, and certifications" },
-  { key: "blog", label: "Blog & Articles", desc: "Engineering deep-dives, articles, and tutorials" },
-  { key: "contact", label: "Contact & Connect", desc: "Contact form, direct email/phone, and social links" },
-];
+    { key: "about", label: "About Me", desc: "Bio, stats, education summary, and personal narrative" },
+    { key: "skills", label: "Skills & Technologies", desc: "Technical skill categories, proficiencies, and tools" },
+    { key: "projects", label: "Projects Showcase", desc: "Featured projects with GitHub links and live demos" },
+    { key: "resume", label: "Work & Education", desc: "Career timeline, academic degrees, and certifications" },
+    { key: "blog", label: "Blog & Articles", desc: "Engineering deep-dives, articles, and tutorials" },
+    { key: "contact", label: "Contact & Connect", desc: "Contact form, direct email/phone, and social links" },
+  ];
 
 const SECTION_CONFIGS: {
   key: "about" | "skills" | "projects" | "resume" | "blog";
   label: string;
   desc: string;
-  defaultBadge: string;
-  defaultHeading: string;
-  defaultSubtext: string;
+  badgePlaceholder: string;
+  headingPlaceholder: string;
+  subtextPlaceholder: string;
 }[] = [
-  {
-    key: "about",
-    label: "About Section",
-    desc: "Badge, heading, and intro for the about section",
-    defaultBadge: "About Me",
-    defaultHeading: "My Background & Story",
-    defaultSubtext: "A quick look at my journey, education, and development experience.",
-  },
-  {
-    key: "skills",
-    label: "Skills Section",
-    desc: "Badge, heading, and intro for technical skills",
-    defaultBadge: "Technical Expertise",
-    defaultHeading: "Skills & Technologies",
-    defaultSubtext: "Tools, languages, and frameworks I use to build modern applications.",
-  },
-  {
-    key: "projects",
-    label: "Projects Section",
-    desc: "Badge, heading, and intro for project showcase",
-    defaultBadge: "Portfolio Showcase",
-    defaultHeading: "Featured Projects",
-    defaultSubtext: "A curated collection of web applications, full-stack systems, and open-source projects.",
-  },
-  {
-    key: "resume",
-    label: "Resume Section",
-    desc: "Badge, heading, and intro for qualifications and career",
-    defaultBadge: "Career & Qualifications",
-    defaultHeading: "Work & Education",
-    defaultSubtext: "My professional journey, academic background, and verified industry certifications.",
-  },
-  {
-    key: "blog",
-    label: "Blog Section",
-    desc: "Badge, heading, and intro for articles and insights",
-    defaultBadge: "Articles & Insights",
-    defaultHeading: "Latest from the Blog",
-    defaultSubtext: "Thoughts, engineering deep-dives, and tutorials on modern web development, architecture, and technology.",
-  },
-];
+    {
+      key: "about",
+      label: "About Section",
+      desc: "Badge, heading, and intro for the about section",
+      badgePlaceholder: "e.g. About Me",
+      headingPlaceholder: "e.g. My Background & Story",
+      subtextPlaceholder: "e.g. A quick look at my journey...",
+    },
+    {
+      key: "skills",
+      label: "Skills Section",
+      desc: "Badge, heading, and intro for technical skills",
+      badgePlaceholder: "e.g. Technical Expertise",
+      headingPlaceholder: "e.g. Skills & Technologies",
+      subtextPlaceholder: "e.g. Tools, languages, and frameworks...",
+    },
+    {
+      key: "projects",
+      label: "Projects Section",
+      desc: "Badge, heading, and intro for project showcase",
+      badgePlaceholder: "e.g. Portfolio Showcase",
+      headingPlaceholder: "e.g. Featured Projects",
+      subtextPlaceholder: "e.g. A curated collection of web applications...",
+    },
+    {
+      key: "resume",
+      label: "Resume Section",
+      desc: "Badge, heading, and intro for qualifications and career",
+      badgePlaceholder: "e.g. Qualifications",
+      headingPlaceholder: "e.g. Work & Education",
+      subtextPlaceholder: "e.g. My professional journey...",
+    },
+    {
+      key: "blog",
+      label: "Blog Section",
+      desc: "Badge, heading, and intro for articles and insights",
+      badgePlaceholder: "e.g. Articles & Insights",
+      headingPlaceholder: "e.g. Latest from the Blog",
+      subtextPlaceholder: "e.g. Thoughts and tutorials...",
+    },
+  ];
 
 export default function WebsiteSettingsPage() {
   const [siteName, setSiteName] = useState("");
@@ -400,21 +399,19 @@ export default function WebsiteSettingsPage() {
               return (
                 <div
                   key={sec.key}
-                  className={`flex items-center justify-between gap-4 p-4 rounded-xl border transition-colors ${
-                    isVisible
+                  className={`flex items-center justify-between gap-4 p-4 rounded-xl border transition-colors ${isVisible
                       ? "border-border bg-background/60"
                       : "border-border/60 bg-muted/30 opacity-75"
-                  }`}
+                    }`}
                 >
                   <div className="space-y-1 pr-2">
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-sm text-foreground">{sec.label}</span>
                       <span
-                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
-                          isVisible
+                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${isVisible
                             ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
                             : "bg-muted text-muted-foreground border border-border"
-                        }`}
+                          }`}
                       >
                         {isVisible ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
                         {isVisible ? "Visible" : "Hidden"}
@@ -428,16 +425,14 @@ export default function WebsiteSettingsPage() {
                     role="switch"
                     aria-checked={isVisible}
                     onClick={() => toggleSection(sec.key)}
-                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary ${
-                      isVisible ? "bg-primary" : "bg-muted-foreground/30"
-                    }`}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary ${isVisible ? "bg-primary" : "bg-muted-foreground/30"
+                      }`}
                   >
                     <span className="sr-only">Toggle {sec.label}</span>
                     <span
                       aria-hidden="true"
-                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-                        isVisible ? "translate-x-5" : "translate-x-0"
-                      }`}
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${isVisible ? "translate-x-5" : "translate-x-0"
+                        }`}
                     />
                   </button>
                 </div>
@@ -484,33 +479,12 @@ export default function WebsiteSettingsPage() {
 
         {/* Section Headings and Content */}
         <section className="rounded-2xl border border-border bg-card p-5 sm:p-7 space-y-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-2 text-primary">
-              <Layers className="h-5 w-5" />
-              <h2 className="text-lg font-semibold text-foreground">Section Headings &amp; Titles</h2>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                setSectionContent((prev) => ({
-                  ...DEFAULT_SECTION_CONTENT,
-                  ...prev,
-                  about: { ...DEFAULT_SECTION_CONTENT.about, ...(prev.about || {}) },
-                  skills: { ...DEFAULT_SECTION_CONTENT.skills, ...(prev.skills || {}) },
-                  projects: { ...DEFAULT_SECTION_CONTENT.projects, ...(prev.projects || {}) },
-                  resume: { ...DEFAULT_SECTION_CONTENT.resume, ...(prev.resume || {}) },
-                  blog: { ...DEFAULT_SECTION_CONTENT.blog, ...(prev.blog || {}) },
-                  contact: { ...DEFAULT_SECTION_CONTENT.contact, ...(prev.contact || {}) },
-                }));
-                setMessage("Populated with recommended section titles! Click Save Website Settings below to store in Supabase.");
-              }}
-              className="inline-flex items-center justify-center rounded-xl border border-primary/30 bg-primary/10 px-3.5 py-2 text-xs font-semibold text-primary hover:bg-primary/20 transition-colors"
-            >
-              Fill Recommended Titles
-            </button>
+          <div className="flex items-center gap-2 text-primary">
+            <Layers className="h-5 w-5" />
+            <h2 className="text-lg font-semibold text-foreground">Section Headings &amp; Titles</h2>
           </div>
           <p className="text-sm text-muted-foreground">
-            Configure the badge, heading, and subtext for each section on the portfolio. If a field is left empty, the recommended default title displays automatically.
+            Configure optional badge, heading, and subtext for each section on the portfolio. Empty fields will not be rendered on the website.
           </p>
 
           <div className="space-y-6 divide-y divide-border">
@@ -529,7 +503,7 @@ export default function WebsiteSettingsPage() {
                         type="text"
                         value={current.badge || ""}
                         onChange={(e) => updateSectionField(sec.key, "badge", e.target.value)}
-                        placeholder={sec.defaultBadge}
+                        placeholder={sec.badgePlaceholder}
                         className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                       />
                     </div>
@@ -539,7 +513,7 @@ export default function WebsiteSettingsPage() {
                         type="text"
                         value={current.heading || ""}
                         onChange={(e) => updateSectionField(sec.key, "heading", e.target.value)}
-                        placeholder={sec.defaultHeading}
+                        placeholder={sec.headingPlaceholder}
                         className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 font-medium"
                       />
                     </div>
@@ -549,7 +523,7 @@ export default function WebsiteSettingsPage() {
                         type="text"
                         value={current.subtext || ""}
                         onChange={(e) => updateSectionField(sec.key, "subtext", e.target.value)}
-                        placeholder={sec.defaultSubtext}
+                        placeholder={sec.subtextPlaceholder}
                         className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                       />
                     </div>

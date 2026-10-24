@@ -29,41 +29,7 @@ export interface SectionContentData {
   };
 }
 
-export const DEFAULT_SECTION_CONTENT: SectionContentData = {
-  about: {
-    badge: "About Me",
-    heading: "My Background & Story",
-    subtext: "A quick look at my journey, education, and development experience.",
-  },
-  skills: {
-    badge: "Technical Expertise",
-    heading: "Skills & Technologies",
-    subtext: "Tools, languages, and frameworks I use to build modern applications.",
-  },
-  projects: {
-    badge: "Portfolio Showcase",
-    heading: "Featured Projects",
-    subtext: "A curated collection of web applications, full-stack systems, and open-source projects.",
-  },
-  resume: {
-    badge: "Career & Qualifications",
-    heading: "Work & Education",
-    subtext: "My professional journey, academic background, and verified industry certifications.",
-  },
-  blog: {
-    badge: "Articles & Insights",
-    heading: "Latest from the Blog",
-    subtext: "Thoughts, engineering deep-dives, and tutorials on modern web development, architecture, and technology.",
-  },
-  contact: {
-    badge: "Get in Touch",
-    heading: "Let's Connect",
-    subtext: "Have a project in mind, a question, or an opportunity? Reach out anytime.",
-    connectHeading: "Find me online",
-    ctaHeading: "Have an idea? Let's build something useful.",
-    ctaSubtext: "I'm always happy to connect, discuss a project, or explore a new opportunity.",
-  },
-};
+export const DEFAULT_SECTION_CONTENT: SectionContentData = {};
 
 export type SectionVisibilityKey = "about" | "skills" | "projects" | "resume" | "blog" | "contact";
 export type SectionVisibilityData = Partial<Record<SectionVisibilityKey, boolean>>;

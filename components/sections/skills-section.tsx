@@ -128,18 +128,25 @@ export function SkillsSection({ initialSkills = [], sectionContent }: SkillsSect
         suppressHydrationWarning
       >
         {/* Section Heading */}
-        <div className="mx-auto w-full min-w-0 max-w-3xl space-y-3 text-center sm:space-y-4">
-          <span className="inline-block rounded-full border border-primary/20 bg-primary/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-primary">
-            {sectionContent?.badge || "Technical Expertise"}
-          </span>
-          <h2 className="break-words font-heading text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl md:text-5xl">
-            {sectionContent?.heading || "Skills & Technologies"}
-          </h2>
-          <p className="break-words text-sm leading-relaxed text-muted-foreground sm:text-base md:text-lg">
-            {sectionContent?.subtext ||
-              "Tools, languages, and frameworks I use to build modern, scalable web applications."}
-          </p>
-        </div>
+        {(sectionContent?.badge || sectionContent?.heading || sectionContent?.subtext) && (
+          <div className="mx-auto w-full min-w-0 max-w-3xl space-y-3 text-center sm:space-y-4">
+            {sectionContent.badge && (
+              <span className="inline-block rounded-full border border-primary/20 bg-primary/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-primary">
+                {sectionContent.badge}
+              </span>
+            )}
+            {sectionContent.heading && (
+              <h2 className="break-words font-heading text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl md:text-5xl">
+                {sectionContent.heading}
+              </h2>
+            )}
+            {sectionContent.subtext && (
+              <p className="break-words text-sm leading-relaxed text-muted-foreground sm:text-base md:text-lg">
+                {sectionContent.subtext}
+              </p>
+            )}
+          </div>
+        )}
 
         <div className="flex items-center justify-center gap-1.5 sm:gap-2 flex-wrap max-w-full">
           {SKILL_FILTERS.map((category) => {

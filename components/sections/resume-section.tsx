@@ -57,34 +57,41 @@ export function ResumeSection({
         suppressHydrationWarning
       >
         {/* Section Header */}
-        <div className="mx-auto w-full min-w-0 max-w-3xl space-y-3 text-center sm:space-y-4">
-          <span className="inline-block rounded-full border border-primary/20 bg-primary/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-primary">
-            {sectionContent?.badge || "Career & Qualifications"}
-          </span>
-          <h2 className="break-words font-heading text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl md:text-5xl">
-            {sectionContent?.heading || "Work & Education"}
-          </h2>
-          <p className="break-words text-sm leading-relaxed text-muted-foreground sm:text-base md:text-lg">
-            {sectionContent?.subtext ||
-              "My professional journey, academic background, and verified industry certifications."}
-          </p>
+        {(sectionContent?.badge || sectionContent?.heading || sectionContent?.subtext || resumeUrl) && (
+          <div className="mx-auto w-full min-w-0 max-w-3xl space-y-3 text-center sm:space-y-4">
+            {sectionContent?.badge && (
+              <span className="inline-block rounded-full border border-primary/20 bg-primary/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-primary">
+                {sectionContent.badge}
+              </span>
+            )}
+            {sectionContent?.heading && (
+              <h2 className="break-words font-heading text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl md:text-5xl">
+                {sectionContent.heading}
+              </h2>
+            )}
+            {sectionContent?.subtext && (
+              <p className="break-words text-sm leading-relaxed text-muted-foreground sm:text-base md:text-lg">
+                {sectionContent.subtext}
+              </p>
+            )}
 
-          {/* Download CV / Resume Button */}
-          {resumeUrl && (
-            <div className="pt-2 flex justify-center">
-              <a
-                href={resumeUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                download={name ? `${name.replace(/\s+/g, "_")}_Resume.pdf` : "Resume.pdf"}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-5 sm:px-6 py-3.5 rounded-2xl bg-primary text-primary-foreground font-semibold shadow-lg shadow-primary/25 hover:bg-primary/90 hover:shadow-xl hover:shadow-primary/30 transition-all duration-200 group min-h-[44px] text-sm"
-              >
-                <Download className="w-5 h-5 group-hover:-translate-y-0.5 transition-transform" />
-                <span>Download Official CV</span>
-              </a>
-            </div>
-          )}
-        </div>
+            {/* Download CV / Resume Button */}
+            {resumeUrl && (
+              <div className="pt-2 flex justify-center">
+                <a
+                  href={resumeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  download={name ? `${name.replace(/\s+/g, "_")}_Resume.pdf` : "Resume.pdf"}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-5 sm:px-6 py-3.5 rounded-2xl bg-primary text-primary-foreground font-semibold shadow-lg shadow-primary/25 hover:bg-primary/90 hover:shadow-xl hover:shadow-primary/30 transition-all duration-200 group min-h-[44px] text-sm"
+                >
+                  <Download className="w-5 h-5 group-hover:-translate-y-0.5 transition-transform" />
+                  <span>Download Official CV</span>
+                </a>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Tab Filter Nav */}
         <div className="scrollbar-none flex w-full min-w-0 justify-start overflow-x-auto overscroll-x-contain py-2 sm:justify-center">
