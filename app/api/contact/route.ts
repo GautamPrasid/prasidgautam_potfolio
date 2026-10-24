@@ -80,6 +80,12 @@ function checkInMemoryIpRateLimit(ip: string): boolean {
   }
   timestamps.push(now);
   ipHits.set(ip, timestamps);
+
+  // Bound memory usage in long-lived serverless instances under high-cardinality traffic.
+  if (ipHits.size > 5000) {
+    const oldestKey = ipHits.keys().next().value;
+    if (oldestKey) ipHits.delete(oldestKey);
+  }
   return false;
 }
 
@@ -112,7 +118,7 @@ export async function POST(request: Request) {
 
     // 3. Read raw body and enforce byte cap even if Content-Length header was omitted
     const rawBody = await request.text();
-    if (rawBody.length > MAX_BODY_BYTES) {
+    if (new TextEncoder().encode(rawBody).byteLength > MAX_BODY_BYTES) {
       return NextResponse.json(
         { error: "Payload too large. Request body cannot exceed 10KB." },
         { status: 413 }
@@ -120,15 +126,23 @@ export async function POST(request: Request) {
     }
 
     // 4. Safe JSON parse
-    let body: Record<string, unknown>;
+    let parsedBody: unknown;
     try {
-      body = JSON.parse(rawBody);
+      parsedBody = JSON.parse(rawBody);
     } catch {
       return NextResponse.json(
         { error: "Malformed JSON payload." },
         { status: 400 }
       );
     }
+
+    if (!parsedBody || typeof parsedBody !== "object" || Array.isArray(parsedBody)) {
+      return NextResponse.json(
+        { error: "Request body must be a JSON object." },
+        { status: 400 }
+      );
+    }
+    const body = parsedBody as Record<string, unknown>;
 
     // 5. Bot Check: Honeypot field
     // Bots fill hidden inputs; humans never see or interact with them.
@@ -226,7 +240,14 @@ export async function POST(request: Request) {
       .eq("email", email)
       .gte("created_at", emailWindowStart);
 
-    if (!emailCountErr && recentEmailCount !== null && recentEmailCount >= DB_EMAIL_MAX) {
+    if (emailCountErr || recentEmailCount === null) {
+      return NextResponse.json(
+        { error: "Contact service is temporarily unavailable. Please try again later." },
+        { status: 503 }
+      );
+    }
+
+    if (recentEmailCount >= DB_EMAIL_MAX) {
       return NextResponse.json(
         { error: "Too many messages sent from this email address. Please try again in 10 minutes." },
         { status: 429 }
@@ -240,7 +261,14 @@ export async function POST(request: Request) {
       .select("*", { count: "exact", head: true })
       .gte("created_at", burstWindowStart);
 
-    if (!burstCountErr && globalBurstCount !== null && globalBurstCount >= DB_GLOBAL_BURST_MAX) {
+    if (burstCountErr || globalBurstCount === null) {
+      return NextResponse.json(
+        { error: "Contact service is temporarily unavailable. Please try again later." },
+        { status: 503 }
+      );
+    }
+
+    if (globalBurstCount >= DB_GLOBAL_BURST_MAX) {
       return NextResponse.json(
         { error: "High traffic volume. Please try again in a few moments." },
         { status: 429 }
