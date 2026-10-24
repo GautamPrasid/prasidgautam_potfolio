@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { CertificationItem } from "@/lib/data";
 import { getCertificationsFromDb } from "@/lib/supabase-db";
 import {
   saveCertificationAction,
   deleteCertificationAction,
   reorderCertificationsAction,
+  uploadAssetAction,
 } from "@/app/admin/actions";
-import { Plus, Edit2, Trash2, ArrowUp, ArrowDown, Award, CheckCircle2, ExternalLink, X } from "lucide-react";
+import { Plus, Edit2, Trash2, ArrowUp, ArrowDown, Award, CheckCircle2, ExternalLink, X, Upload, Loader2 } from "lucide-react";
 
 export default function CertificationsManagerPage() {
   const [items, setItems] = useState<CertificationItem[]>([]);
@@ -38,10 +39,41 @@ export default function CertificationsManagerPage() {
   const [credentialUrl, setCredentialUrl] = useState("");
   const [skillsText, setSkillsText] = useState("");
   const [issuerColor, setIssuerColor] = useState("from-blue-500 to-indigo-600");
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const handleCredentialUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", "certifications");
+      if (credentialUrl) {
+        formData.append("previousUrl", credentialUrl);
+      }
+
+      const res = await uploadAssetAction(formData);
+      if (res.success && res.data?.publicUrl) {
+        setCredentialUrl(res.data.publicUrl);
+        showToast("Certificate credential file uploaded successfully.");
+      } else {
+        showToast(`Upload failed: ${res.message}`);
+      }
+    } catch (err) {
+      console.error("Credential upload error:", err);
+      showToast("Upload failed due to network error.");
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
 
   const handleOpenAdd = () => {
@@ -312,16 +344,64 @@ export default function CertificationsManagerPage() {
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="block text-xs font-semibold uppercase text-muted-foreground">Credential Verification URL</label>
-                <input
-                  type="url"
-                  required
-                  value={credentialUrl}
-                  onChange={(e) => setCredentialUrl(e.target.value)}
-                  placeholder="https://coursera.org/verify/..."
-                  className="w-full px-3.5 py-2 rounded-xl bg-background border border-border text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                />
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-semibold uppercase text-muted-foreground">Credential URL or File</label>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    accept="image/*,application/pdf"
+                    className="hidden"
+                    onChange={handleCredentialUpload}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-border bg-muted/60 hover:bg-muted text-[11px] font-medium text-foreground transition-colors disabled:opacity-50"
+                  >
+                    {isUploading ? (
+                      <Loader2 className="w-3 h-3 animate-spin text-primary" />
+                    ) : (
+                      <Upload className="w-3 h-3 text-primary" />
+                    )}
+                    <span>{isUploading ? "Uploading..." : "Upload File"}</span>
+                  </button>
+                </div>
+                <div className="relative">
+                  <input
+                    type="url"
+                    required
+                    value={credentialUrl}
+                    onChange={(e) => setCredentialUrl(e.target.value)}
+                    placeholder="https://... or upload certificate file"
+                    className="w-full pl-3.5 pr-8 py-2 rounded-xl bg-background border border-border text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  {credentialUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setCredentialUrl("")}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-muted-foreground hover:text-rose-500"
+                      title="Clear credential"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+                {credentialUrl && (
+                  <div className="flex items-center gap-2 pt-1 text-[11px] text-muted-foreground">
+                    <span className="truncate max-w-[240px] text-primary underline">{credentialUrl}</span>
+                    <a
+                      href={credentialUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-primary hover:underline inline-flex items-center gap-0.5"
+                    >
+                      <span>Preview</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-1">

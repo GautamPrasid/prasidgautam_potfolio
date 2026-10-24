@@ -13,6 +13,7 @@ import {
   Briefcase,
   Share2,
   Mail,
+  Globe,
 } from "lucide-react";
 import { getSupabaseClient } from "@/lib/supabase-db";
 
@@ -92,10 +93,19 @@ export default function AdminOverviewPage() {
       icon: Award,
       color: "text-amber-500 bg-amber-500/10 border-amber-500/20",
     },
+    {
+      title: "Messages",
+      count: counts.messages,
+      label: "Contact Submissions",
+      href: "/admin/messages",
+      icon: Mail,
+      color: "text-rose-500 bg-rose-500/10 border-rose-500/20",
+    },
   ];
 
   const quickLinks = [
     { title: "Hero & About", desc: "Edit name, roles, bio & stats", href: "/admin/hero", icon: User },
+    { title: "Website Settings", desc: "Identity, visibility, social preview & SEO", href: "/admin/website-settings", icon: Globe },
     { title: "Skills Manager", desc: "Add, edit or reorder skills", href: "/admin/skills", icon: Wrench },
     { title: "Projects Showcase", desc: "Manage GitHub & demo links", href: "/admin/projects", icon: FolderGit2 },
     { title: "Education History", desc: "Update degrees & coursework", href: "/admin/education", icon: GraduationCap },
@@ -119,7 +129,7 @@ export default function AdminOverviewPage() {
       </div>
 
       {/* Metrics Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {metrics.map((m) => {
           const Icon = m.icon;
           return (

@@ -100,7 +100,7 @@ export default function WebsiteSettingsPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  const previewSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.prasidgautam.com.np/"
+  const previewSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.prasidgautam.com.np/";
 
   useEffect(() => {
     let active = true;
