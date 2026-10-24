@@ -43,7 +43,7 @@ export default function BlogsManagerPage() {
   useEffect(() => {
     let active = true;
     async function load() {
-      const data = await getBlogsFromDb();
+      const data = await getBlogsFromDb(false);
       if (active) {
         setBlogs(data ?? []);
       }
@@ -69,7 +69,7 @@ export default function BlogsManagerPage() {
   const [category, setCategory] = useState<BlogCategory>("Web Development");
   const [tagsText, setTagsText] = useState("");
   const [coverImage, setCoverImage] = useState("");
-  const [readTime, setReadTime] = useState("5 min read");
+  const [readTime, setReadTime] = useState("");
   const [published, setPublished] = useState(true);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -93,9 +93,9 @@ export default function BlogsManagerPage() {
     setExcerpt("");
     setContent("");
     setCategory("Web Development");
-    setTagsText("WebDev, Next.js, Engineering");
+    setTagsText("");
     setCoverImage("");
-    setReadTime("5 min read");
+    setReadTime("");
     setPublished(true);
     setIsModalOpen(true);
   };
@@ -152,6 +152,8 @@ export default function BlogsManagerPage() {
       .split(",")
       .map((t) => t.trim())
       .filter((t) => t.length > 0);
+    const words = content.trim().split(/\s+/).filter(Boolean).length;
+    const finalReadTime = readTime.trim() || `${Math.max(1, Math.ceil(words / 200))} min read`;
 
     try {
       if (editingBlog) {
@@ -164,7 +166,7 @@ export default function BlogsManagerPage() {
           cover_image: coverImage || null,
           category,
           tags: tagsArray,
-          read_time: readTime,
+          read_time: finalReadTime,
           published,
         });
 
@@ -180,7 +182,7 @@ export default function BlogsManagerPage() {
                   coverImage: coverImage || undefined,
                   category,
                   tags: tagsArray,
-                  readTime,
+                  readTime: finalReadTime,
                   published,
                 }
               : b
@@ -196,7 +198,7 @@ export default function BlogsManagerPage() {
           cover_image: coverImage || null,
           category,
           tags: tagsArray,
-          read_time: readTime,
+          read_time: finalReadTime,
           published,
           order_index: blogs.length + 1,
         });
@@ -210,7 +212,7 @@ export default function BlogsManagerPage() {
           coverImage: coverImage || undefined,
           category,
           tags: tagsArray,
-          readTime,
+          readTime: finalReadTime,
           published,
         };
         setBlogs([...blogs, newBlog]);

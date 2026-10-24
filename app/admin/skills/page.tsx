@@ -38,7 +38,7 @@ export default function SkillsManagerPage() {
   const [name, setName] = useState("");
   const [category, setCategory] = useState<Skill["category"]>("Languages");
   const [iconName, setIconName] = useState("Code");
-  const [level, setLevel] = useState<number>(85);
+  const [level, setLevel] = useState<number | "">("");
   const [description, setDescription] = useState("");
 
   const showToast = (msg: string) => {
@@ -51,7 +51,7 @@ export default function SkillsManagerPage() {
     setName("");
     setCategory("Languages");
     setIconName("Code");
-    setLevel(85);
+    setLevel("");
     setDescription("");
     setIsModalOpen(true);
   };
@@ -61,7 +61,7 @@ export default function SkillsManagerPage() {
     setName(skill.name);
     setCategory(skill.category);
     setIconName(skill.iconName);
-    setLevel(skill.level || 85);
+    setLevel(skill.level ?? "");
     setDescription(skill.description || "");
     setIsModalOpen(true);
   };
@@ -70,6 +70,8 @@ export default function SkillsManagerPage() {
     e.preventDefault();
     if (!name.trim()) return;
 
+    const parsedLevel = typeof level === "number" ? level : (Number(level) || undefined);
+
     try {
       if (editingSkill) {
         await saveSkillAction({
@@ -77,13 +79,13 @@ export default function SkillsManagerPage() {
           name,
           category,
           icon_name: iconName,
-          level,
+          level: parsedLevel,
           description,
         });
         setSkills(
           skills.map((s) =>
             s.id === editingSkill.id
-              ? { ...s, name, category, iconName, level, description }
+              ? { ...s, name, category, iconName, level: parsedLevel, description }
               : s
           )
         );
@@ -93,7 +95,7 @@ export default function SkillsManagerPage() {
           name,
           category,
           icon_name: iconName,
-          level,
+          level: parsedLevel,
           description,
           order_index: skills.length + 1,
         });
@@ -103,7 +105,7 @@ export default function SkillsManagerPage() {
           name,
           category,
           iconName,
-          level,
+          level: parsedLevel,
           description,
         };
         setSkills([...skills, newSkillItem]);
@@ -331,7 +333,8 @@ export default function SkillsManagerPage() {
                     min="1"
                     max="100"
                     value={level}
-                    onChange={(e) => setLevel(Number(e.target.value))}
+                    onChange={(e) => setLevel(e.target.value === "" ? "" : Number(e.target.value))}
+                    placeholder="e.g. 85 (optional)"
                     className="w-full px-3.5 py-2 rounded-xl bg-background border border-border text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>

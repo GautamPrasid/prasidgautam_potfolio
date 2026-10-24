@@ -73,7 +73,7 @@ export default function ProjectsManagerPage() {
     setTitle("");
     setDescription("");
     setCategory("Full-Stack");
-    setTagsText("Next.js, TypeScript, Tailwind CSS");
+    setTagsText("");
     setImage("");
     setGithub("");
     setDemo("");

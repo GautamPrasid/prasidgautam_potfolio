@@ -250,9 +250,9 @@ export async function getProjectsFromDb(): Promise<Project[]> {
   }));
 }
 
-export async function getBlogsFromDb(): Promise<BlogPost[]> {
+export async function getBlogsFromDb(includeFallback = true): Promise<BlogPost[]> {
   const client = getSupabaseClient();
-  if (!client) return DEFAULT_BLOGS;
+  if (!client) return includeFallback ? DEFAULT_BLOGS : [];
 
   try {
     const { data, error } = await client
@@ -260,7 +260,9 @@ export async function getBlogsFromDb(): Promise<BlogPost[]> {
       .select("*")
       .order("order_index", { ascending: true });
 
-    if (error || !data || data.length === 0) return DEFAULT_BLOGS;
+    if (error || !data) return includeFallback ? DEFAULT_BLOGS : [];
+    if (data.length === 0 && includeFallback) return DEFAULT_BLOGS;
+    if (data.length === 0 && !includeFallback) return [];
 
     return data.map((d) => ({
       id: d.id,
