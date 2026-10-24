@@ -92,7 +92,7 @@ export function BlogSection({ initialBlogs = [], sectionContent }: BlogSectionPr
     <section
       id="blog"
       aria-label="Blog Section"
-      className="mx-auto w-full min-w-0 max-w-7xl scroll-mt-20 overflow-x-clip px-4 py-14 sm:px-6 sm:py-20 md:px-8 md:py-28"
+      className="mx-auto w-full min-w-0 max-w-7xl scroll-mt-20 overflow-x-clip px-4 py-16 sm:px-6 sm:py-20 lg:px-8 md:py-28"
     >
       <motion.div
         initial={false}
