@@ -276,11 +276,10 @@ export function ContactSection({ initialHeroData = null, sectionContent }: Conta
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     suppressHydrationWarning
-                    className={`p-4 rounded-2xl flex items-start gap-3 border ${
-                      statusMessage.type === "success"
+                    className={`p-4 rounded-2xl flex items-start gap-3 border ${statusMessage.type === "success"
                         ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
                         : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
-                    }`}
+                      }`}
                   >
                     {statusMessage.type === "success" ? (
                       <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />
@@ -319,11 +318,10 @@ export function ContactSection({ initialHeroData = null, sectionContent }: Conta
                       value={formData.name}
                       onChange={handleChange}
                       disabled={isSubmitting}
-                      className={`w-full px-4 py-3 rounded-xl bg-background border text-sm text-foreground focus:outline-none focus:ring-2 transition-all min-h-[44px] ${
-                        errors.name
+                      className={`w-full px-4 py-3 rounded-xl bg-background border text-sm text-foreground focus:outline-none focus:ring-2 transition-all min-h-[44px] ${errors.name
                           ? "border-rose-500 focus:ring-rose-500/40"
                           : "border-border focus:border-primary focus:ring-primary/40"
-                      }`}
+                        }`}
                     />
                     {errors.name && (
                       <p className="text-xs text-rose-500 font-medium">{errors.name}</p>
@@ -344,11 +342,10 @@ export function ContactSection({ initialHeroData = null, sectionContent }: Conta
                       value={formData.email}
                       onChange={handleChange}
                       disabled={isSubmitting}
-                      className={`w-full px-4 py-3 rounded-xl bg-background border text-sm text-foreground focus:outline-none focus:ring-2 transition-all min-h-[44px] ${
-                        errors.email
+                      className={`w-full px-4 py-3 rounded-xl bg-background border text-sm text-foreground focus:outline-none focus:ring-2 transition-all min-h-[44px] ${errors.email
                           ? "border-rose-500 focus:ring-rose-500/40"
                           : "border-border focus:border-primary focus:ring-primary/40"
-                      }`}
+                        }`}
                     />
                     {errors.email && (
                       <p className="text-xs text-rose-500 font-medium">{errors.email}</p>
@@ -370,11 +367,10 @@ export function ContactSection({ initialHeroData = null, sectionContent }: Conta
                     value={formData.subject}
                     onChange={handleChange}
                     disabled={isSubmitting}
-                    className={`w-full px-4 py-3 rounded-xl bg-background border text-sm text-foreground focus:outline-none focus:ring-2 transition-all min-h-[44px] ${
-                      errors.subject
+                    className={`w-full px-4 py-3 rounded-xl bg-background border text-sm text-foreground focus:outline-none focus:ring-2 transition-all min-h-[44px] ${errors.subject
                         ? "border-rose-500 focus:ring-rose-500/40"
                         : "border-border focus:border-primary focus:ring-primary/40"
-                    }`}
+                      }`}
                   />
                   {errors.subject && (
                     <p className="text-xs text-rose-500 font-medium">{errors.subject}</p>
@@ -395,11 +391,10 @@ export function ContactSection({ initialHeroData = null, sectionContent }: Conta
                     value={formData.message}
                     onChange={handleChange}
                     disabled={isSubmitting}
-                    className={`w-full px-4 py-3 rounded-xl bg-background border text-sm text-foreground focus:outline-none focus:ring-2 transition-all resize-none ${
-                      errors.message
+                    className={`w-full px-4 py-3 rounded-xl bg-background border text-sm text-foreground focus:outline-none focus:ring-2 transition-all resize-none ${errors.message
                         ? "border-rose-500 focus:ring-rose-500/40"
                         : "border-border focus:border-primary focus:ring-primary/40"
-                    }`}
+                      }`}
                   />
                   {errors.message && (
                     <p className="text-xs text-rose-500 font-medium">{errors.message}</p>
