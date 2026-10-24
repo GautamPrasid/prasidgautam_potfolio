@@ -96,20 +96,20 @@ export function Footer({
   const brandName = siteName || "Prasid Gautam | Portfolio";
 
   return (
-    <footer className="relative isolate mt-20 overflow-hidden border-t border-border/70 bg-background">
+    <footer className="relative isolate mt-16 overflow-hidden border-t border-border/70 bg-background sm:mt-20">
       <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/70 to-transparent" />
       <div aria-hidden="true" className="pointer-events-none absolute -top-40 left-1/2 -z-10 h-72 w-[min(720px,90vw)] -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
-      <div className="mx-auto max-w-7xl px-4 pb-6 pt-10 sm:px-6 sm:pt-14 lg:px-8">
+      <div className="mx-auto w-full max-w-7xl px-4 pb-5 pt-8 sm:px-6 sm:pb-7 sm:pt-12 lg:px-8">
         {/* Contact callout */}
-        <div className="relative mb-10 overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/[0.12] via-card/90 to-card p-6 shadow-sm sm:mb-14 sm:p-8 lg:p-10">
-          <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-16 h-48 w-48 rounded-full bg-primary/10 blur-3xl" />
+        <div className="relative mb-9 overflow-hidden rounded-[1.75rem] border border-primary/20 bg-card p-5 shadow-sm sm:mb-12 sm:p-8 lg:p-10">
+          <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-primary/10 to-transparent" />\n          <div aria-hidden="true" className="pointer-events-none absolute -right-16 -top-20 h-52 w-52 rounded-full bg-primary/15 blur-3xl" />
           <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
             <div className="max-w-2xl">
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-background/70 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/[0.08] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
                 <Sparkles className="h-3.5 w-3.5" />
                 Open to opportunities
               </div>
-              <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl lg:text-3xl">
+              <h2 className="max-w-2xl text-2xl font-bold leading-tight tracking-tight text-foreground sm:text-3xl lg:text-4xl">
                 {ctaHeading || "Have an idea? Let’s build something useful."}
               </h2>
               <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
@@ -128,8 +128,8 @@ export function Footer({
         </div>
 
         {/* Main footer content */}
-        <div className="grid grid-cols-1 gap-10 border-b border-border/70 pb-10 sm:gap-12 md:grid-cols-2 lg:grid-cols-12 lg:gap-8 lg:pb-12">
-          <div className="space-y-5 md:col-span-2 lg:col-span-5">
+        <div className="grid min-w-0 grid-cols-1 gap-9 border-b border-border/70 pb-9 sm:gap-10 sm:pb-11 md:grid-cols-2 lg:grid-cols-12 lg:gap-10">
+          <div className="min-w-0 space-y-5 md:col-span-2 lg:col-span-5">
             <a
               href="#home"
               onClick={(e) => scrollToSection(e, "#home")}
@@ -139,7 +139,7 @@ export function Footer({
               <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary transition-all duration-300 group-hover:border-primary/40 group-hover:bg-primary group-hover:text-primary-foreground">
                 <Code2 className="h-5 w-5" />
               </span>
-              <span className="text-lg font-bold tracking-tight text-foreground sm:text-xl">
+              <span className="break-words text-lg font-bold tracking-tight text-foreground sm:text-xl">
                 {brandName}<span className="text-primary">.</span>
               </span>
             </a>
@@ -159,11 +159,11 @@ export function Footer({
             )}
           </div>
 
-          <nav aria-label="Footer navigation" className="lg:col-span-3">
+          <nav aria-label="Footer navigation" className="min-w-0 lg:col-span-3">
             <h3 className="mb-4 text-xs font-bold uppercase tracking-[0.16em] text-foreground">
               Explore
             </h3>
-            <ul className="grid grid-cols-2 gap-x-5 gap-y-1.5">
+            <ul className="grid grid-cols-2 gap-x-3 gap-y-1 sm:gap-x-5">
               {QUICK_LINKS.map((link) => (
                 <li key={link.href}>
                   <a
@@ -179,7 +179,7 @@ export function Footer({
             </ul>
           </nav>
 
-          <div className="lg:col-span-4">
+          <div className="min-w-0 lg:col-span-4">
             <h3 className="mb-4 text-xs font-bold uppercase tracking-[0.16em] text-foreground">
               {connectHeading || "Find me online"}
             </h3>
@@ -214,7 +214,7 @@ export function Footer({
         </div>
 
         {/* Copyright and utility links */}
-        <div className="flex flex-col gap-4 pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:pt-7">
+        <div className="flex flex-col gap-4 pt-5 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:pt-6">
           <p className="flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 text-center sm:justify-start">
             <span>© {currentYear} {brandName}</span>
             <span aria-hidden="true" className="text-border">/</span>
