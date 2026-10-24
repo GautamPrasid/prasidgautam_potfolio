@@ -45,7 +45,7 @@ export function ResumeSection({
   return (
     <section
       id="resume"
-      className="py-16 sm:py-20 md:py-28 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto scroll-mt-20"
+      className="mx-auto w-full min-w-0 max-w-7xl scroll-mt-20 overflow-x-clip px-4 py-16 sm:px-6 sm:py-20 lg:px-8 md:py-28"
       aria-label="Resume Section"
     >
       <motion.div
@@ -58,14 +58,14 @@ export function ResumeSection({
       >
         {/* Section Header */}
         {(sectionContent?.badge || sectionContent?.heading || sectionContent?.subtext || resumeUrl) && (
-          <div className="text-center max-w-3xl mx-auto space-y-3 sm:space-y-4">
+          <div className="mx-auto w-full min-w-0 max-w-3xl space-y-3 text-center sm:space-y-4">
             {sectionContent?.badge && (
               <span className="px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide bg-primary/10 text-primary border border-primary/20 inline-block uppercase">
                 {sectionContent.badge}
               </span>
             )}
             {sectionContent?.heading && (
-              <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground tracking-tight">
+              <h2 className="break-words font-heading text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground tracking-tight">
                 {sectionContent.heading}
               </h2>
             )}
@@ -94,8 +94,8 @@ export function ResumeSection({
         )}
 
         {/* Tab Filter Nav */}
-        <div className="flex justify-center overflow-x-auto max-w-full py-2 scrollbar-none overscroll-x-contain">
-          <div className="inline-flex p-1.5 rounded-2xl bg-card border border-border/80 shadow-sm gap-1 max-w-full">
+        <div className="scrollbar-none flex w-full min-w-0 justify-start overflow-x-auto overscroll-x-contain py-2 sm:justify-center">
+          <div className="inline-flex w-max min-w-max gap-1 rounded-2xl border border-border/80 bg-card p-1.5 shadow-sm">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -103,7 +103,7 @@ export function ResumeSection({
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`relative flex items-center gap-2 px-3 sm:px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background min-h-[44px] ${
+                  className={`relative flex min-h-11 shrink-0 items-center gap-2 rounded-xl px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                     isActive
                       ? "text-primary-foreground font-semibold"
                       : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -143,7 +143,7 @@ export function ResumeSection({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -15 }}
             transition={{ duration: 0.3 }}
-            className="space-y-12 sm:space-y-16"
+            className="min-w-0 space-y-10 sm:space-y-12"
           >
             {/* Experience Subsection */}
             {activeTab === "experience" && (
@@ -167,7 +167,7 @@ export function ResumeSection({
                     No experience added yet.
                   </div>
                 ) : (
-                  <div className="relative pl-6 sm:pl-8 space-y-8">
+                  <div className="relative min-w-0 pl-6 sm:pl-8 space-y-6 sm:space-y-8">
                     <div className="absolute left-3 sm:left-4 top-3 bottom-3 w-0.5 bg-gradient-to-b from-primary via-accent to-primary/30" />
 
                     {initialExperience.map((item, idx) => (
@@ -186,7 +186,7 @@ export function ResumeSection({
                           </div>
                         </div>
 
-                        <div className="p-5 sm:p-6 lg:p-8 rounded-2xl bg-card border border-border/80 hover:border-primary/40 shadow-sm hover:shadow-md transition-all space-y-4 min-w-0">
+                        <div className="min-w-0 break-words rounded-2xl border border-border/80 bg-card p-4 shadow-sm transition-all space-y-4 hover:border-primary/40 hover:shadow-md sm:p-6 lg:p-8">
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/60 pb-3">
                             <div className="min-w-0">
                               <h4 className="font-heading font-bold text-lg sm:text-xl text-foreground group-hover:text-primary transition-colors break-words">
@@ -367,7 +367,7 @@ export function ResumeSection({
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.4, delay: idx * 0.1 }}
-                        className="p-5 sm:p-6 rounded-2xl bg-card border border-border/80 hover:border-primary/40 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4 group min-w-0"
+                        className="flex min-w-0 flex-col justify-between space-y-4 break-words rounded-2xl border border-border/80 bg-card p-4 shadow-sm transition-all hover:border-primary/40 hover:shadow-md sm:p-6"
                       >
                         <div className="space-y-3">
                           <div className="flex items-start justify-between gap-3 flex-wrap">
