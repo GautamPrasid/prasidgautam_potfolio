@@ -321,7 +321,7 @@ export function ProjectsSection({
                     </>
                   ) : (
                     <>
-                      <span className="text-primary font-bold">Load More</span>
+                      <span className="text-primary font-bold">Load More Repos</span>
                       <span className="px-2 py-0.5 rounded-md bg-primary/10 text-primary text-[11px] font-bold">
                         +{Math.min(remainingCount, PROJECTS_PER_PAGE)}
                       </span>

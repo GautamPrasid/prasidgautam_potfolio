@@ -33,6 +33,8 @@ import {
   Users,
   CheckSquare,
   Wrench,
+  ArrowDown,
+  ArrowUp,
   LucideIcon,
 } from "lucide-react";
 
@@ -66,9 +68,12 @@ export interface SkillsSectionProps {
   sectionContent?: SectionHeadingItem;
 }
 
+const INITIAL_SKILLS_COUNT = 8;
+
 export function SkillsSection({ initialSkills = [], sectionContent }: SkillsSectionProps = {}) {
   const [skills, setSkills] = useState<Skill[]>(initialSkills);
   const [selectedCategory, setSelectedCategory] = useState<SkillFilter>("All");
+  const [showAllSkills, setShowAllSkills] = useState(false);
 
   useEffect(() => {
     if (initialSkills && initialSkills.length > 0) {
@@ -91,11 +96,22 @@ export function SkillsSection({ initialSkills = [], sectionContent }: SkillsSect
     };
   }, [initialSkills]);
 
+  const handleCategoryChange = (category: SkillFilter) => {
+    setSelectedCategory(category);
+    setShowAllSkills(false);
+  };
+
   const safeSkills = skills ?? [];
   const filteredSkills =
     selectedCategory === "All"
       ? safeSkills
       : safeSkills.filter((skill) => skill.category === selectedCategory);
+
+  const visibleSkills = showAllSkills
+    ? filteredSkills
+    : filteredSkills.slice(0, INITIAL_SKILLS_COUNT);
+  const hasMoreSkills = filteredSkills.length > INITIAL_SKILLS_COUNT && !showAllSkills;
+  const remainingSkillsCount = filteredSkills.length - INITIAL_SKILLS_COUNT;
 
   return (
     <section
@@ -137,7 +153,7 @@ export function SkillsSection({ initialSkills = [], sectionContent }: SkillsSect
             return (
               <button
                 key={category}
-                onClick={() => setSelectedCategory(category)}
+                onClick={() => handleCategoryChange(category)}
                 className={`relative px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary ${
                   isActive
                     ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
@@ -158,12 +174,13 @@ export function SkillsSection({ initialSkills = [], sectionContent }: SkillsSect
             </p>
           </div>
         ) : (
-          <motion.div
+          <>
+            <motion.div
             layout
             className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"
           >
             <AnimatePresence mode="popLayout">
-              {filteredSkills.map((skill: Skill) => {
+              {visibleSkills.map((skill: Skill) => {
                 const IconComponent = ICON_MAP[skill.iconName] || Wrench;
                 const hasLevel = typeof skill.level === "number" && skill.level > 0;
                 return (
@@ -224,7 +241,63 @@ export function SkillsSection({ initialSkills = [], sectionContent }: SkillsSect
               })}
             </AnimatePresence>
           </motion.div>
-        )}
+
+          {/* See More / All Skills Toggle */}
+          {hasMoreSkills ? (
+            <div className="flex flex-col items-center gap-3 pt-2">
+              {/* Count Indicator */}
+              <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <div className="h-px w-12 bg-border" />
+                <span>
+                  Showing {visibleSkills.length} of {filteredSkills.length} skills
+                </span>
+                <div className="h-px w-12 bg-border" />
+              </div>
+
+              {/* Progress bar */}
+              <div className="w-48 h-1 rounded-full bg-muted overflow-hidden">
+                <motion.div
+                  className="h-full rounded-full bg-gradient-to-r from-primary to-accent"
+                  initial={false}
+                  animate={{ width: `${(visibleSkills.length / filteredSkills.length) * 100}%` }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                />
+              </div>
+
+              {/* See More button */}
+              <motion.button
+                onClick={() => setShowAllSkills(true)}
+                className="group relative mt-1 px-8 py-3.5 rounded-2xl bg-card border-2 border-primary/20 hover:border-primary/60 text-foreground font-semibold text-sm shadow-sm hover:shadow-xl transition-all duration-300 flex items-center gap-2.5 overflow-hidden"
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <span className="text-primary font-bold">See More</span>
+                <span className="px-2 py-0.5 rounded-md bg-primary/10 text-primary text-[11px] font-bold">
+                  +{remainingSkillsCount}
+                </span>
+                <ArrowDown className="w-4 h-4 text-primary group-hover:translate-y-0.5 transition-transform" />
+              </motion.button>
+            </div>
+          ) : (
+            filteredSkills.length > INITIAL_SKILLS_COUNT && (
+              <div className="flex flex-col items-center gap-2 pt-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-3.5 h-3.5 text-primary" />
+                  <span>All {filteredSkills.length} skills displayed</span>
+                  <Sparkles className="w-3.5 h-3.5 text-primary" />
+                </div>
+                <button
+                  onClick={() => setShowAllSkills(false)}
+                  className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors underline-offset-4 hover:underline"
+                >
+                  <ArrowUp className="w-3.5 h-3.5" />
+                  <span>Show less (8 skills)</span>
+                </button>
+              </div>
+            )
+          )}
+        </>
+      )}
       </motion.div>
     </section>
   );
