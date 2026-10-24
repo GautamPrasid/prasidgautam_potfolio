@@ -69,6 +69,8 @@ export interface Project {
   description: string;
   tags: string[];
   image?: string;
+  /** Array of public Supabase Storage URLs for the case-study screenshot gallery */
+  screenshots?: string[];
   github?: string;
   demo?: string;
   category: ProjectCategory;

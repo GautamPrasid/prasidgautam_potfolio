@@ -375,6 +375,7 @@ export const getProjectsFromDb = cache(async (): Promise<Project[]> => {
       description: d.description,
       tags: d.tags ?? [],
       image: d.image ?? undefined,
+      screenshots: Array.isArray(d.screenshots) ? d.screenshots : [],
       github: d.github ?? undefined,
       demo: d.demo ?? undefined,
       category: d.category,

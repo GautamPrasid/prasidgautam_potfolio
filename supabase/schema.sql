@@ -91,6 +91,8 @@ CREATE TABLE IF NOT EXISTS public.projects (
     description TEXT NOT NULL,
     tags        JSONB NOT NULL DEFAULT '[]'::jsonb,
     image       TEXT,
+    -- screenshots: array of public storage URLs for the case-study image gallery
+    screenshots JSONB NOT NULL DEFAULT '[]'::jsonb,
     github      TEXT,
     demo        TEXT,
     category    TEXT NOT NULL,
@@ -164,6 +166,11 @@ ALTER TABLE public.site_settings
 
 ALTER TABLE public.hero_about
     ADD COLUMN IF NOT EXISTS availability_text TEXT;
+
+-- screenshots: array of public storage URLs for the project case-study image gallery.
+-- Add to existing databases that were created before this column was in CREATE TABLE.
+ALTER TABLE public.projects
+    ADD COLUMN IF NOT EXISTS screenshots JSONB NOT NULL DEFAULT '[]'::jsonb;
 
 INSERT INTO public.site_settings (id) VALUES (true) ON CONFLICT (id) DO NOTHING;
 
