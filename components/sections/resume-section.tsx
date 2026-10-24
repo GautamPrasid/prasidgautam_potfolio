@@ -13,7 +13,6 @@ import {
   BookOpen,
   ExternalLink,
   Download,
-  FileText,
 } from "lucide-react";
 
 export interface ResumeSectionProps {
@@ -25,7 +24,7 @@ export interface ResumeSectionProps {
   sectionContent?: SectionHeadingItem;
 }
 
-type TabType = "all" | "experience" | "education" | "certifications";
+type TabType = "experience" | "education" | "certifications";
 
 export function ResumeSection({
   initialEducation = [],
@@ -35,10 +34,9 @@ export function ResumeSection({
   name,
   sectionContent,
 }: ResumeSectionProps) {
-  const [activeTab, setActiveTab] = useState<TabType>("all");
+  const [activeTab, setActiveTab] = useState<TabType>("experience");
 
   const tabs: { id: TabType; label: string; icon: typeof Briefcase; count: number }[] = [
-    { id: "all", label: "All Overview", icon: FileText, count: initialExperience.length + initialEducation.length + initialCertifications.length },
     { id: "experience", label: "Experience", icon: Briefcase, count: initialExperience.length },
     { id: "education", label: "Education", icon: GraduationCap, count: initialEducation.length },
     { id: "certifications", label: "Certifications", icon: Award, count: initialCertifications.length },
@@ -148,7 +146,7 @@ export function ResumeSection({
             className="space-y-12 sm:space-y-16"
           >
             {/* Experience Subsection */}
-            {(activeTab === "all" || activeTab === "experience") && (
+            {activeTab === "experience" && (
               <div className="space-y-6">
                 <div className="flex items-center gap-3 border-b border-border/60 pb-4">
                   <div className="p-2.5 rounded-xl bg-primary/10 text-primary shrink-0">
@@ -245,7 +243,7 @@ export function ResumeSection({
             )}
 
             {/* Education Subsection */}
-            {(activeTab === "all" || activeTab === "education") && (
+            {activeTab === "education" && (
               <div className="space-y-6">
                 <div className="flex items-center gap-3 border-b border-border/60 pb-4">
                   <div className="p-2.5 rounded-xl bg-primary/10 text-primary shrink-0">
@@ -340,7 +338,7 @@ export function ResumeSection({
             )}
 
             {/* Certifications Subsection */}
-            {(activeTab === "all" || activeTab === "certifications") && (
+            {activeTab === "certifications" && (
               <div className="space-y-6">
                 <div className="flex items-center gap-3 border-b border-border/60 pb-4">
                   <div className="p-2.5 rounded-xl bg-primary/10 text-primary shrink-0">
