@@ -8,7 +8,6 @@ import {
   Clock,
   BookOpen,
   ArrowRight,
-  Sparkles,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -23,10 +22,6 @@ export const metadata: Metadata = {
 const SHORT_MONTHS = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-];
-const FULL_MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December"
 ];
 
 function formatBlogDate(dateStr?: string): string {
