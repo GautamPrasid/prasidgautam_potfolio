@@ -1,14 +1,15 @@
 {
   "name": "prasidgautam-portfolio",
   "version": "1.0.0",
-  "description": "Full-stack personal portfolio with Supabase-driven CMS admin dashboard. Built with Next.js 14, TypeScript, Tailwind CSS, and Framer Motion.",
+  "description": "A responsive full-stack developer portfolio with a Supabase-powered CMS, protected admin dashboard, and dynamic project showcase. Built with Next.js 14, TypeScript, React, and Tailwind CSS.",
   "author": "Prasid Gautam",
   "license": "MIT",
   "private": true,
   "keywords": [
-    "portfolio",
+    "developer-portfolio",
     "nextjs",
     "typescript",
+    "react",
     "supabase",
     "tailwindcss",
     "framer-motion",
