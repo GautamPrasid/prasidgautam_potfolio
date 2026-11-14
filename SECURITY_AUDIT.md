@@ -33,7 +33,7 @@ This checklist distinguishes source review from checks that require access to th
 - [ ] `npm run lint`
 - [ ] `npx tsc --noEmit`
 - [ ] `npm run build`
-- [ ] `npm audit --audit-level=high` and review advisories before upgrading dependencies.
+- [ ] `npm audit --audit-level=high` and review advisories before upgrading dependencies. The CI audit step must run after type-check, lint, and build; a skipped audit is not a pass.
 - [ ] Review outdated packages separately; do not apply bulk upgrades without regression testing.
 
 ### Functional / data
