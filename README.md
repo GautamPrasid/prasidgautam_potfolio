@@ -1,55 +1,62 @@
-# Developer Portfolio
+# Prasid Gautam — Developer Portfolio
 
-A full-stack personal portfolio with a built-in CMS admin dashboard. Every piece of content — hero text, bio, skills, education, experience, certifications, projects, social links, and contact messages — is stored in Supabase and editable through a protected `/admin` panel. No content is hardcoded.
+A full-stack developer portfolio built to present my background, skills, experience, projects, certifications, and writing in one place. The public website is powered by Supabase, while a protected admin dashboard lets me manage portfolio content without editing source code.
 
-## Tech Stack
+**Live website:** [prasidgautam.com.np](https://www.prasidgautam.com.np)
 
-| Layer | Technology |
-|-------|-----------|
-| Framework | Next.js 14 (App Router, TypeScript) |
-| Styling | Tailwind CSS + custom CSS animations |
-| Animations | Framer Motion |
-| Database | Supabase (PostgreSQL) |
-| Auth | Supabase Auth (email/password) |
-| Storage | Supabase Storage (profile photo, resume PDF, project images) |
+## Highlights
+
+- **Database-driven content:** Portfolio sections are loaded from Supabase rather than maintained as static page content.
+- **Admin content management:** Protected dashboard for managing profile details, skills, education, experience, certifications, projects, blog posts, social links, website settings, and contact messages.
+- **Authentication and access control:** Supabase Auth with admin authorization and Row Level Security policies.
+- **Project showcase:** Project descriptions, technologies, categories, featured items, repository/demo links, and image galleries.
+- **Responsive interface:** Designed for desktop, tablet, and mobile screens.
+- **Dark and light themes:** Theme preference is retained between visits.
+- **Motion and interaction:** Framer Motion animations and interactive portfolio sections.
+- **Contact form:** Receives visitor messages and stores them in Supabase.
+- **SEO support:** Metadata, Open Graph information, canonical site URL, and sitemap support.
+- **Deployable on Vercel:** Configured for a Next.js production deployment.
+
+## Technology
+
+| Area | Tools |
+|---|---|
+| Framework | Next.js 14 — App Router |
+| Language | TypeScript |
+| UI | React 18, Tailwind CSS |
+| Animation | Framer Motion |
 | Icons | Lucide React |
-| Deployment | Vercel |
+| Backend and database | Supabase, PostgreSQL |
+| Authentication | Supabase Auth |
+| File storage | Supabase Storage |
+| Hosting | Vercel |
 
-## Features
-
-- **Zero hardcoded content** — everything is pulled from Supabase at request time
-- **Admin CMS** at `/admin` — CRUD for all portfolio sections
-- **Row-Level Security** — only rows belonging to the authenticated admin are writable
-- **Dynamic SEO** — `<title>`, `<meta description>`, and OpenGraph tags are generated from live DB data
-- **Dark / Light mode** — persisted in `localStorage`, no flash on load
-- **Contact form** — messages stored in Supabase `messages` table with email fallback
-- **Scroll-triggered animations** — Framer Motion `whileInView` with SSR hydration handled correctly
-- **Projects repository pagination** — starts with 4 projects and reveals up to 4 more per click using the **Load More Repos** button, with a live counter, progress bar, and animated cards
-- **Skills pagination** — starts with 8 skills per category; **See More** reveals the remaining skills with a progress indicator, and **Show less** collapses the list
-- **Category-aware pagination** — changing project or skill categories resets the visible list to its initial limit
-
-## Project Structure
+## Project structure
 
 ```
 app/
-  (public)         → Public portfolio pages
-  admin/           → Protected CMS (layout, server actions, per-section pages)
-  api/contact/     → Contact form API route
+  (public)/       Public portfolio routes
+  admin/          Protected admin dashboard and server actions
+  api/contact/    Contact form endpoint
 components/
-  sections/        → HeroSection, AboutSection, SkillsSection, …
-  ui/              → Shared UI primitives (AnimatedCounter, DynamicIcon, …)
-  navbar, footer, page-wrapper, scroll-progress
-lib/
-  supabase-db.ts   → All read helpers (getHeroAboutFromDb, getSkillsFromDb, …)
-  data.ts          → Shared TypeScript types
-utils/supabase/    → Supabase SSR client helpers (server, client, middleware)
+  sections/       Portfolio page sections
+  ui/             Reusable interface components
+lib/              Database helpers and shared types
+utils/supabase/   Supabase server, browser, and middleware clients
 supabase/
-  schema.sql       → Full schema + RLS policies (idempotent, safe to re-run)
+  schema.sql      Database tables, indexes, and security policies
+public/           Static assets
 ```
 
-## Local Setup
+## Run locally
 
-### 1. Clone and install
+### 1. Requirements
+
+- Node.js (LTS recommended)
+- npm
+- A Supabase project
+
+### 2. Clone and install
 
 ```bash
 git clone https://github.com/GautamPrasid/prasidgautam_potfolio.git
@@ -57,86 +64,70 @@ cd prasidgautam_potfolio
 npm install
 ```
 
-### 2. Create a Supabase project
+### 3. Configure Supabase
 
-1. Go to [supabase.com](https://supabase.com) → New project
-2. Run `supabase/schema.sql` in the **SQL Editor** (sets up all tables, RLS policies, and the `is_admin()` function)
-3. After running the schema, follow the instructions at the top of `schema.sql` to insert your user ID into the `admins` table
+1. Create a project at [supabase.com](https://supabase.com).
+2. Open the Supabase SQL Editor and run `supabase/schema.sql`.
+3. Create or configure your admin account according to the instructions in the SQL schema.
+4. Configure the required environment variables below.
 
-### 3. Environment variables
+### 4. Environment variables
 
-Create `.env.local` in the project root:
+Create a `.env.local` file in the project root. Use `.env.local.example` as the template.
 
 ```env
-# Required for public data fetching and Supabase client
 NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-
-# Required for Admin CMS mutations and asset uploads (server-only)
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-
-# Site domain (defaults to production domain if omitted in production)
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
-
-# Optional — contact form notification fallback
-CONTACT_EMAIL=your@email.com
 ```
 
-### 4. Run locally
+Keep `SUPABASE_SERVICE_ROLE_KEY` private. It must only be used in trusted server-side code and must never be exposed through a `NEXT_PUBLIC_` variable or committed to Git.
+
+### 5. Start the development server
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) for the public site.  
-Open [http://localhost:3000/admin](http://localhost:3000/admin) and log in with your Supabase account to edit content.
+Visit [http://localhost:3000](http://localhost:3000). The admin dashboard is available at [http://localhost:3000/admin](http://localhost:3000/admin) after signing in with an authorized admin account.
 
-## Admin Panel
+## Admin dashboard
 
-| Page | What it controls |
-|------|-----------------|
-| `/admin/hero` | Name, bio, roles, profile photo, resume PDF, GitHub/email |
-| `/admin/social-links` | Social link entries with icons and ordering |
-| `/admin/skills` | Skill cards with icons, categories, and proficiency levels |
-| `/admin/education` | Education history timeline |
-| `/admin/experience` | Work experience timeline |
-| `/admin/certifications` | Certificates with issuer, date, credential URL |
-| `/admin/projects` | Project showcase with uploads, links, tags, and category filters |
-| `/admin/blogs` | Blog articles, Markdown editor, cover uploads, and draft/published toggle |
-| `/admin/website-settings` | Site title, description, logo, social preview image, and section visibility |
-| `/admin/messages` | Contact form inbox with read status management |
+The admin area provides content management for:
 
-## Validation & Quality Checks
+- Profile, introduction, biography, and resume
+- Skills and categories
+- Education and experience
+- Certifications
+- Projects, project images, tags, and links
+- Blog posts and publication status
+- Social links and their display order
+- Website title, description, logo, social preview, and section visibility
+- Contact form messages
 
-Run the following commands to verify code quality before deploying:
+Access is intended for authorized administrators only. Review the Supabase Row Level Security policies and server-side authorization before deploying.
+
+## Quality checks
+
+Run these commands before deployment:
 
 ```bash
-# Type check TypeScript definitions
 npx tsc --noEmit
-
-# Run ESLint validation
 npm run lint
-
-# Build production bundle with SSG / ISR verification
 npm run build
 ```
 
-## Deployment (Vercel)
+## Deployment
 
-1. Push to GitHub
-2. Import the repo into [Vercel](https://vercel.com)
-3. In **Project Settings → Environment Variables**, add:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `SUPABASE_SERVICE_ROLE_KEY`
-   - `NEXT_PUBLIC_SITE_URL` = `https://www.prasidgautam.com.np`
-4. Deploy — Next.js App Router with ISR (1-hour revalidation) and on-demand cache revalidation is supported out of the box.
+1. Import this repository into [Vercel](https://vercel.com).
+2. Add the Supabase environment variables in the Vercel project settings.
+3. Set `NEXT_PUBLIC_SITE_URL` to `https://www.prasidgautam.com.np` (or your own production domain).
+4. Deploy the project.
 
-## Documentation (Mintlify)
+## Documentation
 
-Project setup, content management, and deployment guides are available in the Mintlify docs. The docs configuration is at the repository root in `docs.json`; connect the repository in Mintlify with the repository root as the docs directory.
-
-Preview the documentation locally from the repository root with:
+The repository includes a Mintlify configuration in `docs.json`. To preview the documentation locally, run:
 
 ```bash
 npx mint dev
@@ -144,4 +135,4 @@ npx mint dev
 
 ## License
 
-MIT — feel free to fork and adapt for your own portfolio.
+This project is licensed under the MIT License. See [LICENSE](LICENSE) if present.
