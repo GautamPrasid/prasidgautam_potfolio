@@ -5,12 +5,17 @@ on:
   push:
     branches: [main, security-quality-audit]
   workflow_dispatch:
+  workflow_run:
+    workflows: ["Refresh security dependency lockfile"]
+    types: [completed]
+    branches: [security-quality-audit]
 
 permissions:
   contents: read
 
 jobs:
   validate:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -20,6 +25,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && 'security-quality-audit' || github.ref }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -39,5 +46,5 @@ jobs:
       - name: Production build
         run: npm run build
 
-      - name: Audit production dependency vulnerabilities
+      - name: Audit all dependency vulnerabilities
         run: npm audit --audit-level=high
