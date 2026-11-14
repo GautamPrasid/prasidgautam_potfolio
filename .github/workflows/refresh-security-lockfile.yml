@@ -1,0 +1,45 @@
+name: Refresh security dependency lockfile
+
+on:
+  push:
+    branches: [security-quality-audit]
+    paths:
+      - "package.json"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh-lockfile:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout security branch
+        uses: actions/checkout@v4
+        with:
+          ref: security-quality-audit
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Regenerate lockfile
+        run: npm install --ignore-scripts
+
+      - name: Apply non-breaking dependency security fixes
+        run: npm audit fix --ignore-scripts || true
+
+      - name: Commit updated dependency manifests
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(security): refresh patched dependency lockfile"
+            git push origin security-quality-audit
+          fi
