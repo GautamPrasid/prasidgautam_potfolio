@@ -9,7 +9,14 @@ This checklist distinguishes source review from checks that require access to th
 - The service-role key is documented as `SUPABASE_SERVICE_ROLE_KEY` (not `NEXT_PUBLIC_*`). Keep it in server-only modules and Vercel server environment variables. Never log it or return it to clients.
 - `supabase/schema.sql` enables RLS on the 11 application tables. Public content is readable; admin writes use `public.is_admin()`; blog reads are limited to published posts for non-admins; messages have no public insert policy and are written through the server contact route.
 - The `portfolio-assets` Storage bucket is public-read and admin-write. Files uploaded there, including PDFs, are therefore publicly accessible by URL. Do not store private documents in this bucket.
-- `app/api/contact/route.ts` includes a 10 KB body cap, field validation, a honeypot, interaction timing check, and rate limiting. Its in-memory IP limiter is per serverless instance; database count-based limits can race under concurrent requests and should not be treated as a strict distributed limiter.
+- `app/api/contact/route.ts` now reads request bodies incrementally and stops at 10 KB, validates UTF-8, trusts only Vercel's verified client-IP header for its local limiter, and retains shared email/global database throttles. The in-memory limiter is per serverless instance; database count-then-insert limits can still race under concurrent requests. Use an atomic database RPC or a shared edge rate-limit service before treating throttling as strict.
+
+## Source hardening included in the security PR
+
+- The contact route enforces the 10 KB body limit while streaming, including requests without a trustworthy `Content-Length` header.
+- The contact route no longer trusts client-provided `x-forwarded-for` or `x-real-ip` values; it uses Vercel's verified `x-vercel-forwarded-for` header only.
+- The favicon route only fetches HTTPS public Storage objects from the configured Supabase origin, refuses redirects, applies a timeout, checks image MIME types, and caps downloaded bytes.
+- `package.json` targets Next.js 15.5.29 and matching `eslint-config-next`; CI refreshes the lockfile on the security branch and audits all dependency groups.
 
 ## Required checks before production release
 
@@ -26,7 +33,7 @@ This checklist distinguishes source review from checks that require access to th
 - [ ] `npm run lint`
 - [ ] `npx tsc --noEmit`
 - [ ] `npm run build`
-- [ ] `npm audit --omit=dev` and review advisories before upgrading dependencies.
+- [ ] `npm audit --audit-level=high` and review advisories before upgrading dependencies.
 - [ ] Review outdated packages separately; do not apply bulk upgrades without regression testing.
 
 ### Functional / data
