@@ -17,7 +17,7 @@ const ALLOWED_IMAGE_TYPES = new Set([
 
 async function readImageLimited(response: Response): Promise<Uint8Array | null> {
   const declaredLength = response.headers.get("content-length");
-  if (declaredLength && /^\\d+$/.test(declaredLength) && Number(declaredLength) > MAX_LOGO_BYTES) {
+  if (declaredLength && /^\d+$/.test(declaredLength) && Number(declaredLength) > MAX_LOGO_BYTES) {
     return null;
   }
   if (!response.body) return null;
