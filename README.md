@@ -6,7 +6,7 @@ A full-stack personal portfolio with a built-in CMS admin dashboard. Every piece
 
 | Layer | Technology |
 |-------|-----------|
-| Framework | Next.js 14 (App Router, TypeScript) |
+| Framework | Next.js 15 (App Router, TypeScript) |
 | Styling | Tailwind CSS + custom CSS animations |
 | Animations | Framer Motion |
 | Database | Supabase (PostgreSQL) |
