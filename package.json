@@ -48,5 +48,6 @@
   },
   "overrides": {
     "postcss": "$postcss"
-  }
+  },
+  "packageManager": "npm@10.9.9"
 }
