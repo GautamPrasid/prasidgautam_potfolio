@@ -83,7 +83,10 @@ export async function GET() {
         if (response.ok && ALLOWED_IMAGE_TYPES.has(contentType)) {
           const bytes = await readImageLimited(response);
           if (bytes) {
-            return new NextResponse(bytes, {
+            // Copy into a concrete ArrayBuffer so NextResponse receives a valid BodyInit.
+            const responseBody = new ArrayBuffer(bytes.byteLength);
+            new Uint8Array(responseBody).set(bytes);
+            return new NextResponse(responseBody, {
               headers: {
                 "Content-Type": contentType,
                 "X-Content-Type-Options": "nosniff",
