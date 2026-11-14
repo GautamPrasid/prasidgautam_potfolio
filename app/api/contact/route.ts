@@ -3,14 +3,11 @@ import { createAdminClient } from "@/utils/supabase/admin";
 
 /**
  * Contact Form Abuse Protection:
- * 1. Request body capped at 10KB to prevent memory exhaustion attacks.
- * 2. Trusted proxy header resolution (x-vercel-forwarded-for, cf-connecting-ip, x-real-ip)
- *    to prevent client IP spoofing.
- * 3. L1 in-memory IP rate limiter for instant burst protection.
- * 4. L2 shared database-backed rate limiter (via Supabase messages table)
- *    that persists and enforces limits across all stateless Vercel serverless instances.
- * 5. Bot protection: honeypot field + minimum human interaction timing check.
- * 6. Server-side sanitization: control character stripping, link count limits, RFC email validation.
+ * 1. Streaming request-body cap (10KB) before buffering to prevent memory exhaustion.
+ * 2. Only the Vercel-verified client IP header is trusted for the in-memory limiter.
+ * 3. Shared database-backed email/global throttles across serverless instances.
+ * 4. Bot protection: honeypot field + minimum interaction timing check.
+ * 5. Server-side sanitization, link limits, and email validation.
  */
 
 const MAX_BODY_BYTES = 10 * 1024; // 10 KB cap
@@ -29,42 +26,55 @@ const EMAIL_REGEX =
   /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
 
 /**
- * Resolve client IP using edge-verified headers.
- * Does NOT blindly trust client-supplied x-forwarded-for headers.
+/**
+ * Only trust the Vercel-provided client IP header. Do not fall back to
+ * x-forwarded-for/x-real-ip because clients may supply those headers.
  */
 function getClientIp(request: Request): string {
-  // 1. Vercel Edge proxy header (cannot be forged by the client)
-  const vercelIp = request.headers.get("x-vercel-forwarded-for");
-  if (vercelIp) {
-    return vercelIp.split(",")[0].trim();
-  }
+  const value = request.headers.get("x-vercel-forwarded-for");
+  return value?.split(",")[0]?.trim() || "unknown";
+}
 
-  // 2. Cloudflare Connecting IP
-  const cfIp = request.headers.get("cf-connecting-ip");
-  if (cfIp) {
-    return cfIp.trim();
-  }
+/**
+ * Read a request body incrementally and stop as soon as it exceeds the cap.
+ * This protects requests without Content-Length and avoids unbounded request.text().
+ */
+async function readLimitedBody(
+  request: Request
+): Promise<{ text: string; tooLarge: boolean; invalidEncoding: boolean }> {
+  const reader = request.body?.getReader();
+  if (!reader) return { text: "", tooLarge: false, invalidEncoding: false };
 
-  // 3. Trusted Real IP header
-  const realIp = request.headers.get("x-real-ip");
-  if (realIp) {
-    return realIp.trim();
-  }
+  const chunks: Uint8Array[] = [];
+  let total = 0;
 
-  // 4. Fallback: x-forwarded-for. When multiple proxies exist, the closest upstream
-  // proxy appends to the end of the list. Take the last valid IP to prevent client-injected spoofing.
-  const forwarded = request.headers.get("x-forwarded-for");
-  if (forwarded) {
-    const ips = forwarded
-      .split(",")
-      .map((ip) => ip.trim())
-      .filter(Boolean);
-    if (ips.length > 0) {
-      return ips[ips.length - 1];
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > MAX_BODY_BYTES) {
+      await reader.cancel().catch(() => undefined);
+      return { text: "", tooLarge: true, invalidEncoding: false };
     }
+    chunks.push(value);
   }
 
-  return "unknown";
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+
+  try {
+    return {
+      text: new TextDecoder("utf-8", { fatal: true }).decode(bytes),
+      tooLarge: false,
+      invalidEncoding: false,
+    };
+  } catch {
+    return { text: "", tooLarge: false, invalidEncoding: true };
+  }
 }
 
 /**
@@ -100,7 +110,7 @@ export async function POST(request: Request) {
   try {
     // 1. Cap request body size via Content-Length header
     const contentLength = request.headers.get("content-length");
-    if (contentLength && parseInt(contentLength, 10) > MAX_BODY_BYTES) {
+    if (contentLength && /^\d+$/.test(contentLength) && Number(contentLength) > MAX_BODY_BYTES) {
       return NextResponse.json(
         { error: "Payload too large. Request body cannot exceed 10KB." },
         { status: 413 }
@@ -117,13 +127,17 @@ export async function POST(request: Request) {
     }
 
     // 3. Read raw body and enforce byte cap even if Content-Length header was omitted
-    const rawBody = await request.text();
-    if (new TextEncoder().encode(rawBody).byteLength > MAX_BODY_BYTES) {
+    const limitedBody = await readLimitedBody(request);
+    if (limitedBody.tooLarge) {
       return NextResponse.json(
         { error: "Payload too large. Request body cannot exceed 10KB." },
         { status: 413 }
       );
     }
+    if (limitedBody.invalidEncoding) {
+      return NextResponse.json({ error: "Request body must be valid UTF-8." }, { status: 400 });
+    }
+    const rawBody = limitedBody.text;
 
     // 4. Safe JSON parse
     let parsedBody: unknown;
