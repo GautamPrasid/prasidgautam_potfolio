@@ -1,7 +1,7 @@
 {
   "name": "prasidgautam-portfolio",
   "version": "1.0.0",
-  "description": "Full-stack personal portfolio with Supabase-driven CMS admin dashboard. Built with Next.js 14, TypeScript, Tailwind CSS, and Framer Motion.",
+  "description": "A modern full-stack personal portfolio with a Supabase-powered CMS, protected admin dashboard, and dynamic project showcase. Built with Next.js 15, TypeScript, React, and Tailwind CSS.",
   "author": "Prasid Gautam",
   "license": "MIT",
   "private": true,
@@ -26,7 +26,7 @@
     "@supabase/supabase-js": "^2.117.0",
     "framer-motion": "^13.4.0",
     "lucide-react": "^1.47.0",
-    "next": "14.2.35",
+    "next": "15.5.29",
     "react": "^18",
     "react-dom": "^18",
     "server-only": "^0.0.1"
@@ -36,7 +36,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "eslint": "^8",
-    "eslint-config-next": "14.2.35",
+    "eslint-config-next": "15.5.29",
     "postcss": "^8",
     "prettier": "^3.9.8",
     "prettier-plugin-tailwindcss": "^0.8.1",
